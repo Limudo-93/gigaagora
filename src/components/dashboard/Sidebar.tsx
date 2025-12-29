@@ -69,12 +69,26 @@ function getScoreBadge(avgRating: number | null | undefined): { label: string; c
 }
 
 export default async function Sidebar() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let supabase: any;
+  let user: any;
 
-  if (!user) return null;
+  try {
+    supabase = await createClient();
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+
+    if (!authUser) return null;
+    user = authUser;
+  } catch (error: any) {
+    // Durante o build estático, as variáveis de ambiente podem não estar disponíveis
+    // Retornar null para evitar erros durante o build
+    if (error?.message?.includes("Missing Supabase environment variables")) {
+      return null;
+    }
+    // Se for outro erro, também retornar null para não quebrar o build
+    return null;
+  }
 
   // Buscar próximo gig confirmado
   let nextGig: any = null;
