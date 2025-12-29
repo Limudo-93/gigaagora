@@ -61,7 +61,7 @@ export default async function ProfileHeader() {
     .eq("user_id", user.id)
     .or("expires_at.is.null,expires_at.gt.now()");
 
-  // Calcular iniciais do nome
+  // Calcular iniciais do nome (corrigido para TypeScript)
   const displayName = profile?.display_name || user.email?.split("@")[0] || "Usuário";
   const initials = displayName
     .split(" ")

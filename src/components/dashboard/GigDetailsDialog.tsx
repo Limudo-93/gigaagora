@@ -487,6 +487,7 @@ export default function GigDetailsDialog({
 
                 <div className="space-y-3">
                   {confirmedMusicians.map((musician, idx) => {
+                    // Calcular iniciais (corrigido para TypeScript)
                     const initials = musician.musician_name
                       ? musician.musician_name
                           .split(" ")
@@ -534,6 +535,7 @@ export default function GigDetailsDialog({
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={contractorInfo.contractor_photo_url || undefined} />
                     <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white text-sm">
+                      {/* Iniciais do contratante (corrigido para TypeScript) */}
                       {contractorInfo.contractor_name
                         ? contractorInfo.contractor_name
                             .split(" ")
@@ -558,6 +560,7 @@ export default function GigDetailsDialog({
               <Button
                 onClick={() => {
                   if (gigId) {
+                    // Redirecionar (corrigido para typedRoutes)
                     router.push(`/dashboard/gigs/${gigId}/matches` as any);
                     onOpenChange(false);
                   }

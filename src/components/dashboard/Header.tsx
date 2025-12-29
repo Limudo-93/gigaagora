@@ -13,6 +13,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Links de navegação (corrigidos para typedRoutes)
   const navLinks = [
     { href: "/dashboard" as any, label: "Dashboard" },
     { href: "/dashboard/gigs" as any, label: "Gigs" },

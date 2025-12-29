@@ -79,6 +79,7 @@ type AcceptedMusician = {
   basePrice?: number | null;
 };
 
+// Função para obter iniciais (corrigido para TypeScript)
 function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
   return name

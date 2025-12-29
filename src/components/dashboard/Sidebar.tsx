@@ -49,6 +49,7 @@ function formatTimeAgo(dateString: string): string {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
 }
 
+// Função para obter iniciais (corrigido para TypeScript)
 function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
   return name

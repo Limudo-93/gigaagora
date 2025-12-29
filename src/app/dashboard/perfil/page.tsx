@@ -52,6 +52,7 @@ export default async function PerfilPage() {
   }
 
   const displayName = profile?.display_name || user.email?.split("@")[0] || "Usuário";
+  // Calcular iniciais do nome (corrigido para TypeScript)
   const initials = displayName
     .split(" ")
     .map((n: string) => n[0])

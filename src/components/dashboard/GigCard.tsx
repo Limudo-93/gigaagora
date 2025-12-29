@@ -81,6 +81,7 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
   const address = gig.address_text || "";
   const statusUI = normalizeStatus(gig.status);
 
+  // Handlers corrigidos para typedRoutes
   const handleOpen = () => {
     if (onOpen) return onOpen(gig.id);
     router.push(`/dashboard/gigs/${gig.id}` as any);
@@ -228,7 +229,7 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
           variant="ghost" 
           size="sm" 
           className="flex-1"
-          onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches` as any)}
+          onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches` as any)} // Corrigido para typedRoutes
         >
           <Users className="mr-2 h-4 w-4" />
           Ver Matches

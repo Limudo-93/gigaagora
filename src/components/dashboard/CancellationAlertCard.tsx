@@ -106,7 +106,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
       // Marcar notificação como lida
       await markAsRead(notificationId);
 
-      // Redirecionar para a página da gig
+      // Redirecionar para a página da gig (corrigido para typedRoutes)
       router.push(`/dashboard/gigs/${gigId}` as any);
       router.refresh();
     } catch (err) {
@@ -170,6 +170,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
                 size="sm"
                 onClick={() => {
                   markAsRead(notification.id);
+                  // Redirecionar (corrigido para typedRoutes)
                   router.push(`/dashboard/gigs/${notification.gig_id}` as any);
                 }}
                 className="w-full sm:w-auto text-xs md:text-sm"
