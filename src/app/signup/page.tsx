@@ -370,7 +370,7 @@ export default function SignupPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Já tem uma conta?{" "}
-                <Link href="/login" className="font-semibold text-orange-600 hover:text-orange-700 transition-colors">
+                <Link href="/login" as any className="font-semibold text-orange-600 hover:text-orange-700 transition-colors">
                   Entrar
                 </Link>
               </p>

@@ -34,7 +34,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Dashboard
@@ -42,7 +42,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/dashboard/gigs"
+                  href="/dashboard/gigs" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Gigs
@@ -50,7 +50,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/dashboard/messages"
+                  href="/dashboard/messages" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Mensagens
@@ -58,7 +58,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/dashboard/perfil"
+                  href="/dashboard/perfil" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Perfil
@@ -73,7 +73,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  href="/ajuda"
+                  href="/ajuda" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Central de Ajuda
@@ -81,7 +81,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/contato"
+                  href="/contato" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Contato
@@ -89,7 +89,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/termos"
+                  href="/termos" as any
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
                   Termos de Uso

@@ -182,7 +182,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg md:text-xl font-semibold text-foreground">Meus Gigs</h2>
         <Button asChild>
-          <Link href="/dashboard/gigs/new">
+          <Link href="/dashboard/gigs/new" as any>
             <Plus className="mr-2 h-4 w-4" />
             Criar Nova Gig
           </Link>
