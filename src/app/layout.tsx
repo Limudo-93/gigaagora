@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import ThemeProvider from "@/components/ThemeProvider";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Giga Agora",
-  description: "Next.js starter with Tailwind, shadcn/ui, and Supabase"
+  title: "Chama o Músico",
+  description: "A plataforma que conecta músicos talentosos com oportunidades de trabalho",
 };
 
 export default function RootLayout({
-  children
-}: {
-  children: ReactNode;
-}) {
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
-        {children}
+    <html lang="pt-BR">
+      <body className={inter.className}>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

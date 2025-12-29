@@ -1,169 +1,269 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import GigCard from "./GigCard";
+import GigDetailsDialog from "./GigDetailsDialog";
 
 type GigRow = {
   id: string;
   title: string | null;
   location_name: string | null;
   address_text: string | null;
-  start_time: string | null; // timestamptz
-  status: string | null; // USER-DEFINED (enum)
+  timezone: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  show_minutes: number | null;
+  break_minutes: number | null;
+  status: string | null;
+  flyer_url?: string | null;
+  min_cache?: number | null;
+  max_cache?: number | null;
 };
 
-type TabDef = {
-  value: string; // ui value
-  label: string;
-  dbStatus: string; // status value in DB
-};
+type TabKey = "draft" | "upcoming" | "past" | "canceled";
 
-const TABS: TabDef[] = [
-  { value: "rascunho", label: "Rascunho", dbStatus: "draft" },
-  { value: "abertos", label: "Abertos", dbStatus: "open" },
-  { value: "andamento", label: "Em andamento", dbStatus: "in_progress" },
-  { value: "concluidos", label: "Concluídos", dbStatus: "completed" },
-  { value: "cancelados", label: "Cancelados", dbStatus: "cancelled" },
-];
-
-export default function GigsTabs() {
+export default function GigsTabs({ userId }: { userId: string }) {
   const router = useRouter();
-
-  const [activeTab, setActiveTab] = useState<string>(TABS[0].value);
-
-  const [userId, setUserId] = useState<string | null>(null);
-
-  const [gigs, setGigs] = useState<GigRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [tab, setTab] = useState<TabKey>("upcoming");
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [rows, setRows] = useState<GigRow[]>([]);
+  const [selectedGigId, setSelectedGigId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const active = useMemo(() => {
-    return TABS.find((t) => t.value === activeTab) ?? TABS[0];
-  }, [activeTab]);
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setErrorMsg(null);
 
-  async function ensureUser() {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) {
-      setUserId(null);
-      setErrorMsg("Faça login novamente para carregar gigs.");
-      return null;
+      try {
+        // Busca gigs onde o usuário é o contractor (criador da gig)
+        // Primeiro busca as gigs
+        let q = supabase
+          .from("gigs")
+          .select(
+            "id,title,location_name,address_text,timezone,start_time,end_time,show_minutes,break_minutes,status,flyer_url"
+          )
+          .eq("contractor_id", userId);
+
+        // filtros por aba
+        if (tab === "draft") {
+          q = q.eq("status", "draft");
+        } else if (tab === "canceled") {
+          // O enum no banco usa "cancelled" (com dois 'l')
+          q = q.eq("status", "cancelled");
+        } else if (tab === "upcoming") {
+          // Abertos: status publicado e data futura
+          q = q.eq("status", "published")
+            .gte("start_time", new Date().toISOString());
+        } else if (tab === "past") {
+          // Concluídos: data passada (ou status completed se existir)
+          q = q.lt("start_time", new Date().toISOString());
+        }
+
+        const { data, error } = await q.order("start_time", { ascending: true });
+
+        console.log("GigsTabs query result:", { 
+          dataCount: data?.length || 0, 
+          error, 
+          tab, 
+          userId 
+        });
+
+        if (error) {
+          console.error("GigsTabs load error:", error);
+          console.error("Error details:", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          });
+          setErrorMsg(
+            `Erro ao carregar gigs: ${error.message}${error.hint ? ` (${error.hint})` : ""}`
+          );
+          setRows([]);
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          console.log("GigsTabs: Nenhuma gig encontrada para:", { tab, userId });
+        }
+
+        // Busca os valores de cache das roles para cada gig
+        const gigsWithCache = await Promise.all(
+          (data ?? []).map(async (gig) => {
+            const { data: rolesData } = await supabase
+              .from("gig_roles")
+              .select("cache")
+              .eq("gig_id", gig.id)
+              .not("cache", "is", null);
+
+            const cacheValues = (rolesData ?? [])
+              .map((r) => r.cache)
+              .filter((c): c is number => c !== null && c !== undefined);
+
+            return {
+              ...gig,
+              min_cache: cacheValues.length > 0 ? Math.min(...cacheValues) : null,
+              max_cache: cacheValues.length > 0 ? Math.max(...cacheValues) : null,
+            };
+          })
+        );
+
+        console.log("GigsTabs loaded:", gigsWithCache.length, "gigs");
+        setRows(gigsWithCache as GigRow[]);
+      } catch (e: any) {
+        console.error("GigsTabs load exception:", e);
+        setErrorMsg(e?.message ?? "Erro ao carregar gigs.");
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      load();
+    } else {
+      setErrorMsg("Usuário não identificado.");
+      setLoading(false);
     }
-    const uid = data?.user?.id ?? null;
-    setUserId(uid);
-    if (!uid) setErrorMsg("Faça login novamente para carregar gigs.");
-    return uid;
-  }
+  }, [userId, tab]);
 
-  async function fetchGigs(opts?: { silent?: boolean }) {
-    const silent = !!opts?.silent;
+  const filtered = rows; // já filtrado na query
 
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
+  const handleOpenGig = (gigId: string) => {
+    setSelectedGigId(gigId);
+    setDialogOpen(true);
+  };
 
+  const handleEditGig = (gigId: string) => {
+    // Redireciona para a página de edição
+    window.location.href = `/dashboard/gigs/${gigId}/edit`;
+  };
+
+  const handleCancelGig = async (gigId: string) => {
+    setCancellingId(gigId);
     setErrorMsg(null);
 
-    const uid = userId ?? (await ensureUser());
-    if (!uid) {
-      if (!silent) setLoading(false);
-      else setRefreshing(false);
-      return;
-    }
+    try {
+      const { error } = await supabase
+        .from("gigs")
+        .update({ status: "cancelled" })
+        .eq("id", gigId)
+        .eq("contractor_id", userId); // Garantir que só cancela suas próprias gigs
 
-    // 🔥 IMPORTANTE:
-    // Aqui a gente assume (pelo seu schema) que:
-    // gigs.contractor_id = profiles.id (ou seja, o próprio user.id)
-    const { data, error } = await supabase
-      .from("gigs")
-      .select("id,title,location_name,address_text,start_time,status")
-      .eq("contractor_id", uid)
-      .eq("status", active.dbStatus)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      setGigs([]);
-      setErrorMsg(error.message ?? "Erro ao carregar gigs.");
-    } else {
-      setGigs((data ?? []) as GigRow[]);
-    }
-
-    if (!silent) setLoading(false);
-    else setRefreshing(false);
-  }
-
-  // pega user e carrega a primeira vez + quando troca aba
-  useEffect(() => {
-    (async () => {
-      const uid = await ensureUser();
-      if (!uid) {
-        setLoading(false);
+      if (error) {
+        console.error("Error cancelling gig:", error);
+        setErrorMsg(`Erro ao cancelar gig: ${error.message}`);
+        setCancellingId(null);
         return;
       }
-      await fetchGigs();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+
+      // Remove da lista local ou atualiza o status
+      setRows((prev) => prev.filter((g) => g.id !== gigId));
+      setCancellingId(null);
+    } catch (err: any) {
+      console.error("cancelGig exception:", err);
+      setErrorMsg(err?.message ?? "Erro inesperado ao cancelar gig.");
+      setCancellingId(null);
+    }
+  };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-white">Meus Gigs</h2>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            className="bg-white/10 text-white hover:bg-white/15"
-            onClick={() => fetchGigs({ silent: true })}
-            disabled={loading || refreshing}
-          >
-            {refreshing ? "Atualizando..." : "Atualizar"}
-          </Button>
-
-          <Button
-            className="bg-white text-black hover:bg-white/90"
-            onClick={() => router.push("/gigs/new")}
-          >
-            + Criar Nova Gig
-          </Button>
-        </div>
+    <section className="mt-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg md:text-xl font-semibold text-foreground">Meus Gigs</h2>
+        <Button asChild>
+          <Link href="/dashboard/gigs/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Nova Gig
+          </Link>
+        </Button>
       </div>
 
-      {errorMsg ? (
-        <div className="mb-4 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3 text-sm text-amber-100">
-          {errorMsg}
-        </div>
-      ) : null}
-
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v)}>
-        <TabsList className="bg-black/10">
-          {TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as TabKey)}>
+        <TabsList className="w-full justify-start bg-muted">
+          <TabsTrigger value="draft">Rascunho</TabsTrigger>
+          <TabsTrigger value="upcoming">Abertos</TabsTrigger>
+          <TabsTrigger value="past">Concluídos</TabsTrigger>
+          <TabsTrigger value="canceled">Cancelados</TabsTrigger>
         </TabsList>
 
-        {TABS.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="mt-4">
-            {loading ? (
-              <p className="text-sm text-white/60">Carregando gigs...</p>
-            ) : gigs.length === 0 ? (
-              <p className="text-sm text-white/60">Nenhuma gig aqui.</p>
-            ) : (
-              <div className="space-y-3">
-                {gigs.map((gig) => (
-                  <GigCard key={gig.id} gig={gig} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        ))}
+        <div className="mt-3">
+          {errorMsg && (
+            <div className="mb-3 rounded-lg border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <p className="font-semibold">Erro ao carregar gigs:</p>
+              <p className="mt-1">{errorMsg}</p>
+              <p className="mt-2 text-xs opacity-75">
+                Verifique o console do navegador (F12) para mais detalhes.
+              </p>
+            </div>
+          )}
+
+          {loading ? (
+            <Card>
+              <CardContent className="px-4 py-6 text-center text-sm text-muted-foreground">
+                Carregando gigs...
+              </CardContent>
+            </Card>
+          ) : filtered.length === 0 ? (
+            <Card>
+              <CardContent className="px-4 py-6 text-center">
+                <p className="text-sm font-medium text-foreground">Nenhuma gig encontrada</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {tab === "draft"
+                    ? "Nenhuma gig em rascunho."
+                    : tab === "upcoming"
+                    ? "Nenhuma gig aberta."
+                    : tab === "past"
+                    ? "Nenhuma gig concluída."
+                    : "Nenhuma gig cancelada."}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {filtered.slice(0, 3).map((g) => (
+                <GigCard 
+                  key={g.id} 
+                  gig={g} 
+                  onOpen={handleOpenGig}
+                  onEdit={handleEditGig}
+                  onCancel={handleCancelGig}
+                  isCancelling={cancellingId === g.id}
+                />
+              ))}
+              {filtered.length > 3 && (
+                <div className="text-center pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push("/dashboard/gigs")}
+                  >
+                    Ver todas as {filtered.length} gigs
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* só pra manter TabsContent compatível com shadcn se você usar em outro lugar */}
+        <TabsContent value={tab} />
       </Tabs>
+
+      <GigDetailsDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        gigId={selectedGigId}
+      />
     </section>
   );
 }

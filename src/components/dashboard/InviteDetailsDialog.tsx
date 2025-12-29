@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, ClipboardList } from "lucide-react";
+import { Calendar, Clock, MapPin, ClipboardList, DollarSign } from "lucide-react";
 
 function formatDateTime(iso?: string) {
   if (!iso) return { date: "-", time: "-" };
@@ -27,138 +27,247 @@ export default function InviteDetailsDialog({
   onAccept: () => void;
   onDecline: () => void;
 }) {
-  const gig = invite?.gig;
-  const role = invite?.role;
+  // Suporta tanto o formato novo (gig/role) quanto o antigo (gigs/gig_roles)
+  const gig = invite?.gig || (Array.isArray(invite?.gigs) ? invite?.gigs[0] : invite?.gigs);
+  const role = invite?.role || (Array.isArray(invite?.gig_roles) ? invite?.gig_roles[0] : invite?.gig_roles);
 
   const { date, time } = formatDateTime(gig?.start_time);
+  const { time: endTime } = formatDateTime(gig?.end_time);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
             {gig?.title ?? "Detalhes do convite"}
           </DialogTitle>
         </DialogHeader>
 
         {!gig ? (
-          <p className="text-sm text-muted-foreground">Nenhum detalhe disponível.</p>
+          <div className="py-8 text-center">
+            <p className="text-sm text-gray-600">Nenhum detalhe disponível.</p>
+          </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">Convite</Badge>
+              <Badge className="bg-gradient-to-r from-orange-500 to-purple-500 text-white border-0">
+                Convite
+              </Badge>
 
               {invite?.warned_short_gig && (
-                <Badge className="bg-amber-500 text-white hover:bg-amber-500">
+                <Badge className="bg-amber-500 text-white border-0">
                   Show curto ({invite.warned_short_gig_minutes ?? "?"} min)
                 </Badge>
               )}
 
-              {gig?.status && <Badge variant="outline">{gig.status}</Badge>}
-            </div>
-
-            {/* Gig info */}
-            <div className="grid grid-cols-1 gap-3 rounded-lg border p-4 sm:grid-cols-2">
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground">Local</span>
-                <span className="ml-auto font-medium text-foreground">
-                  {gig.location_name ?? "-"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground">Data</span>
-                <span className="ml-auto font-medium text-foreground">{date}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <Clock size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground">Horário</span>
-                <span className="ml-auto font-medium text-foreground">{time}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <Clock size={16} className="text-muted-foreground" />
-                <span className="text-muted-foreground">Duração</span>
-                <span className="ml-auto font-medium text-foreground">
-                  {gig.show_minutes ? `${gig.show_minutes} min` : "-"}
-                  {gig.break_minutes ? ` (+ ${gig.break_minutes} min pausa)` : ""}
-                </span>
-              </div>
-            </div>
-
-            {/* Address/description */}
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-              <p className="text-sm font-medium">Endereço</p>
-              <p className="text-sm text-muted-foreground">
-                {gig.address_text ?? "—"}
-              </p>
-
-              {gig.description && (
-                <>
-                  <p className="text-sm font-medium pt-2">Descrição</p>
-                  <p className="text-sm text-muted-foreground">{gig.description}</p>
-                </>
+              {gig?.status && (
+                <Badge variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300">
+                  {gig.status}
+                </Badge>
               )}
             </div>
 
-            {/* Role (gig_roles) */}
-            <div className="rounded-lg border p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <ClipboardList size={16} className="text-muted-foreground" />
-                <p className="text-sm font-medium">Vaga / Requisitos</p>
+            {/* Gig info - Card moderno */}
+            <div className="rounded-2xl border border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/70 p-5 shadow-lg space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-100 to-purple-100 flex items-center justify-center">
+                    <MapPin size={18} className="text-orange-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 mb-0.5">Local</p>
+                    <p className="font-semibold text-gray-900 truncate">
+                      {gig.location_name ?? "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
+                    <Calendar size={18} className="text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 mb-0.5">Data</p>
+                    <p className="font-semibold text-gray-900">{date}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <Clock size={18} className="text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 mb-0.5">Horário</p>
+                    <p className="font-semibold text-gray-900">
+                      {time}
+                      {endTime && endTime !== "-" && ` - ${endTime}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                    <Clock size={18} className="text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-600 mb-0.5">Duração</p>
+                    <p className="font-semibold text-gray-900">
+                      {gig.show_minutes ? `${gig.show_minutes} min` : "-"}
+                      {gig.break_minutes ? ` (+ ${gig.break_minutes} min pausa)` : ""}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Address/description - Card moderno */}
+            {(gig.address_text || gig.description) && (
+              <div className="rounded-2xl border border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/70 p-5 shadow-lg space-y-3">
+                {gig.address_text && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <MapPin size={16} className="text-gray-600" />
+                      Endereço
+                    </p>
+                    <p className="text-sm text-gray-700 pl-6">
+                      {gig.address_text}
+                    </p>
+                  </div>
+                )}
+
+                {gig.description && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 mb-2">Descrição</p>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {gig.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Role (gig_roles) - Card moderno */}
+            <div className="rounded-2xl border border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/70 p-5 shadow-lg space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-purple-500 flex items-center justify-center">
+                  <ClipboardList size={16} className="text-white" />
+                </div>
+                <p className="text-base font-semibold text-gray-900">Vaga / Requisitos</p>
               </div>
 
               {role ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Instrumento</span>
-                    <span className="font-medium">{role.instrument ?? "-"}</span>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
+                  <div className="rounded-lg bg-white/50 p-3 border border-gray-100">
+                    <p className="text-xs text-gray-600 mb-1">Instrumento</p>
+                    <p className="font-semibold text-gray-900">{role.instrument ?? "-"}</p>
                   </div>
 
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Quantidade</span>
-                    <span className="font-medium">{role.quantity ?? "-"}</span>
+                  <div className="rounded-lg bg-white/50 p-3 border border-gray-100">
+                    <p className="text-xs text-gray-600 mb-1">Quantidade</p>
+                    <p className="font-semibold text-gray-900">{role.quantity ?? "-"}</p>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <p className="text-muted-foreground">Gêneros desejados</p>
-                    <p className="font-medium break-words">{role.desired_genres ?? "—"}</p>
-                  </div>
+                  {role.cache && (
+                    <div className="rounded-lg bg-white/50 p-3 border border-gray-100">
+                      <p className="text-xs text-gray-600 mb-1 flex items-center gap-1">
+                        <DollarSign size={14} />
+                        Cachê
+                      </p>
+                      <p className="font-semibold text-gray-900">
+                        R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache)}
+                      </p>
+                    </div>
+                  )}
 
-                  <div className="sm:col-span-2">
-                    <p className="text-muted-foreground">Skills desejadas</p>
-                    <p className="font-medium break-words">{role.desired_skills ?? "—"}</p>
-                  </div>
+                  {role.desired_genres && (
+                    <div className="sm:col-span-2 rounded-lg bg-white/50 p-3 border border-gray-100">
+                      <p className="text-xs text-gray-600 mb-2">Gêneros desejados</p>
+                      {Array.isArray(role.desired_genres) && role.desired_genres.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {role.desired_genres.map((genre: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300 text-xs">
+                              {genre}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : typeof role.desired_genres === 'string' && role.desired_genres.trim() ? (
+                        <p className="text-sm font-medium text-gray-900 break-words">{role.desired_genres}</p>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">—</p>
+                      )}
+                    </div>
+                  )}
 
-                  <div className="sm:col-span-2">
-                    <p className="text-muted-foreground">Setup desejado</p>
-                    <p className="font-medium break-words">{role.desired_setup ?? "—"}</p>
-                  </div>
+                  {role.desired_skills && (
+                    <div className="sm:col-span-2 rounded-lg bg-white/50 p-3 border border-gray-100">
+                      <p className="text-xs text-gray-600 mb-2">Skills desejadas</p>
+                      {Array.isArray(role.desired_skills) && role.desired_skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {role.desired_skills.map((skill: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300 text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : typeof role.desired_skills === 'string' && role.desired_skills.trim() ? (
+                        <p className="text-sm font-medium text-gray-900 break-words">{role.desired_skills}</p>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">—</p>
+                      )}
+                    </div>
+                  )}
+
+                  {role.desired_setup && (
+                    <div className="sm:col-span-2 rounded-lg bg-white/50 p-3 border border-gray-100">
+                      <p className="text-xs text-gray-600 mb-2">Setup desejado</p>
+                      {Array.isArray(role.desired_setup) && role.desired_setup.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {role.desired_setup.map((setup: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300 text-xs">
+                              {setup}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : typeof role.desired_setup === 'string' && role.desired_setup.trim() ? (
+                        <p className="text-sm font-medium text-gray-900 break-words">{role.desired_setup}</p>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">—</p>
+                      )}
+                    </div>
+                  )}
 
                   {role.notes && (
-                    <div className="sm:col-span-2">
-                      <p className="text-muted-foreground">Observações</p>
-                      <p className="font-medium break-words">{role.notes}</p>
+                    <div className="sm:col-span-2 rounded-lg bg-white/50 p-3 border border-gray-100">
+                      <p className="text-xs text-gray-600 mb-2">Observações</p>
+                      <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words">
+                        {role.notes}
+                      </p>
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nenhum detalhe de vaga encontrado (gig_role_id vazio ou sem relação).
+                <p className="text-sm text-gray-600 text-center py-4">
+                  Nenhum detalhe de vaga encontrado.
                 </p>
               )}
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button variant="outline" onClick={onDecline}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-4 border-t border-gray-200">
+              <Button 
+                variant="outline" 
+                onClick={onDecline}
+                className="bg-white border-gray-300 text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-all duration-200 font-medium"
+              >
                 Recusar
               </Button>
-              <Button onClick={onAccept}>Aceitar</Button>
+              <Button 
+                onClick={onAccept}
+                className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+              >
+                Aceitar
+              </Button>
             </div>
           </div>
         )}

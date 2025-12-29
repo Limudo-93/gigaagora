@@ -1,3 +1,9 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, DollarSign } from "lucide-react";
+
 export default function InviteCard({ invite, onAccept, onDecline, onDetails }: any) {
   const gig = invite.gig;
 
