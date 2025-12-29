@@ -103,11 +103,18 @@ export default async function Sidebar() {
         .maybeSingle();
 
       if (directData) {
-        nextGig = {
-          title: directData.invites?.gigs?.title || "Show",
-          start_time: directData.invites?.gigs?.start_time,
-          end_time: directData.invites?.gigs?.end_time,
-        };
+        // Tratar invites como array ou objeto único
+        const invites = Array.isArray(directData.invites) ? directData.invites[0] : directData.invites;
+        // Tratar gigs como array ou objeto único
+        const gigs = invites?.gigs ? (Array.isArray(invites.gigs) ? invites.gigs[0] : invites.gigs) : null;
+        
+        if (gigs) {
+          nextGig = {
+            title: gigs.title || "Show",
+            start_time: gigs.start_time,
+            end_time: gigs.end_time,
+          };
+        }
       }
     } else if (rpcData && rpcData.length > 0) {
       const firstGig = rpcData[0];
