@@ -71,7 +71,7 @@ export default async function PerfilPage() {
               Gerencie suas informações pessoais e profissionais
             </p>
           </div>
-          <Link href="/dashboard/perfil/edit" as any>
+          <Link href={"/dashboard/perfil/edit" as any}>
             <Button className="bg-orange-500 hover:bg-orange-600 text-white">
               <Edit className="mr-2 h-4 w-4" />
               Editar Perfil

@@ -267,7 +267,7 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
                 Não tem uma conta?{" "}
-                <Link href="/signup" as any className="font-semibold text-primary hover:text-primary/80 transition-colors">
+                <Link href={"/signup" as any} className="font-semibold text-primary hover:text-primary/80 transition-colors">
                   Criar conta
                 </Link>
               </p>

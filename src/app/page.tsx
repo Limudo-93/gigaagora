@@ -216,7 +216,7 @@ export default async function Page() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" as any>
+            <Link href={"/" as any}>
               <Logo size="md" />
             </Link>
             <div className="flex items-center gap-4">
@@ -670,25 +670,25 @@ export default async function Page() {
             <div>
               <h3 className="font-semibold mb-4 text-white">Plataforma</h3>
               <ul className="space-y-2 text-sm text-gray-300">
-                <li><Link href="/dashboard/gigs" as any className="hover:text-white transition-colors">Trabalhos</Link></li>
-                <li><Link href="/dashboard" as any className="hover:text-white transition-colors">Dashboard</Link></li>
-                <li><Link href="/dashboard/perfil" as any className="hover:text-white transition-colors">Perfil</Link></li>
+                <li><Link href={"/dashboard/gigs" as any} className="hover:text-white transition-colors">Trabalhos</Link></li>
+                <li><Link href={"/dashboard" as any} className="hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link href={"/dashboard/perfil" as any} className="hover:text-white transition-colors">Perfil</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4 text-white">Sobre</h3>
               <ul className="space-y-2 text-sm text-gray-300">
-                <li><Link href="/como-funciona" as any className="hover:text-white transition-colors">Como Funciona</Link></li>
-                <li><Link href="/sobre" as any className="hover:text-white transition-colors">Sobre Nós</Link></li>
-                <li><Link href="/contato" as any className="hover:text-white transition-colors">Contato</Link></li>
-                <li><Link href="/faq" as any className="hover:text-white transition-colors">FAQ</Link></li>
+                <li><Link href={"/como-funciona" as any} className="hover:text-white transition-colors">Como Funciona</Link></li>
+                <li><Link href={"/sobre" as any} className="hover:text-white transition-colors">Sobre Nós</Link></li>
+                <li><Link href={"/contato" as any} className="hover:text-white transition-colors">Contato</Link></li>
+                <li><Link href={"/faq" as any} className="hover:text-white transition-colors">FAQ</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4 text-white">Legal</h3>
               <ul className="space-y-2 text-sm text-gray-300">
-                <li><Link href="/termos" as any className="hover:text-white transition-colors">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" as any className="hover:text-white transition-colors">Privacidade</Link></li>
+                <li><Link href={"/termos" as any} className="hover:text-white transition-colors">Termos de Uso</Link></li>
+                <li><Link href={"/privacidade" as any} className="hover:text-white transition-colors">Privacidade</Link></li>
               </ul>
             </div>
           </div>

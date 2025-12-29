@@ -188,7 +188,7 @@ export default function TermosPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">16. Contato</h2>
               <p>
                 Para questões sobre estes termos, entre em contato conosco através da página de{" "}
-                <Link href="/contato" as any className="text-orange-600 hover:underline">Contato</Link> ou pelo email 
+                <Link href={"/contato" as any} className="text-orange-600 hover:underline">Contato</Link> ou pelo email 
                 legal@chamaomusico.com.br.
               </p>
             </section>
@@ -222,17 +222,17 @@ export default function TermosPage() {
             <div>
               <h3 className="font-semibold mb-4">Sobre</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/como-funciona" as any className="hover:text-white">Como Funciona</Link></li>
-                <li><Link href="/sobre" as any className="hover:text-white">Sobre Nós</Link></li>
-                <li><Link href="/contato" as any className="hover:text-white">Contato</Link></li>
-                <li><Link href="/faq" as any className="hover:text-white">FAQ</Link></li>
+                <li><Link href={"/como-funciona" as any} className="hover:text-white">Como Funciona</Link></li>
+                <li><Link href={"/sobre" as any} className="hover:text-white">Sobre Nós</Link></li>
+                <li><Link href={"/contato" as any} className="hover:text-white">Contato</Link></li>
+                <li><Link href={"/faq" as any} className="hover:text-white">FAQ</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/termos" as any className="hover:text-white">Termos de Uso</Link></li>
-                <li><Link href="/privacidade" as any className="hover:text-white">Privacidade</Link></li>
+                <li><Link href={"/termos" as any} className="hover:text-white">Termos de Uso</Link></li>
+                <li><Link href={"/privacidade" as any} className="hover:text-white">Privacidade</Link></li>
               </ul>
             </div>
           </div>
