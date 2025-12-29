@@ -214,7 +214,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
         }
 
         // Transforma os dados
-        const transformed = (directData ?? []).map((invite: any) => {
+        const transformed: PendingInviteRow[] = (directData ?? []).map((invite: any) => {
           const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
           const role = Array.isArray(invite.gig_roles) ? invite.gig_roles[0] : invite.gig_roles;
           
@@ -231,6 +231,9 @@ export default function PendingInvites({ userId }: { userId: string }) {
             city: gig?.city ?? null,
             state: gig?.state ?? null,
             instrument: role?.instrument ?? null,
+            flyer_url: gig?.flyer_url ?? null,
+            contractor_name: null, // Não disponível na query direta
+            cache: null, // Não disponível na query direta
           };
         });
 
