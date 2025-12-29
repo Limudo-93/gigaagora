@@ -107,7 +107,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
       await markAsRead(notificationId);
 
       // Redirecionar para a página da gig
-      router.push(`/dashboard/gigs/${gigId}`);
+      router.push(`/dashboard/gigs/${gigId}` as any);
       router.refresh();
     } catch (err) {
       console.error("Error republishing gig:", err);
@@ -170,7 +170,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
                 size="sm"
                 onClick={() => {
                   markAsRead(notification.id);
-                  router.push(`/dashboard/gigs/${notification.gig_id}`);
+                  router.push(`/dashboard/gigs/${notification.gig_id}` as any);
                 }}
                 className="w-full sm:w-auto text-xs md:text-sm"
               >

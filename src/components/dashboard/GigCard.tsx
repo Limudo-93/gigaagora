@@ -83,14 +83,14 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
 
   const handleOpen = () => {
     if (onOpen) return onOpen(gig.id);
-    router.push(`/dashboard/gigs/${gig.id}`);
+    router.push(`/dashboard/gigs/${gig.id}` as any);
   };
 
   const handleEdit = () => {
     if (onEdit) {
       onEdit(gig.id);
     } else {
-      router.push(`/dashboard/gigs/${gig.id}/edit`);
+      router.push(`/dashboard/gigs/${gig.id}/edit` as any);
     }
   };
 
@@ -228,7 +228,7 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
           variant="ghost" 
           size="sm" 
           className="flex-1"
-          onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches`)}
+          onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches` as any)}
         >
           <Users className="mr-2 h-4 w-4" />
           Ver Matches

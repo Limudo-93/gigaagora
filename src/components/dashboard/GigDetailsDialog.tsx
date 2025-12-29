@@ -558,7 +558,7 @@ export default function GigDetailsDialog({
               <Button
                 onClick={() => {
                   if (gigId) {
-                    router.push(`/dashboard/gigs/${gigId}/matches`);
+                    router.push(`/dashboard/gigs/${gigId}/matches` as any);
                     onOpenChange(false);
                   }
                 }}

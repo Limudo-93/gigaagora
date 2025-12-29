@@ -14,11 +14,11 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const navLinks = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/dashboard/gigs", label: "Gigs" },
-    { href: "/dashboard/messages", label: "Mensagens" },
-    { href: "/dashboard/financeiro", label: "Financeiro" },
-    { href: "/dashboard/perfil", label: "Perfil" },
+    { href: "/dashboard" as any, label: "Dashboard" },
+    { href: "/dashboard/gigs" as any, label: "Gigs" },
+    { href: "/dashboard/messages" as any, label: "Mensagens" },
+    { href: "/dashboard/financeiro" as any, label: "Financeiro" },
+    { href: "/dashboard/perfil" as any, label: "Perfil" },
   ];
 
   // Fechar menu quando a rota mudar
