@@ -125,7 +125,7 @@ export default async function ProfileCompletion() {
           className="bg-orange-500 hover:bg-orange-600 text-white shrink-0"
           asChild
         >
-          <Link href="/dashboard/perfil/edit" as any>Completar Perfil</Link>
+          <Link href={"/dashboard/perfil/edit" as any}>Completar Perfil</Link>
         </Button>
       </div>
     );

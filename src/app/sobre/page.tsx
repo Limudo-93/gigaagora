@@ -29,10 +29,10 @@ export default function SobrePage() {
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="ghost" className="text-gray-700 hover:text-gray-900 hover:bg-gray-100" asChild>
-                <Link href="/login">Entrar</Link>
+                <Link href={"/login" as any}>Entrar</Link>
               </Button>
               <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white" asChild>
-                <Link href="/signup">Criar Conta</Link>
+                <Link href={"/signup" as any}>Criar Conta</Link>
               </Button>
             </div>
           </div>
@@ -246,7 +246,7 @@ export default function SobrePage() {
               className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-6 backdrop-blur-sm"
               asChild
             >
-              <Link href="/como-funciona" as any>Saiba Mais</Link>
+              <Link href={"/como-funciona" as any}>Saiba Mais</Link>
             </Button>
           </div>
         </div>

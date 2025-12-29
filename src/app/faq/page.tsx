@@ -124,10 +124,10 @@ export default function FAQPage() {
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="ghost" className="text-gray-700 hover:text-gray-900 hover:bg-gray-100" asChild>
-                <Link href="/login">Entrar</Link>
+                <Link href={"/login" as any}>Entrar</Link>
               </Button>
               <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white" asChild>
-                <Link href="/signup">Criar Conta</Link>
+                <Link href={"/signup" as any}>Criar Conta</Link>
               </Button>
             </div>
           </div>
@@ -281,7 +281,7 @@ export default function FAQPage() {
             className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
             asChild
           >
-            <Link href="/contato" as any>Falar com Suporte</Link>
+            <Link href={"/contato" as any}>Falar com Suporte</Link>
           </Button>
         </div>
       </section>

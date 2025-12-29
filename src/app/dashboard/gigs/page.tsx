@@ -535,7 +535,7 @@ export default function GigsPage() {
             </p>
           </div>
           <Button asChild>
-            <Link href="/dashboard/gigs/new" as any>
+            <Link href={"/dashboard/gigs/new" as any}>
               <Plus className="mr-2 h-4 w-4" />
               Criar Nova Gig
             </Link>

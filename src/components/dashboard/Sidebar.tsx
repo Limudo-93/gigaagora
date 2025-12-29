@@ -265,7 +265,7 @@ export default async function Sidebar() {
           <div className="flex items-center gap-2">
             <DownloadICSButton />
             <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" asChild>
-              <Link href="/dashboard/agenda" as any>Ver Completa</Link>
+              <Link href={"/dashboard/agenda" as any}>Ver Completa</Link>
             </Button>
           </div>
         </CardHeader>
@@ -294,7 +294,7 @@ export default async function Sidebar() {
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base font-semibold">Conversas Recentes</CardTitle>
           <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" asChild>
-            <Link href="/dashboard/messages" as any>Ver Todas</Link>
+            <Link href={"/dashboard/messages" as any}>Ver Todas</Link>
           </Button>
         </CardHeader>
         <CardContent>
@@ -345,7 +345,7 @@ export default async function Sidebar() {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base font-semibold">Favoritos</CardTitle>
             <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" asChild>
-              <Link href="/dashboard/favoritos" as any>Ver Todos</Link>
+              <Link href={"/dashboard/favoritos" as any}>Ver Todos</Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -377,7 +377,7 @@ export default async function Sidebar() {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base font-semibold">Avaliações Recentes</CardTitle>
             <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" asChild>
-              <Link href="/dashboard/avaliacoes" as any>Ver Todas</Link>
+              <Link href={"/dashboard/avaliacoes" as any}>Ver Todas</Link>
             </Button>
           </CardHeader>
           <CardContent>

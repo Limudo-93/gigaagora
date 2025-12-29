@@ -221,7 +221,7 @@ export default async function Page() {
             </Link>
             <div className="flex items-center gap-4">
               <Button variant="ghost" className="text-foreground hover:bg-muted/50" asChild>
-                <Link href="/login" as any>Entrar</Link>
+                <Link href={"/login" as any}>Entrar</Link>
               </Button>
               <Button 
                 className="text-white shadow-md transition-all duration-200" 
@@ -231,7 +231,7 @@ export default async function Page() {
                   color: "white"
                 }}
               >
-                <Link href="/signup" as any>Criar Conta</Link>
+                <Link href={"/signup" as any}>Criar Conta</Link>
               </Button>
             </div>
           </div>
@@ -277,7 +277,7 @@ export default async function Page() {
                 }}
                 asChild
               >
-                <Link href="/login" as any>Efetuar Login</Link>
+                <Link href={"/login" as any}>Efetuar Login</Link>
               </Button>
               <Button
                 size="lg"
@@ -288,7 +288,7 @@ export default async function Page() {
                 }}
                 asChild
               >
-                <Link href="/signup" as any>Criar Conta Grátis</Link>
+                <Link href={"/signup" as any}>Criar Conta Grátis</Link>
               </Button>
             </div>
           </div>
@@ -646,7 +646,7 @@ export default async function Page() {
               }}
               asChild
             >
-              <Link href="/signup" as any>Criar Conta Grátis</Link>
+              <Link href={"/signup" as any}>Criar Conta Grátis</Link>
             </Button>
           </div>
         </div>

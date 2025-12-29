@@ -129,7 +129,7 @@ export default async function ProfileHeader() {
       {/* Botões - empilhados em mobile, lado a lado em desktop */}
       <div className="flex flex-col sm:flex-row gap-2 relative z-10 shrink-0 w-full sm:w-auto">
         <Button asChild size="sm" className="w-full sm:w-auto text-xs md:text-sm">
-          <Link href="/dashboard/perfil/edit" as any>
+          <Link href={"/dashboard/perfil/edit" as any}>
             Editar Perfil
           </Link>
         </Button>
