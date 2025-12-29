@@ -39,15 +39,15 @@ export default function LocationInfo({
       )}
 
       {/* Distância e Tempo */}
-      {showDistance && (distanceKm !== null || estimatedTravelTimeMinutes !== null) && (
+      {showDistance && (distanceKm !== null && distanceKm !== undefined || estimatedTravelTimeMinutes !== null && estimatedTravelTimeMinutes !== undefined) && (
         <div className="flex items-center gap-3 flex-wrap">
-          {distanceKm !== null && (
+          {distanceKm !== null && distanceKm !== undefined && (
             <Badge variant="outline" className="text-xs">
               <MapPin className="h-3 w-3 mr-1" />
               {distanceKm.toFixed(1)} km
             </Badge>
           )}
-          {estimatedTravelTimeMinutes !== null && (
+          {estimatedTravelTimeMinutes !== null && estimatedTravelTimeMinutes !== undefined && (
             <Badge variant="outline" className="text-xs">
               <Clock className="h-3 w-3 mr-1" />
               ~{estimatedTravelTimeMinutes} min
