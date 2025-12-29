@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,8 @@ import { supabase } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 import { Chrome, Facebook } from "lucide-react";
 
-export default function SignupPage() {
+function SignupForm({ referralCode }: { referralCode: string | null }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const referralCode = searchParams.get("ref");
   
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
@@ -379,6 +377,28 @@ export default function SignupPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function SignupPageContent() {
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get("ref");
+  
+  return <SignupForm referralCode={referralCode} />;
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    }>
+      <SignupPageContent />
+    </Suspense>
   );
 }
 
