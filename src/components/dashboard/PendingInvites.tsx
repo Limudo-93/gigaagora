@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Calendar, Clock, DollarSign, Check, X, Eye, Download, User, AlertTriangle, MapPin, Loader2 } from "lucide-react";
+import { Calendar, Clock, DollarSign, Check, X, Eye, Download, User, AlertTriangle, MapPin, Loader2, Navigation } from "lucide-react";
 import InviteDetailsDialog from "./InviteDetailsDialog";
+import { haversineKm, estimateTravelMin } from "@/lib/geo";
 
 type PendingInviteRow = {
   invite_id: string;
@@ -25,11 +26,18 @@ type PendingInviteRow = {
   address_text: string | null;
   city: string | null;
   state: string | null;
+  region_label: string | null;
+  gig_latitude: number | null;
+  gig_longitude: number | null;
 
   instrument: string | null;
   flyer_url: string | null;
   contractor_name: string | null;
   cache: number | null;
+
+  // Campos calculados
+  distance_km: number | null;
+  estimated_travel_time_minutes: number | null;
 };
 
 function formatDateTimeBR(iso: string | null) {
@@ -79,172 +87,121 @@ export default function PendingInvites({ userId }: { userId: string }) {
     console.log("PendingInvites: fetchPending called with userId:", userId);
 
     try {
-      // Tenta usar a RPC primeiro
-      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_list_pending_invites");
+      // Buscar localização do músico primeiro
+      const { data: musicianProfile, error: musicianError } = await supabase
+        .from("musician_profiles")
+        .select("latitude, longitude")
+        .eq("user_id", userId)
+        .single();
 
-      if (rpcError) {
-        console.error("RPC fetchPending error:", rpcError);
-        console.error("Error details:", {
-          message: rpcError.message,
-          details: rpcError.details,
-          hint: rpcError.hint,
-          code: rpcError.code,
-        });
+      const musicianLat = musicianProfile?.latitude as number | null | undefined;
+      const musicianLng = musicianProfile?.longitude as number | null | undefined;
 
-        // Se a RPC não existir (code 42883) ou tiver problemas, tenta query direta
-        if (rpcError.code === "42883" || rpcError.code === "P0001") {
-          console.log("RPC não disponível, tentando query direta...");
-          console.log("PendingInvites: Querying invites for musician_id:", userId);
-          
-          // Fallback: busca direta da tabela invites com join em gigs
-          const { data: directData, error: directError } = await supabase
-            .from("invites")
-            .select(`
-              id,
-              status,
-              created_at,
-              gig_id,
-              gig_role_id,
-              gigs(
-                id,
-                title,
-                start_time,
-                end_time,
-                location_name,
-                address_text,
-                city,
-                state,
-                flyer_url,
-                contractor_id,
-                profiles!gigs_contractor_id_fkey(
-                  display_name
-                )
-              ),
-              gig_roles(
-                instrument,
-                cache
-              )
-            `)
-            .eq("musician_id", userId)
-            .eq("status", "pending")
-            .order("created_at", { ascending: false });
-
-          console.log("PendingInvites: Direct query result:", { directData, directError });
-
-          if (directError) {
-            console.error("Direct query error:", directError);
-            setErrorMsg(
-              `Erro ao carregar convites: ${directError.message}${directError.hint ? ` (${directError.hint})` : ""}. Verifique se as tabelas 'invites', 'gigs' e 'gig_roles' existem e têm as colunas corretas.`
-            );
-            setItems([]);
-            setLoading(false);
-            return;
-          }
-
-          // Transforma os dados para o formato esperado
-          const transformed = (directData ?? []).map((invite: any) => {
-            const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
-            const role = Array.isArray(invite.gig_roles) ? invite.gig_roles[0] : invite.gig_roles;
-            const contractorProfile = Array.isArray(gig?.profiles) ? gig?.profiles[0] : gig?.profiles;
-            
-            return {
-              invite_id: invite.id,
-              status: invite.status,
-              created_at: invite.created_at,
-              gig_id: invite.gig_id,
-              gig_title: gig?.title ?? null,
-              start_time: gig?.start_time ?? null,
-              end_time: gig?.end_time ?? null,
-              location_name: gig?.location_name ?? null,
-              address_text: gig?.address_text ?? null,
-              city: gig?.city ?? null,
-              state: gig?.state ?? null,
-              instrument: role?.instrument ?? null,
-              flyer_url: gig?.flyer_url ?? null,
-              contractor_name: contractorProfile?.display_name ?? null,
-              cache: role?.cache ?? null,
-            };
-          });
-
-          console.log("PendingInvites loaded (direct):", transformed.length, "invites");
-          console.log("PendingInvites: Transformed data:", transformed);
-          setItems(transformed);
-          setLoading(false);
-          return;
-        }
-
-        // Outro tipo de erro da RPC - mas ainda mostra os dados se a query direta funcionar
-        console.warn("RPC error, but trying direct query as fallback...");
-        
-        // Tenta query direta mesmo se não for erro de função não encontrada
-        const { data: directData, error: directError } = await supabase
-          .from("invites")
-          .select(`
+      // Busca direta da tabela invites com join em gigs (com novos campos)
+      const { data: directData, error: directError } = await supabase
+        .from("invites")
+        .select(`
+          id,
+          status,
+          created_at,
+          gig_id,
+          gig_role_id,
+          gigs(
             id,
-            status,
-            created_at,
-            gig_id,
-            gig_role_id,
-            gigs(
-              id,
-              title,
-              start_time,
-              end_time,
-              location_name,
-              address_text,
-              city,
-              state
-            ),
-            gig_roles(
-              instrument
+            title,
+            start_time,
+            end_time,
+            location_name,
+            address_text,
+            city,
+            state,
+            region_label,
+            latitude,
+            longitude,
+            flyer_url,
+            contractor_id,
+            profiles!gigs_contractor_id_fkey(
+              display_name
             )
-          `)
-          .eq("musician_id", userId)
-          .eq("status", "pending")
-          .order("created_at", { ascending: false });
+          ),
+          gig_roles(
+            instrument,
+            cache
+          )
+        `)
+        .eq("musician_id", userId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
-        if (directError) {
-          console.error("Direct query error:", directError);
-          setErrorMsg(
-            `Erro ao carregar convites: ${rpcError.message}. A RPC pode ter problemas no banco de dados. Verifique o console para mais detalhes.`
-          );
-          setItems([]);
-          setLoading(false);
-          return;
-        }
-
-        // Transforma os dados
-        const transformed: PendingInviteRow[] = (directData ?? []).map((invite: any) => {
-          const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
-          const role = Array.isArray(invite.gig_roles) ? invite.gig_roles[0] : invite.gig_roles;
-          
-          return {
-            invite_id: invite.id,
-            status: invite.status,
-            created_at: invite.created_at,
-            gig_id: invite.gig_id,
-            gig_title: gig?.title ?? null,
-            start_time: gig?.start_time ?? null,
-            end_time: gig?.end_time ?? null,
-            location_name: gig?.location_name ?? null,
-            address_text: gig?.address_text ?? null,
-            city: gig?.city ?? null,
-            state: gig?.state ?? null,
-            instrument: role?.instrument ?? null,
-            flyer_url: gig?.flyer_url ?? null,
-            contractor_name: null, // Não disponível na query direta
-            cache: null, // Não disponível na query direta
-          };
-        });
-
-        console.log("PendingInvites loaded (direct fallback):", transformed.length, "invites");
-        setItems(transformed);
+      if (directError) {
+        console.error("Direct query error:", directError);
+        setErrorMsg(
+          `Erro ao carregar convites: ${directError.message}${directError.hint ? ` (${directError.hint})` : ""}. Verifique se as tabelas 'invites', 'gigs' e 'gig_roles' existem e têm as colunas corretas.`
+        );
+        setItems([]);
         setLoading(false);
         return;
       }
 
-      console.log("PendingInvites loaded (RPC):", rpcData?.length ?? 0, "invites");
-      setItems((rpcData ?? []) as PendingInviteRow[]);
+      // Transforma os dados para o formato esperado e calcula distância
+      const transformed: PendingInviteRow[] = (directData ?? []).map((invite: any) => {
+        const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
+        const role = Array.isArray(invite.gig_roles) ? invite.gig_roles[0] : invite.gig_roles;
+        const contractorProfile = Array.isArray(gig?.profiles) ? gig?.profiles[0] : gig?.profiles;
+        
+        const gigLat = gig?.latitude as number | null | undefined;
+        const gigLng = gig?.longitude as number | null | undefined;
+        
+        // Calcular distância se temos coordenadas de ambos
+        let distanceKm: number | null = null;
+        let estimatedTravelTimeMinutes: number | null = null;
+        
+        if (musicianLat != null && musicianLng != null && gigLat != null && gigLng != null) {
+          distanceKm = haversineKm(musicianLat, musicianLng, gigLat, gigLng);
+          estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
+        }
+        
+        return {
+          invite_id: invite.id,
+          status: invite.status,
+          created_at: invite.created_at,
+          gig_id: invite.gig_id,
+          gig_title: gig?.title ?? null,
+          start_time: gig?.start_time ?? null,
+          end_time: gig?.end_time ?? null,
+          location_name: gig?.location_name ?? null,
+          address_text: gig?.address_text ?? null,
+          city: gig?.city ?? null,
+          state: gig?.state ?? null,
+          region_label: gig?.region_label ?? null,
+          gig_latitude: gigLat ?? null,
+          gig_longitude: gigLng ?? null,
+          instrument: role?.instrument ?? null,
+          flyer_url: gig?.flyer_url ?? null,
+          contractor_name: contractorProfile?.display_name ?? null,
+          cache: role?.cache ?? null,
+          distance_km: distanceKm,
+          estimated_travel_time_minutes: estimatedTravelTimeMinutes,
+        };
+      });
+
+      // Ordenar por distância (menor primeiro) e depois por data de criação (mais recente primeiro)
+      transformed.sort((a, b) => {
+        // Se ambos têm distância, ordena por distância
+        if (a.distance_km != null && b.distance_km != null) {
+          return a.distance_km - b.distance_km;
+        }
+        // Se só um tem distância, ele vem primeiro
+        if (a.distance_km != null && b.distance_km == null) return -1;
+        if (a.distance_km == null && b.distance_km != null) return 1;
+        // Se nenhum tem distância, ordena por data (mais recente primeiro)
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      console.log("PendingInvites loaded:", transformed.length, "invites");
+      setItems(transformed);
       setLoading(false);
     } catch (e: any) {
       console.error("fetchPending exception:", e);
@@ -506,9 +463,36 @@ export default function PendingInvites({ userId }: { userId: string }) {
                         <div className="flex items-start gap-2.5">
                           <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm text-foreground truncate">{location || "Local não informado"}</p>
+                            {r.region_label ? (
+                              <div>
+                                <p className="font-semibold text-sm text-foreground">{r.region_label}</p>
+                                {location && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{location}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="font-semibold text-sm text-foreground truncate">{location || "Local não informado"}</p>
+                            )}
                           </div>
                         </div>
+
+                        {/* Distância e Tempo de Viagem */}
+                        {(r.distance_km != null || r.estimated_travel_time_minutes != null) && (
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {r.distance_km != null && (
+                              <Badge variant="outline" className="text-xs">
+                                <Navigation className="h-3 w-3 mr-1" />
+                                {r.distance_km.toFixed(1)} km
+                              </Badge>
+                            )}
+                            {r.estimated_travel_time_minutes != null && (
+                              <Badge variant="outline" className="text-xs">
+                                <Clock className="h-3 w-3 mr-1" />
+                                ~{r.estimated_travel_time_minutes} min
+                              </Badge>
+                            )}
+                          </div>
+                        )}
 
                         {/* Data e Hora - Em linha única para escaneabilidade */}
                         <div className="flex items-center gap-4 text-sm">
@@ -527,7 +511,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
                         </div>
                       </div>
 
-                      {/* Badges de status */}
+                      {/* Badges de status e compatibilidade */}
                       <div className="flex flex-wrap gap-2 pt-1">
                         <Badge variant="secondary" className="text-xs font-medium">
                           Convite Pendente
@@ -535,6 +519,17 @@ export default function PendingInvites({ userId }: { userId: string }) {
                         {hoursRemaining && hoursRemaining > 0 && hoursRemaining <= 48 && (
                           <Badge className="text-xs bg-orange-500 text-white border-0 font-medium">
                             {hoursRemaining}h restantes
+                          </Badge>
+                        )}
+                        {/* Badge de distância próxima */}
+                        {r.distance_km != null && r.distance_km <= 10 && (
+                          <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
+                            Muito Próximo
+                          </Badge>
+                        )}
+                        {r.distance_km != null && r.distance_km > 10 && r.distance_km <= 25 && (
+                          <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
+                            Próximo
                           </Badge>
                         )}
                       </div>
@@ -752,3 +747,4 @@ export default function PendingInvites({ userId }: { userId: string }) {
     </section>
   );
 }
+
