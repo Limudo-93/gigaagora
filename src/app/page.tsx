@@ -109,16 +109,6 @@ async function getRecentMusicians() {
   }
 }
 
-// Dados mockados para prova social se não houver músicos reais suficientes
-const mockMusicians = [
-  { display_name: "João Silva", city: "São Paulo", state: "SP", instrument: "Violão" },
-  { display_name: "Maria Santos", city: "Rio de Janeiro", state: "RJ", instrument: "Piano" },
-  { display_name: "Pedro Costa", city: "Belo Horizonte", state: "MG", instrument: "Bateria" },
-  { display_name: "Ana Oliveira", city: "Curitiba", state: "PR", instrument: "Vocal" },
-  { display_name: "Lucas Ferreira", city: "Porto Alegre", state: "RS", instrument: "Baixo" },
-  { display_name: "Julia Rocha", city: "Brasília", state: "DF", instrument: "Guitarra" },
-];
-
 export default async function Page() {
   const supabase = await createClient();
   const {
@@ -132,10 +122,8 @@ export default async function Page() {
   const stats = await getStats();
   const recentMusicians = await getRecentMusicians();
   
-  // Combinar músicos reais com mockados para prova social
-  const socialProofMusicians = recentMusicians.length > 0 
-    ? recentMusicians.slice(0, 6)
-    : mockMusicians.slice(0, 6);
+  // Mostrar apenas músicos reais (sem dados mockados)
+  const socialProofMusicians = recentMusicians.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-white">
@@ -247,7 +235,7 @@ export default async function Page() {
             {/* Badge de confiança */}
             <div className="flex items-center justify-center gap-2 text-white/80 text-sm">
               <CheckCircle2 className="h-5 w-5 text-green-300" />
-              <span>Grátis para começar • Sem cartão de crédito</span>
+              <span>Sem cartão de crédito</span>
             </div>
           </div>
         </div>
@@ -275,50 +263,58 @@ export default async function Page() {
             </h2>
           </div>
 
-          {/* Grid de avatares */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
-            {socialProofMusicians.map((musician: any, idx: number) => {
-              const displayName = musician.display_name || musician.name || "Músico";
-              const initials = displayName
-                .split(" ")
-                .map((n: string) => n[0])
-                .join("")
-                .toUpperCase()
-                .slice(0, 2);
-              const location = musician.city && musician.state
-                ? `${musician.city}, ${musician.state}`
-                : musician.city || musician.state || "Brasil";
-              const instrument = musician.instrument || 
-                (musician.musician_profiles && 
-                 Array.isArray(musician.musician_profiles) ? 
-                 musician.musician_profiles[0]?.instruments?.[0] : 
-                 musician.musician_profiles?.instruments?.[0]) || 
-                "Músico";
+          {/* Grid de avatares - apenas músicos reais */}
+          {socialProofMusicians.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+              {socialProofMusicians.map((musician: any, idx: number) => {
+                const displayName = musician.display_name || musician.name || "Músico";
+                const initials = displayName
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+                const location = musician.city && musician.state
+                  ? `${musician.city}, ${musician.state}`
+                  : musician.city || musician.state || "Brasil";
+                const instrument = musician.instrument || 
+                  (musician.musician_profiles && 
+                   Array.isArray(musician.musician_profiles) ? 
+                   musician.musician_profiles[0]?.instruments?.[0] : 
+                   musician.musician_profiles?.instruments?.[0]) || 
+                  "Músico";
 
-              return (
-                <Card key={idx} className="border-0 shadow-md hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <Avatar className="h-20 w-20 mx-auto mb-4 ring-2 ring-purple-500/20">
-                      <AvatarImage src={musician.photo_url} />
-                      <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white font-bold text-lg">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <h3 className="font-semibold text-gray-900 mb-1 text-sm">
-                      {displayName}
-                    </h3>
-                    <p className="text-xs text-purple-600 font-medium mb-1">
-                      {instrument}
-                    </p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
-                      <MapPin className="h-3 w-3" />
-                      <span>{location}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                return (
+                  <Card key={idx} className="border-0 shadow-md hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6 text-center">
+                      <Avatar className="h-20 w-20 mx-auto mb-4 ring-2 ring-purple-500/20">
+                        <AvatarImage src={musician.photo_url} />
+                        <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white font-bold text-lg">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <h3 className="font-semibold text-gray-900 mb-1 text-sm">
+                        {displayName}
+                      </h3>
+                      <p className="text-xs text-purple-600 font-medium mb-1">
+                        {instrument}
+                      </p>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        <span>{location}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                Músicos talentosos se cadastram todo dia. Seja o primeiro!
+              </p>
+            </div>
+          )}
 
           {/* Stats rápidas */}
           <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto text-center">
@@ -662,10 +658,6 @@ export default async function Page() {
           </Button>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-white/80 text-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-300" />
-              <span>Grátis para sempre</span>
-            </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-green-300" />
               <span>Sem cartão de crédito</span>
