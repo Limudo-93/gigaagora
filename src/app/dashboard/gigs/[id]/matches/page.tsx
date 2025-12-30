@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -122,14 +122,14 @@ export default function GigMatchesPage() {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportingUserId, setReportingUserId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     if (!gigId) {
       setError("ID da gig não fornecido.");
       setLoading(false);
       return;
     }
 
-    const loadData = async () => {
+    try {
       // Carregar favoritos
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -351,10 +351,17 @@ export default function GigMatchesPage() {
         }
 
         // Carregar badges para todos os músicos (aceitos + confirmados)
+        const currentMusicians = musicians.length > 0 ? musicians : (rpcData || []).filter((m: any) => {
+          const confirmedInviteIds = new Set((await supabase.from("confirmations").select("invite_id").eq("confirmed", true)).data?.map((c: any) => c.invite_id) || []);
+          return !confirmedInviteIds.has(m.invite_id);
+        });
+        const currentConfirmed = confirmedMusicians.length > 0 ? confirmedMusicians : (confirmedRpcData || []);
+        
         const allMusicianIds = [
-          ...musicians.map((m: any) => m.musician_id),
-          ...confirmedMusicians.map((m: any) => m.musician_id)
+          ...currentMusicians.map((m: any) => m.musician_id),
+          ...currentConfirmed.map((m: any) => m.musician_id)
         ];
+        
         if (allMusicianIds.length > 0) {
           const { data: badgesData } = await supabase
             .from("user_badges")
@@ -590,18 +597,23 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
 
       // Recarrega os dados para atualizar as listas
       // O músico será movido da lista de aceitos para a lista de confirmados
-      const loadData = async () => {
+      setLoading(true);
+      
+      try {
         // Recarregar músicos aceitos e confirmados
         const { data: rpcData } = await supabase.rpc(
           "rpc_list_accepted_musicians_for_gig",
           { p_gig_id: gigId }
         );
         
-        const { data: confirmedRpcData } = await supabase.rpc(
+        const { data: confirmedRpcData, error: confirmedRpcError } = await supabase.rpc(
           "rpc_list_confirmed_musicians_for_gig",
           { p_gig_id: gigId }
         );
 
+        console.log('Recarregando após confirmar:', { rpcData, confirmedRpcData, confirmedRpcError });
+
+        // Processar músicos aceitos (filtrar confirmados)
         if (rpcData) {
           const { data: confirmedInvites } = await supabase
             .from("confirmations")
@@ -613,12 +625,88 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
           setMusicians(acceptedNotConfirmed as AcceptedMusician[]);
         }
 
-        if (confirmedRpcData) {
+        // Processar músicos confirmados
+        if (confirmedRpcData && confirmedRpcData.length > 0) {
           setConfirmedMusicians((confirmedRpcData || []) as AcceptedMusician[]);
-        }
-      };
+        } else if (confirmedRpcError) {
+          // Fallback: buscar diretamente
+          const { data: gigInvites } = await supabase
+            .from("invites")
+            .select("id")
+            .eq("gig_id", gigId);
 
-      await loadData();
+          const inviteIds = (gigInvites || []).map((inv: any) => inv.id);
+
+          if (inviteIds.length > 0) {
+            const { data: confirmationsData } = await supabase
+              .from("confirmations")
+              .select(`
+                invite_id,
+                musician_id,
+                confirmed_at,
+                invites!inner(
+                  id,
+                  musician_id,
+                  gig_role_id,
+                  gig_roles!inner(instrument),
+                  profiles!invites_musician_id_fkey(display_name, photo_url, city, state, phone_e164),
+                  musician_profiles!invites_musician_id_fkey(avg_rating, rating_count)
+                )
+              `)
+              .eq("confirmed", true)
+              .in("invite_id", inviteIds);
+
+            if (confirmationsData && confirmationsData.length > 0) {
+              const transformed = confirmationsData.map((c: any) => {
+                const inv = Array.isArray(c.invites) ? c.invites[0] : c.invites;
+                return {
+                  invite_id: c.invite_id,
+                  musician_id: c.musician_id,
+                  musician_name: inv?.profiles?.display_name || null,
+                  musician_photo_url: inv?.profiles?.photo_url || null,
+                  instrument: inv?.gig_roles?.instrument || "",
+                  gig_role_id: inv?.gig_role_id || "",
+                  accepted_at: c.confirmed_at,
+                  avg_rating: inv?.musician_profiles?.avg_rating || null,
+                  rating_count: inv?.musician_profiles?.rating_count || null,
+                  city: inv?.profiles?.city || null,
+                  state: inv?.profiles?.state || null,
+                };
+              });
+              setConfirmedMusicians(transformed as AcceptedMusician[]);
+            }
+          }
+        }
+
+        // Recarregar badges
+        const allMusicianIds = [
+          ...musicians.map((m: any) => m.musician_id),
+          ...confirmedMusicians.map((m: any) => m.musician_id)
+        ];
+        
+        if (allMusicianIds.length > 0) {
+          const { data: badgesData } = await supabase
+            .from("user_badges")
+            .select("user_id, badge_type, earned_at, expires_at")
+            .in("user_id", allMusicianIds)
+            .or("expires_at.is.null,expires_at.gt.now()");
+          
+          if (badgesData) {
+            const badgesMap: Record<string, any[]> = {};
+            badgesData.forEach((badge: any) => {
+              if (!badgesMap[badge.user_id]) {
+                badgesMap[badge.user_id] = [];
+              }
+              badgesMap[badge.user_id].push(badge);
+            });
+            setBadges(badgesMap);
+          }
+        }
+      } catch (err) {
+        console.error("Error reloading data:", err);
+      } finally {
+        setLoading(false);
+      }
 
       // Mostra mensagem de sucesso
       alert("Músico confirmado com sucesso! Uma mensagem foi enviada automaticamente.");
@@ -802,29 +890,30 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
         )}
 
         {/* Seção de Músicos que Aceitaram (não confirmados) */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <User className="h-5 w-5 text-gray-600" />
-            <h2 className="text-xl font-bold text-gray-900">Músicos que Aceitaram</h2>
-            <Badge className="bg-gray-100 text-gray-800 border-gray-300">
-              {musicians.length}
-            </Badge>
-          </div>
+        {(musicians.length > 0 || confirmedMusicians.length === 0) && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-gray-600" />
+              <h2 className="text-xl font-bold text-gray-900">Músicos que Aceitaram</h2>
+              <Badge className="bg-gray-100 text-gray-800 border-gray-300">
+                {musicians.length}
+              </Badge>
+            </div>
 
-        {musicians.length === 0 ? (
-          <Card className="border-white/20 backdrop-blur-xl bg-white/80">
-            <CardContent className="p-12 text-center">
-              <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-lg font-semibold text-gray-900 mb-2">
-                Nenhum músico aceitou ainda
-              </p>
-              <p className="text-sm text-gray-600">
-                Os convites foram enviados automaticamente para músicos compatíveis.
-                Quando alguém aceitar, aparecerá aqui.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
+            {musicians.length === 0 ? (
+              <Card className="border-white/20 backdrop-blur-xl bg-white/80">
+                <CardContent className="p-12 text-center">
+                  <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-lg font-semibold text-gray-900 mb-2">
+                    Nenhum músico aceitou ainda
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Os convites foram enviados automaticamente para músicos compatíveis.
+                    Quando alguém aceitar, aparecerá aqui.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {musicians.map((musician) => (
               <Card
@@ -1002,6 +1091,8 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 </CardContent>
               </Card>
             ))}
+          </div>
+            )}
           </div>
         )}
 
