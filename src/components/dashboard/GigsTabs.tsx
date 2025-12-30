@@ -66,6 +66,8 @@ export default function GigsTabs({ userId }: { userId: string }) {
             .gte("start_time", new Date().toISOString());
         } else if (tab === "past") {
           // Concluídos: data passada (ou status completed se existir)
+          // IMPORTANTE: Mostrar todas as gigs com data passada, independente de status
+          // Não filtrar por status aqui, apenas por data
           q = q.lt("start_time", new Date().toISOString());
         }
 
@@ -75,7 +77,8 @@ export default function GigsTabs({ userId }: { userId: string }) {
           dataCount: data?.length || 0, 
           error, 
           tab, 
-          userId 
+          userId,
+          gigs: data?.map((g: any) => ({ id: g.id, title: g.title, status: g.status, start_time: g.start_time }))
         });
 
         if (error) {
@@ -95,6 +98,13 @@ export default function GigsTabs({ userId }: { userId: string }) {
 
         if (!data || data.length === 0) {
           console.log("GigsTabs: Nenhuma gig encontrada para:", { tab, userId });
+          // Verificar se há gigs com outros status para debug
+          const { data: allGigs } = await supabase
+            .from("gigs")
+            .select("id, title, status, start_time")
+            .eq("contractor_id", userId)
+            .order("start_time", { ascending: true });
+          console.log("GigsTabs: Todas as gigs do contratante (para debug):", allGigs);
         }
 
         // Busca os valores de cache das roles para cada gig
@@ -135,6 +145,35 @@ export default function GigsTabs({ userId }: { userId: string }) {
       setErrorMsg("Usuário não identificado.");
       setLoading(false);
     }
+
+    // Configurar subscription para atualizar quando houver mudanças nas gigs
+    const channel = supabase
+      .channel(`gigs-tabs-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gigs',
+          filter: `contractor_id=eq.${userId}`,
+        },
+        () => {
+          // Recarregar quando houver mudanças nas gigs do contratante
+          console.log('Mudança detectada em gigs, recarregando...');
+          load();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Subscription ativa para gigs-tabs');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Erro na subscription gigs-tabs');
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId, tab]);
 
   const filtered = rows; // já filtrado na query
