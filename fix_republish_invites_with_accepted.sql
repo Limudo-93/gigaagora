@@ -1,12 +1,15 @@
 -- ============================================
--- CORREÇÃO: Quando uma gig é republicada, criar novos invites
--- para todos os músicos compatíveis
+-- CORREÇÃO: Republicar gig deve resetar invites 'accepted' ou 'confirmed'
+-- que não têm confirmação ativa
+-- ============================================
+-- Problema: Quando um músico cancela uma confirmação, o invite pode continuar
+-- com status 'accepted' ou 'confirmed', e quando a gig é republicada, esses
+-- invites não são resetados porque a função só reseta 'declined', 'cancelled' ou 'rejected'
 -- ============================================
 
 -- ============================================
 -- 1. ATUALIZAR função auto_create_invites_for_gig
---    Para criar novos invites quando uma gig é republicada,
---    mesmo que já existam invites antigos (recusados/cancelados)
+--    Para resetar invites 'accepted' ou 'confirmed' que não têm confirmação ativa
 -- ============================================
 
 CREATE OR REPLACE FUNCTION auto_create_invites_for_gig()
@@ -16,15 +19,12 @@ DECLARE
   musician_record RECORD;
   v_invite_id UUID;
   v_existing_status TEXT;
+  v_has_active_confirmation BOOLEAN;
 BEGIN
   -- Só processa se a gig está publicada
   IF NEW.status != 'published' THEN
     RETURN NEW;
   END IF;
-
-  -- Se a gig foi atualizada de um status diferente para 'published',
-  -- isso significa que está sendo republicada
-  -- Nesse caso, precisamos criar novos invites ou resetar os antigos
 
   -- Para cada role da gig
   FOR role_record IN 
@@ -60,6 +60,17 @@ BEGIN
         AND musician_id = musician_record.user_id
       LIMIT 1;
 
+      -- Verifica se há confirmação ativa para este invite
+      IF v_invite_id IS NOT NULL THEN
+        SELECT EXISTS (
+          SELECT 1 FROM confirmations
+          WHERE invite_id = v_invite_id
+          AND confirmed = true
+        ) INTO v_has_active_confirmation;
+      ELSE
+        v_has_active_confirmation := false;
+      END IF;
+
       -- Se não existe invite, cria um novo
       IF v_invite_id IS NULL THEN
         INSERT INTO invites (
@@ -88,8 +99,19 @@ BEGIN
           responded_at = NULL,
           accepted_at = NULL
         WHERE id = v_invite_id;
-      -- Se o invite já está como 'pending' ou 'accepted', não faz nada
-      -- (não queremos resetar invites que já foram aceitos ou que ainda estão pendentes)
+      -- Se o invite está 'accepted' ou 'confirmed' mas NÃO tem confirmação ativa,
+      -- resetar para 'pending' (músico cancelou a confirmação)
+      ELSIF v_existing_status IN ('accepted', 'confirmed') AND NOT v_has_active_confirmation THEN
+        UPDATE invites
+        SET 
+          status = 'pending',
+          invited_at = NOW(),
+          cancelled_at = NULL,
+          responded_at = NULL,
+          accepted_at = NULL
+        WHERE id = v_invite_id;
+      -- Se o invite já está como 'pending' ou tem confirmação ativa, não faz nada
+      -- (não queremos resetar invites que já foram aceitos e confirmados ou que ainda estão pendentes)
       END IF;
     END LOOP;
   END LOOP;
@@ -98,18 +120,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Garantir que o trigger está configurado corretamente
-DROP TRIGGER IF EXISTS trigger_auto_create_invites ON gigs;
-
-CREATE TRIGGER trigger_auto_create_invites
-  AFTER INSERT OR UPDATE ON gigs
-  FOR EACH ROW
-  WHEN (NEW.status = 'published')
-  EXECUTE FUNCTION auto_create_invites_for_gig();
-
 -- ============================================
--- 2. CRIAR função RPC para republicar uma gig manualmente
---    Útil para quando o contratante quer forçar a criação de novos invites
+-- 2. ATUALIZAR função rpc_republish_gig
+--    Para resetar invites 'accepted' ou 'confirmed' que não têm confirmação ativa
 -- ============================================
 
 CREATE OR REPLACE FUNCTION rpc_republish_gig(p_gig_id UUID)
@@ -120,6 +133,7 @@ DECLARE
   musician_record RECORD;
   v_invite_id UUID;
   v_existing_status TEXT;
+  v_has_active_confirmation BOOLEAN;
   v_invites_created INTEGER := 0;
   v_invites_reset INTEGER := 0;
 BEGIN
@@ -180,6 +194,17 @@ BEGIN
         AND musician_id = musician_record.user_id
       LIMIT 1;
 
+      -- Verifica se há confirmação ativa para este invite
+      IF v_invite_id IS NOT NULL THEN
+        SELECT EXISTS (
+          SELECT 1 FROM confirmations
+          WHERE invite_id = v_invite_id
+          AND confirmed = true
+        ) INTO v_has_active_confirmation;
+      ELSE
+        v_has_active_confirmation := false;
+      END IF;
+
       -- Se não existe, cria um novo
       IF v_invite_id IS NULL THEN
         INSERT INTO invites (
@@ -209,6 +234,18 @@ BEGIN
           accepted_at = NULL
         WHERE id = v_invite_id;
         v_invites_reset := v_invites_reset + 1;
+      -- Se o invite está 'accepted' ou 'confirmed' mas NÃO tem confirmação ativa,
+      -- resetar para 'pending' (músico cancelou a confirmação)
+      ELSIF v_existing_status IN ('accepted', 'confirmed') AND NOT v_has_active_confirmation THEN
+        UPDATE invites
+        SET 
+          status = 'pending',
+          invited_at = NOW(),
+          cancelled_at = NULL,
+          responded_at = NULL,
+          accepted_at = NULL
+        WHERE id = v_invite_id;
+        v_invites_reset := v_invites_reset + 1;
       END IF;
     END LOOP;
   END LOOP;
@@ -227,13 +264,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION rpc_republish_gig(UUID) TO authenticated;
 
 -- Comentário
-COMMENT ON FUNCTION rpc_republish_gig(UUID) IS 'Republica uma gig, criando novos invites para músicos compatíveis e resetando invites recusados/cancelados';
+COMMENT ON FUNCTION rpc_republish_gig(UUID) IS 'Republica uma gig, criando novos invites para músicos compatíveis e resetando invites recusados/cancelados ou que não têm confirmação ativa';
 
 -- ============================================
 -- 3. VERIFICAÇÕES
 -- ============================================
 
--- Verificar se a função foi atualizada
+-- Verificar se as funções foram atualizadas
 SELECT 
     proname as function_name,
     pg_get_functiondef(oid) as function_definition
