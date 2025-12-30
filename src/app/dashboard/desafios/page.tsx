@@ -261,7 +261,11 @@ export default function DesafiosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredChallenges.map((challenge) => {
                 const achievement = getAchievementForChallenge(challenge.id);
-                const isCompleted = achievement?.completed_at !== null;
+                // Verificar se está completo: deve ter achievement, completed_at não nulo, e progress >= requirement
+                const isCompleted = achievement?.completed_at !== null && 
+                                   achievement.completed_at !== undefined &&
+                                   challenge.requirement_value !== null &&
+                                   achievement.progress >= (challenge.requirement_value || 0);
                 const progress = getProgressPercentage(achievement, challenge);
                 const difficulty = DIFFICULTY_CONFIG[challenge.difficulty];
 
