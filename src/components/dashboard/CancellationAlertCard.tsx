@@ -90,23 +90,38 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
 
   const republishGig = async (gigId: string, notificationId: string) => {
     try {
-      // Atualizar status da gig para published
-      const { error: updateError } = await supabase
-        .from("gigs")
-        .update({ status: "published" })
-        .eq("id", gigId)
-        .eq("contractor_id", userId);
+      // Tentar usar a função RPC primeiro (se disponível)
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "rpc_republish_gig",
+        { p_gig_id: gigId }
+      );
 
-      if (updateError) {
-        console.error("Error republishing gig:", updateError);
-        alert("Erro ao republicar a gig. Tente novamente.");
+      if (rpcError) {
+        console.log("RPC não disponível, usando método direto:", rpcError);
+        // Fallback: atualizar status da gig para published
+        // O trigger auto_create_invites_for_gig vai criar/resetar os invites
+        const { error: updateError } = await supabase
+          .from("gigs")
+          .update({ status: "published" })
+          .eq("id", gigId)
+          .eq("contractor_id", userId);
+
+        if (updateError) {
+          console.error("Error republishing gig:", updateError);
+          alert("Erro ao republicar a gig. Tente novamente.");
+          return;
+        }
+      } else if (rpcData && !rpcData.ok) {
+        alert(rpcData.message || "Erro ao republicar a gig.");
         return;
+      } else if (rpcData && rpcData.ok) {
+        console.log("Gig republicada:", rpcData.message);
       }
 
       // Marcar notificação como lida
       await markAsRead(notificationId);
 
-      // Redirecionar para a página de edição da gig (onde pode republicar)
+      // Redirecionar para a página de edição da gig
       router.push(`/dashboard/gigs/${gigId}/edit` as any);
       router.refresh();
     } catch (err) {

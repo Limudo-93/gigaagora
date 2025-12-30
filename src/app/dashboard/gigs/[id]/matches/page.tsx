@@ -351,8 +351,15 @@ export default function GigMatchesPage() {
         }
 
         // Carregar badges para todos os músicos (aceitos + confirmados)
+        // Buscar confirmedInviteIds antes de usar no filter
+        const { data: confirmedInvites } = await supabase
+          .from("confirmations")
+          .select("invite_id")
+          .eq("confirmed", true);
+        
+        const confirmedInviteIds = new Set((confirmedInvites || []).map((c: any) => c.invite_id));
+        
         const currentMusicians = musicians.length > 0 ? musicians : (rpcData || []).filter((m: any) => {
-          const confirmedInviteIds = new Set((await supabase.from("confirmations").select("invite_id").eq("confirmed", true)).data?.map((c: any) => c.invite_id) || []);
           return !confirmedInviteIds.has(m.invite_id);
         });
         const currentConfirmed = confirmedMusicians.length > 0 ? confirmedMusicians : (confirmedRpcData || []);
@@ -386,8 +393,9 @@ export default function GigMatchesPage() {
       } finally {
         setLoading(false);
       }
-    };
+    }, [gigId]);
 
+  useEffect(() => {
     loadData();
 
     // Configurar subscription para atualizar em tempo real quando um invite for aceito
