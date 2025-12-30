@@ -278,7 +278,7 @@ export default function FinanceiroPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
             <p className="text-sm text-gray-600 mt-1">
-              Acompanhe seus ganhos, trabalhos e estatísticas detalhadas
+              Veja como sua música está gerando resultados e planeje seus próximos passos
             </p>
           </div>
           <Button
@@ -306,8 +306,17 @@ export default function FinanceiroPage() {
                 {formatCurrency(totalEarnings)}
               </div>
               <p className="text-xs text-green-700 mt-1">
-                {totalGigs} {totalGigs === 1 ? "trabalho" : "trabalhos"}
+                {totalGigs === 0 
+                  ? "Comece a aceitar gigs para ver seus ganhos aqui"
+                  : totalGigs === 1 
+                    ? "1 trabalho confirmado" 
+                    : `${totalGigs} trabalhos confirmados`}
               </p>
+              {totalEarnings > 0 && (
+                <p className="text-xs text-green-600/80 mt-1 font-medium">
+                  🎉 Você já ganhou {formatCurrency(totalEarnings)} tocando!
+                </p>
+              )}
             </CardContent>
           </Card>
 

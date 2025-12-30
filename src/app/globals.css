@@ -184,6 +184,19 @@
     animation: fadeIn 0.3s ease-out;
   }
 
+  /* Delays para animações de pulse */
+  .delay-200 {
+    animation-delay: 0.2s;
+  }
+
+  .delay-300 {
+    animation-delay: 0.3s;
+  }
+
+  .delay-400 {
+    animation-delay: 0.4s;
+  }
+
   /* Scrollbar personalizada - usa cores do tema */
   .scrollbar-theme {
     scrollbar-width: thin;

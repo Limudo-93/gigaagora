@@ -198,9 +198,111 @@ export default function DesafiosPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Desafios</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Complete desafios, ganhe pontos e suba de ranking!
+            Complete desafios, ganhe pontos e suba de ranking! Músicos com mais conquistas recebem mais convites.
           </p>
         </div>
+
+        {/* Card de Próximo Desafio Recomendado */}
+        {(() => {
+          // Encontrar o próximo desafio mais fácil de completar
+          const nextEasyChallenge = challenges
+            .map(challenge => {
+              const achievement = getAchievementForChallenge(challenge.id);
+              const isCompleted = achievement !== undefined &&
+                achievement?.completed_at !== null &&
+                challenge.requirement_value !== null &&
+                (achievement?.progress || 0) >= (challenge.requirement_value || 0);
+              
+              if (isCompleted) return null;
+              
+              const progress = getProgressPercentage(achievement, challenge);
+              const remaining = challenge.requirement_value 
+                ? Math.max(0, challenge.requirement_value - (achievement?.progress || 0))
+                : challenge.requirement_value || 0;
+              
+              return {
+                challenge,
+                achievement,
+                progress,
+                remaining,
+                difficulty: challenge.difficulty === 'easy' ? 1 : challenge.difficulty === 'medium' ? 2 : challenge.difficulty === 'hard' ? 3 : 4
+              };
+            })
+            .filter(Boolean)
+            .sort((a, b) => {
+              // Priorizar: fácil > progresso alto > pontos
+              if (a!.difficulty !== b!.difficulty) return a!.difficulty - b!.difficulty;
+              if (a!.progress !== b!.progress) return b!.progress - a!.progress;
+              return b!.challenge.points - a!.challenge.points;
+            })[0];
+
+          if (!nextEasyChallenge) return null;
+
+          const { challenge, achievement, progress, remaining } = nextEasyChallenge;
+          const difficulty = DIFFICULTY_CONFIG[challenge.difficulty];
+
+          return (
+            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg">
+              <CardContent className="p-5 md:p-6">
+                <div className="flex items-start gap-4">
+                  <div className="relative shrink-0">
+                    <div className="absolute inset-0 bg-primary/20 rounded-xl blur-md" />
+                    <div className="relative h-12 w-12 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg">
+                      {difficulty.icon}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                        Próximo desafio recomendado
+                      </span>
+                    </div>
+                    <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">
+                      {challenge.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                      {challenge.description}
+                    </p>
+                    
+                    {progress > 0 && (
+                      <div className="mb-4 space-y-2">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Progresso</span>
+                          <span className="font-semibold text-foreground">
+                            {achievement?.progress || 0} / {challenge.requirement_value}
+                          </span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Faltam {remaining} para completar
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-2">
+                        <Award className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-semibold text-primary">
+                          {challenge.points} pontos
+                        </span>
+                      </div>
+                      <Badge className={difficulty.color}>
+                        {difficulty.label}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <p className="text-xs text-foreground leading-relaxed">
+                        <strong>💡 Por que completar?</strong> Músicos que completam desafios aparecem mais no topo das buscas e recebem até <strong>40% mais convites</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Card de Ranking */}
         {ranking && (

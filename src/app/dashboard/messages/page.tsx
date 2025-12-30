@@ -362,8 +362,20 @@ export default function MessagesPage() {
             {loading ? (
               <div className="p-4 text-center text-sm text-muted-foreground">Carregando...</div>
             ) : filteredConversations.length === 0 ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                {searchTerm ? "Nenhuma conversa encontrada" : "Nenhuma conversa ainda"}
+              <div className="p-4 md:p-8 text-center">
+                <div className="max-w-sm mx-auto">
+                  <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MessageSquare className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-2">
+                    {searchTerm ? "Nenhuma conversa encontrada" : "Suas conversas aparecem aqui"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {searchTerm 
+                      ? "Tente ajustar os termos de busca."
+                      : "🎶 Assim que um contratante entrar em contato sobre uma gig, você será notificado e a conversa aparecerá aqui."}
+                  </p>
+                </div>
               </div>
             ) : (
               filteredConversations.map((conv) => (
@@ -528,9 +540,16 @@ export default function MessagesPage() {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center bg-muted/30">
-              <div className="text-center p-4">
-                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Selecione uma conversa para começar</p>
+              <div className="text-center p-6 max-w-sm mx-auto">
+                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-base font-semibold text-foreground mb-2">
+                  Selecione uma conversa
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Escolha uma conversa na lista ao lado para começar a trocar mensagens
+                </p>
               </div>
             </div>
           )}

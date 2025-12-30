@@ -6,6 +6,7 @@ import Link from "next/link";
 import DashboardLayoutWithSidebar from "@/components/dashboard/DashboardLayoutWithSidebar";
 import ProfileHeader from "@/components/dashboard/ProfileHeader";
 import ProfileCompletion from "@/components/dashboard/ProfileCompletion";
+import PriorityActionBlock from "@/components/dashboard/PriorityActionBlock";
 import CancellationAlertCard from "@/components/dashboard/CancellationAlertCard";
 import GigsTabs from "@/components/dashboard/GigsTabs";
 import PendingInvites from "@/components/dashboard/PendingInvites";
@@ -28,6 +29,9 @@ export default async function DashboardPage() {
     <DashboardLayoutWithSidebar>
       {/* Card de Boas-vindas - Primeira vez */}
       <WelcomeCard />
+
+      {/* 🎯 Bloco de Ação Prioritária - Topo do dashboard */}
+      <PriorityActionBlock userId={user.id} />
 
       {/* Mobile: Header compacto primeiro */}
       <div className="md:hidden">
