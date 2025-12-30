@@ -20,6 +20,7 @@ import {
   Calendar,
   Music,
 } from "lucide-react";
+import HomeHeader from "@/components/HomeHeader";
 
 async function getStats() {
   const supabase = await createClient();
@@ -212,31 +213,8 @@ export default async function Page() {
 
   return (
     <div className="min-h-screen">
-      {/* Header simples para homepage */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href={"/" as any}>
-              <Logo size="md" />
-            </Link>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" className="text-foreground hover:bg-muted/50" asChild>
-                <Link href={"/login" as any}>Entrar</Link>
-              </Button>
-              <Button 
-                className="text-white shadow-md transition-all duration-200" 
-                asChild
-                style={{
-                  background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-                  color: "white"
-                }}
-              >
-                <Link href={"/signup" as any}>Criar Conta</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header com menu de navegação */}
+      <HomeHeader />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 text-white">
