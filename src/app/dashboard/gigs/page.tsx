@@ -21,7 +21,8 @@ import {
   User,
   Loader2,
   UserCheck,
-  DollarSign
+  DollarSign,
+  Navigation
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -29,6 +30,7 @@ import GigDetailsDialog from "@/components/dashboard/GigDetailsDialog";
 import ShareGigButton from "@/components/dashboard/ShareGigButton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useNotification } from "@/components/ui/notification-provider";
+import { haversineKm, estimateTravelMin } from "@/lib/geo";
 
 type GigRow = {
   id: string;
@@ -57,6 +59,13 @@ type GigRow = {
     musician_photo_url: string | null;
     instrument: string;
   }[];
+  // Campos de localização
+  latitude?: number | null;
+  longitude?: number | null;
+  region_label?: string | null;
+  // Campos calculados
+  distance_km?: number | null;
+  estimated_travel_time_minutes?: number | null;
 };
 
 function formatDateBR(iso?: string | null) {
@@ -131,15 +140,39 @@ export default function GigsPage() {
     setError(null);
 
     try {
+      // Buscar localização e raio de busca do músico (se for músico)
+      let musicianLat: number | null = null;
+      let musicianLng: number | null = null;
+      let radius: number | null = null;
+
       if (userType === "musician") {
-        // Busca os instrumentos do músico
+        // Busca os instrumentos, localização e raio do músico
         const { data: musicianProfile } = await supabase
           .from("musician_profiles")
-          .select("instruments")
+          .select("instruments, latitude, longitude, max_radius_km, strengths_counts")
           .eq("user_id", userId)
           .single();
 
         const instruments = (musicianProfile?.instruments as string[]) || [];
+        
+        musicianLat = musicianProfile?.latitude as number | null | undefined;
+        musicianLng = musicianProfile?.longitude as number | null | undefined;
+        
+        // Buscar raio de busca
+        radius = musicianProfile?.max_radius_km as number | null | undefined;
+        if (!radius && musicianProfile?.strengths_counts) {
+          const metadata = musicianProfile.strengths_counts as any;
+          radius = metadata?.searchRadius || 50;
+        }
+        if (!radius) radius = 50;
+        
+        setMaxRadiusKm(radius);
+        
+        if (musicianLat && musicianLng) {
+          setMusicianLocation({ lat: musicianLat, lng: musicianLng });
+        } else {
+          setMusicianLocation(null);
+        }
         
         if (instruments.length === 0) {
           setGigs([]);
@@ -163,7 +196,7 @@ export default function GigsPage() {
           return;
         }
 
-        // Busca as gigs
+        // Busca as gigs (incluindo coordenadas e região)
         const { data: gigsData, error: gigsError } = await supabase
           .from("gigs")
           .select(`
@@ -174,6 +207,9 @@ export default function GigsPage() {
             address_text,
             city,
             state,
+            latitude,
+            longitude,
+            region_label,
             start_time,
             end_time,
             show_minutes,
@@ -234,6 +270,18 @@ export default function GigsPage() {
           const compatibleRole = (gig.gig_roles || []).find((gr: any) => instruments.includes(gr.instrument));
           const contractorInfo = contractorsMap.get(gig.contractor_id);
 
+          // Calcular distância e tempo de viagem se temos coordenadas
+          let distanceKm: number | null = null;
+          let estimatedTravelTimeMinutes: number | null = null;
+          
+          const gigLat = gig.latitude as number | null | undefined;
+          const gigLng = gig.longitude as number | null | undefined;
+          
+          if (musicianLat != null && musicianLng != null && gigLat != null && gigLng != null) {
+            distanceKm = haversineKm(musicianLat, musicianLng, gigLat, gigLng);
+            estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
+          }
+
           processedGigs.push({
             id: gig.id,
             title: gig.title,
@@ -255,17 +303,43 @@ export default function GigsPage() {
             invite_status: invite?.status || null,
             compatible_instruments: compatibleInstruments,
             cache: compatibleRole?.cache || null,
+            latitude: gigLat ?? null,
+            longitude: gigLng ?? null,
+            region_label: gig.region_label ?? null,
+            distance_km: distanceKm,
+            estimated_travel_time_minutes: estimatedTravelTimeMinutes,
           });
         }
 
-        setGigs(processedGigs);
-        setFilteredGigs(processedGigs);
+        // Filtrar por raio de busca se temos localização do músico e raio configurado
+        let finalGigs = processedGigs;
+        if (musicianLat != null && musicianLng != null && radius != null) {
+          finalGigs = processedGigs.filter((gig) => {
+            // Se não tem distância calculada, exclui (não podemos filtrar sem distância)
+            if (gig.distance_km == null) return false;
+            // Filtra pelo raio configurado - só inclui se estiver dentro do raio
+            return gig.distance_km <= radius;
+          });
+          
+          // Ordenar por distância (menor primeiro)
+          finalGigs.sort((a, b) => {
+            if (a.distance_km != null && b.distance_km != null) {
+              return a.distance_km - b.distance_km;
+            }
+            if (a.distance_km != null && b.distance_km == null) return -1;
+            if (a.distance_km == null && b.distance_km != null) return 1;
+            return 0;
+          });
+        }
+
+        setGigs(finalGigs);
+        setFilteredGigs(finalGigs);
       } else {
         // Para contractors: mostra TODAS as gigs (draft, published, cancelled)
         const { data, error: gigsError } = await supabase
           .from("gigs")
           .select(
-            "id,title,description,location_name,address_text,city,state,start_time,end_time,show_minutes,break_minutes,status,flyer_url,contractor_id"
+            "id,title,description,location_name,address_text,city,state,latitude,longitude,region_label,start_time,end_time,show_minutes,break_minutes,status,flyer_url,contractor_id"
           )
           .eq("contractor_id", userId)
           .order("start_time", { ascending: true });
@@ -806,12 +880,122 @@ export default function GigsPage() {
                         <div className="flex items-start gap-2.5">
                           <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm text-foreground truncate">{location}</p>
-                            {cityState && (
-                              <p className="text-xs font-medium text-muted-foreground mt-0.5">{cityState}</p>
+                            {gig.region_label ? (
+                              <div>
+                                <p className="font-semibold text-sm text-foreground">{gig.region_label}</p>
+                                {location && (
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{location}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <div>
+                                <p className="font-semibold text-sm text-foreground truncate">{location}</p>
+                                {cityState && (
+                                  <p className="text-xs font-medium text-muted-foreground mt-0.5">{cityState}</p>
+                                )}
+                              </div>
                             )}
                           </div>
                         </div>
+
+                        {/* Distância e Tempo de Viagem - DESTAQUE MUITO VISÍVEL */}
+                        {userType === "musician" && (gig.distance_km != null || gig.estimated_travel_time_minutes != null) ? (
+                          <div className="space-y-2">
+                            {/* Card de Distância e Tempo - DESTAQUE */}
+                            <div className={`rounded-xl border-2 p-4 shadow-md ${
+                              gig.distance_km != null
+                                ? gig.distance_km <= 7
+                                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30"
+                                  : gig.distance_km <= 15
+                                  ? "border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30"
+                                  : "border-orange-500 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30"
+                                : "border-primary/50 bg-gradient-to-br from-primary/10 to-purple-50 dark:from-primary/20 dark:to-purple-900/20"
+                            }`}>
+                              <div className="grid grid-cols-2 gap-4">
+                                {/* Distância - Grande e Destacada */}
+                                {gig.distance_km != null && (
+                                  <div className="flex items-start gap-3">
+                                    <div className={`p-2 rounded-lg ${
+                                      gig.distance_km <= 7
+                                        ? "bg-green-500/20"
+                                        : gig.distance_km <= 15
+                                        ? "bg-blue-500/20"
+                                        : "bg-orange-500/20"
+                                    }`}>
+                                      <Navigation className={`h-5 w-5 ${
+                                        gig.distance_km <= 7
+                                          ? "text-green-600 dark:text-green-400"
+                                          : gig.distance_km <= 15
+                                          ? "text-blue-600 dark:text-blue-400"
+                                          : "text-orange-600 dark:text-orange-400"
+                                      }`} />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs font-medium text-muted-foreground mb-1">Distância</p>
+                                      <p className={`text-2xl font-bold ${
+                                        gig.distance_km <= 7
+                                          ? "text-green-700 dark:text-green-300"
+                                          : gig.distance_km <= 15
+                                          ? "text-blue-700 dark:text-blue-300"
+                                          : "text-orange-700 dark:text-orange-300"
+                                      }`}>
+                                        {gig.distance_km.toFixed(1)} km
+                                      </p>
+                                      {/* Status Perto/Normal/Longe */}
+                                      <Badge 
+                                        className={`mt-1.5 text-xs font-semibold ${
+                                          gig.distance_km <= 7
+                                            ? "bg-green-500 text-white"
+                                            : gig.distance_km <= 15
+                                            ? "bg-blue-500 text-white"
+                                            : "bg-orange-500 text-white"
+                                        }`}
+                                      >
+                                        {gig.distance_km <= 7 
+                                          ? "✓ Próximo"
+                                          : gig.distance_km <= 15
+                                          ? "• Normal"
+                                          : "⚠ Longe"
+                                        }
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Tempo de Viagem de Carro - Grande e Destacado */}
+                                {gig.estimated_travel_time_minutes != null && (
+                                  <div className="flex items-start gap-3">
+                                    <div className="p-2 rounded-lg bg-blue-500/20">
+                                      <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-xs font-medium text-muted-foreground mb-1">Tempo de carro</p>
+                                      <p className="text-2xl font-bold text-foreground">
+                                        ~{gig.estimated_travel_time_minutes} min
+                                      </p>
+                                      <p className="text-xs text-muted-foreground mt-1">Tempo estimado</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Aviso se está fora do raio configurado */}
+                            {maxRadiusKm != null && gig.distance_km != null && gig.distance_km > maxRadiusKm && (
+                              <div className="rounded-lg border-2 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20 p-3">
+                                <p className="text-xs font-medium text-orange-800 dark:text-orange-200">
+                                  ⚠️ Este convite está fora do seu raio de busca configurado ({maxRadiusKm} km)
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : userType === "musician" && musicianLocation && (
+                          <div className="rounded-lg border-2 border-border bg-muted/30 p-3">
+                            <p className="text-xs text-muted-foreground">
+                              Distância não disponível (gig sem coordenadas)
+                            </p>
+                          </div>
+                        )}
 
                         {/* Data e Hora - Em linha única para escaneabilidade */}
                         <div className="flex items-center gap-4 text-sm">
@@ -851,6 +1035,32 @@ export default function GigsPage() {
                         {userType === "musician" && gig.invite_status === "declined" && (
                           <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
                             ✗ Recusado
+                          </Badge>
+                        )}
+                        {/* Badges de distância */}
+                        {userType === "musician" && gig.distance_km != null && (
+                          <>
+                            {gig.distance_km <= 7 && (
+                              <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
+                                Próximo
+                              </Badge>
+                            )}
+                            {gig.distance_km > 7 && gig.distance_km <= 15 && (
+                              <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
+                                Normal
+                              </Badge>
+                            )}
+                            {gig.distance_km > 15 && (
+                              <Badge className="text-xs bg-orange-500 text-white border-0 font-medium">
+                                Longe
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                        {/* Badge de fora do raio se configurado */}
+                        {userType === "musician" && gig.distance_km != null && maxRadiusKm != null && gig.distance_km > maxRadiusKm && (
+                          <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
+                            Fora do Raio
                           </Badge>
                         )}
                       </div>
