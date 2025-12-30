@@ -77,8 +77,68 @@ export default function PendingInvites({ userId }: { userId: string }) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedInvite, setSelectedInvite] = useState<any | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [musicianLocation, setMusicianLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [maxRadiusKm, setMaxRadiusKm] = useState<number | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
 
   const count = useMemo(() => items.length, [items]);
+
+  // Função para obter e salvar localização do músico
+  const handleGetMyLocation = async () => {
+    setGettingLocation(true);
+    setErrorMsg(null);
+
+    if (!navigator.geolocation) {
+      setErrorMsg("Geolocalização não é suportada pelo seu navegador.");
+      setGettingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        try {
+          // Salvar localização no perfil do músico
+          const { error: updateError } = await supabase
+            .from("musician_profiles")
+            .update({
+              latitude: lat,
+              longitude: lng,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (updateError) {
+            console.error("Error saving location:", updateError);
+            setErrorMsg("Erro ao salvar localização. Tente novamente.");
+          } else {
+            setMusicianLocation({ lat, lng });
+            setShowLocationPrompt(false);
+            // Forçar reload dos convites
+            window.location.reload();
+          }
+        } catch (err: any) {
+          console.error("Error saving location:", err);
+          setErrorMsg("Erro ao salvar localização.");
+        } finally {
+          setGettingLocation(false);
+        }
+      },
+      (err) => {
+        console.error("Error getting location:", err);
+        setErrorMsg("Não foi possível obter sua localização. Verifique as permissões do navegador.");
+        setGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   const fetchPending = useCallback(async () => {
     setLoading(true);
@@ -87,15 +147,34 @@ export default function PendingInvites({ userId }: { userId: string }) {
     console.log("PendingInvites: fetchPending called with userId:", userId);
 
     try {
-      // Buscar localização do músico primeiro
+      // Buscar localização e raio de busca do músico
       const { data: musicianProfile, error: musicianError } = await supabase
         .from("musician_profiles")
-        .select("latitude, longitude")
+        .select("latitude, longitude, max_radius_km, strengths_counts")
         .eq("user_id", userId)
         .single();
 
       const musicianLat = musicianProfile?.latitude as number | null | undefined;
       const musicianLng = musicianProfile?.longitude as number | null | undefined;
+      
+      // Buscar raio de busca (pode estar em max_radius_km ou em strengths_counts)
+      let radius = musicianProfile?.max_radius_km as number | null | undefined;
+      if (!radius && musicianProfile?.strengths_counts) {
+        const metadata = musicianProfile.strengths_counts as any;
+        radius = metadata?.searchRadius || 50; // Default 50km
+      }
+      if (!radius) radius = 50; // Default
+      
+      setMaxRadiusKm(radius);
+      
+      // Se não tem localização, mostrar prompt
+      if (!musicianLat || !musicianLng) {
+        setShowLocationPrompt(true);
+        setMusicianLocation(null);
+      } else {
+        setMusicianLocation({ lat: musicianLat, lng: musicianLng });
+        setShowLocationPrompt(false);
+      }
 
       // Busca direta da tabela invites com join em gigs (com novos campos)
       const { data: directData, error: directError } = await supabase
@@ -144,7 +223,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
       }
 
       // Transforma os dados para o formato esperado e calcula distância
-      const transformed: PendingInviteRow[] = (directData ?? []).map((invite: any) => {
+      let transformed: PendingInviteRow[] = (directData ?? []).map((invite: any) => {
         const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
         const role = Array.isArray(invite.gig_roles) ? invite.gig_roles[0] : invite.gig_roles;
         const contractorProfile = Array.isArray(gig?.profiles) ? gig?.profiles[0] : gig?.profiles;
@@ -184,6 +263,16 @@ export default function PendingInvites({ userId }: { userId: string }) {
           estimated_travel_time_minutes: estimatedTravelTimeMinutes,
         };
       });
+
+      // Filtrar por raio de busca se temos localização do músico
+      if (musicianLat != null && musicianLng != null && radius != null) {
+        transformed = transformed.filter((item) => {
+          // Se não tem distância calculada, inclui (pode não ter coordenadas da gig)
+          if (item.distance_km == null) return true;
+          // Filtra pelo raio configurado
+          return item.distance_km <= radius;
+        });
+      }
 
       // Ordenar por distância (menor primeiro) e depois por data de criação (mais recente primeiro)
       transformed.sort((a, b) => {
@@ -480,10 +569,32 @@ export default function PendingInvites({ userId }: { userId: string }) {
                         {(r.distance_km != null || r.estimated_travel_time_minutes != null) && (
                           <div className="flex items-center gap-3 flex-wrap">
                             {r.distance_km != null && (
-                              <Badge variant="outline" className="text-xs">
-                                <Navigation className="h-3 w-3 mr-1" />
-                                {r.distance_km.toFixed(1)} km
-                              </Badge>
+                              <>
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${
+                                    maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                      ? "border-green-500 text-green-700 bg-green-50"
+                                      : maxRadiusKm != null && r.distance_km > maxRadiusKm
+                                      ? "border-orange-500 text-orange-700 bg-orange-50"
+                                      : ""
+                                  }`}
+                                >
+                                  <Navigation className="h-3 w-3 mr-1" />
+                                  {r.distance_km.toFixed(1)} km
+                                </Badge>
+                                {maxRadiusKm != null && (
+                                  <Badge 
+                                    className={`text-xs ${
+                                      r.distance_km <= maxRadiusKm
+                                        ? "bg-green-500 text-white"
+                                        : "bg-orange-500 text-white"
+                                    }`}
+                                  >
+                                    {r.distance_km <= maxRadiusKm ? "Dentro do raio" : "Fora do raio"}
+                                  </Badge>
+                                )}
+                              </>
                             )}
                             {r.estimated_travel_time_minutes != null && (
                               <Badge variant="outline" className="text-xs">
@@ -491,6 +602,15 @@ export default function PendingInvites({ userId }: { userId: string }) {
                                 ~{r.estimated_travel_time_minutes} min
                               </Badge>
                             )}
+                          </div>
+                        )}
+                        
+                        {/* Aviso se está fora do raio configurado */}
+                        {maxRadiusKm != null && r.distance_km != null && r.distance_km > maxRadiusKm && (
+                          <div className="rounded-lg border-2 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20 p-3">
+                            <p className="text-xs font-medium text-orange-800 dark:text-orange-200">
+                              ⚠️ Este convite está {r.distance_km.toFixed(1)} km de distância, fora do seu raio de busca configurado ({maxRadiusKm} km).
+                            </p>
                           </div>
                         )}
 
@@ -521,16 +641,40 @@ export default function PendingInvites({ userId }: { userId: string }) {
                             {hoursRemaining}h restantes
                           </Badge>
                         )}
-                        {/* Badge de distância próxima */}
-                        {r.distance_km != null && r.distance_km <= 10 && (
-                          <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
-                            Muito Próximo
-                          </Badge>
+                        {/* Badges de distância baseados no raio configurado */}
+                        {r.distance_km != null && maxRadiusKm != null && (
+                          <>
+                            {r.distance_km <= maxRadiusKm && r.distance_km <= 10 && (
+                              <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
+                                Muito Próximo
+                              </Badge>
+                            )}
+                            {r.distance_km <= maxRadiusKm && r.distance_km > 10 && r.distance_km <= 25 && (
+                              <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
+                                Próximo
+                              </Badge>
+                            )}
+                            {r.distance_km > maxRadiusKm && (
+                              <Badge className="text-xs bg-orange-500 text-white border-0 font-medium">
+                                Fora do Raio
+                              </Badge>
+                            )}
+                          </>
                         )}
-                        {r.distance_km != null && r.distance_km > 10 && r.distance_km <= 25 && (
-                          <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
-                            Próximo
-                          </Badge>
+                        {/* Fallback se não tem raio configurado */}
+                        {r.distance_km != null && maxRadiusKm == null && (
+                          <>
+                            {r.distance_km <= 10 && (
+                              <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
+                                Muito Próximo
+                              </Badge>
+                            )}
+                            {r.distance_km > 10 && r.distance_km <= 25 && (
+                              <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
+                                Próximo
+                              </Badge>
+                            )}
+                          </>
                         )}
                       </div>
 
