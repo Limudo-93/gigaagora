@@ -120,9 +120,10 @@ export async function createPushSubscription(
       return null;
     }
 
+    const keyArray = urlBase64ToUint8Array(vapidPublicKey);
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+      applicationServerKey: keyArray,
     });
 
     console.log('[Push Notifications] Subscription criada:', subscription.endpoint);
