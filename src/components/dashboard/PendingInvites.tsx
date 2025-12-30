@@ -157,13 +157,29 @@ export default function PendingInvites({ userId }: { userId: string }) {
       const musicianLat = musicianProfile?.latitude as number | null | undefined;
       const musicianLng = musicianProfile?.longitude as number | null | undefined;
       
-      // Buscar raio de busca (pode estar em max_radius_km ou em strengths_counts)
-      let radius = musicianProfile?.max_radius_km as number | null | undefined;
-      if (!radius && musicianProfile?.strengths_counts) {
+      // Buscar raio de busca (priorizar strengths_counts.searchRadius onde o slider salva)
+      let radius: number | null = null;
+      if (musicianProfile?.strengths_counts) {
         const metadata = musicianProfile.strengths_counts as any;
-        radius = metadata?.searchRadius || 50; // Default 50km
+        if (metadata?.searchRadius != null) {
+          radius = Number(metadata.searchRadius);
+        }
       }
-      if (!radius) radius = 50; // Default
+      // Fallback para max_radius_km se não encontrou em strengths_counts
+      if (radius == null) {
+        const maxRadius = musicianProfile?.max_radius_km as number | null | undefined;
+        if (maxRadius != null) {
+          radius = Number(maxRadius);
+        }
+      }
+      // Default final se ainda não tem
+      if (radius == null) radius = 50;
+      
+      console.log(`[PendingInvites] Raio de busca configurado: ${radius} km`, {
+        fromStrengthsCounts: musicianProfile?.strengths_counts ? (musicianProfile.strengths_counts as any)?.searchRadius : null,
+        fromMaxRadiusKm: musicianProfile?.max_radius_km,
+        finalRadius: radius
+      });
       
       setMaxRadiusKm(radius);
       
@@ -266,12 +282,29 @@ export default function PendingInvites({ userId }: { userId: string }) {
 
       // Filtrar por raio de busca se temos localização do músico e raio configurado
       if (musicianLat != null && musicianLng != null && radius != null) {
+        const radiusValue = Number(radius); // Garantir que é número
+        console.log(`[PendingInvites] Filtrando convites por raio: ${radiusValue} km (tipo: ${typeof radiusValue}). Total antes: ${transformed.length}`);
+        const beforeFilter = transformed.length;
         transformed = transformed.filter((item) => {
           // Se não tem distância calculada, exclui (não podemos filtrar sem distância)
-          if (item.distance_km == null) return false;
+          if (item.distance_km == null) {
+            console.log(`[PendingInvites] Excluindo convite ${item.invite_id} - sem distância calculada`);
+            return false;
+          }
+          // Garantir que distance_km é número
+          const distance = Number(item.distance_km);
           // Filtra pelo raio configurado - só inclui se estiver dentro do raio
-          return item.distance_km <= radius;
+          const isWithinRadius = distance <= radiusValue;
+          if (!isWithinRadius) {
+            console.log(`[PendingInvites] Excluindo convite ${item.invite_id} - distância ${distance.toFixed(1)} km > raio ${radiusValue} km`);
+          } else {
+            console.log(`[PendingInvites] Mantendo convite ${item.invite_id} - distância ${distance.toFixed(1)} km <= raio ${radiusValue} km`);
+          }
+          return isWithinRadius;
         });
+        console.log(`[PendingInvites] Total após filtro: ${transformed.length} (removidos: ${beforeFilter - transformed.length})`);
+      } else {
+        console.log(`[PendingInvites] Não filtrando por raio - musicianLat: ${musicianLat}, musicianLng: ${musicianLng}, radius: ${radius} (tipo: ${typeof radius})`);
       }
 
       // Ordenar por distância (menor primeiro) e depois por data de criação (mais recente primeiro)
