@@ -109,6 +109,8 @@ export default function GigsPage() {
   const [pendingDeclineGigId, setPendingDeclineGigId] = useState<string | null>(null);
   const [pendingDeleteGigId, setPendingDeleteGigId] = useState<string | null>(null);
   const notification = useNotification();
+  const [musicianLocation, setMusicianLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [maxRadiusKm, setMaxRadiusKm] = useState<number | null>(null);
 
   // Busca o usuário atual e seu tipo
   useEffect(() => {
