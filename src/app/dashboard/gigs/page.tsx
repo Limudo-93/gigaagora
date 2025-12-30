@@ -762,7 +762,8 @@ export default function GigsPage() {
                       </div>
 
                       {/* Botões de ação */}
-                      <div className="flex flex-col gap-2 pt-2">
+                      <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+                        {/* Botão Ver Detalhes - sempre visível */}
                         <Button
                           variant="outline"
                           className="w-full"
@@ -803,10 +804,10 @@ export default function GigsPage() {
                             )}
                              
                             {(!gig.invite_status || (gig.invite_status !== "accepted" && gig.invite_status !== "declined")) && (
-                              <div className="flex gap-2">
+                              <div className="grid grid-cols-2 gap-2">
                                 <Button
                                   variant="default"
-                                  className="flex-1"
+                                  className="w-full"
                                   onClick={(e) => handleAcceptInvite(gig.id, gig.invite_id, e)}
                                   disabled={processingInviteId === gig.invite_id || !gig.invite_id}
                                 >
@@ -819,7 +820,7 @@ export default function GigsPage() {
                                 </Button>
                                 <Button
                                   variant="outline"
-                                  className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
+                                  className="w-full border-destructive text-destructive hover:bg-destructive/10"
                                   onClick={(e) => handleDeclineInvite(gig.id, gig.invite_id, e)}
                                   disabled={processingInviteId === gig.invite_id || !gig.invite_id}
                                 >
@@ -837,17 +838,17 @@ export default function GigsPage() {
 
                         {/* Botões para contractors */}
                         {userType === "contractor" && userId && gig.contractor_id === userId && (
-                          <div className="flex gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <ShareGigButton 
                               gigId={gig.id} 
                               gigTitle={gig.title}
                               variant="outline"
-                              className="flex-1"
+                              className="w-full"
                             />
                             <Button
                               variant="outline"
                               size="icon"
-                              className="border-destructive text-destructive hover:bg-destructive/10"
+                              className="w-full border-destructive text-destructive hover:bg-destructive/10"
                               onClick={(e) => handleDeleteGig(gig.id, e)}
                               disabled={deletingGigId === gig.id}
                             >
