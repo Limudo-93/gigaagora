@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { computeRegionLabel } from "@/lib/geo";
+import { reverseGeocode } from "@/app/actions/geocoding";
 
 /**
  * Server action para criar uma gig com cálculo automático de region_label
@@ -32,7 +33,33 @@ export async function createGigWithRegion(data: {
   let finalLongitude = data.longitude;
   let finalCity = data.city;
   let finalState = data.state;
+  let finalRegionLabel: string | null = null;
 
+  // Se temos coordenadas mas não temos cidade/estado, fazer reverse geocoding
+  if ((finalLatitude && finalLongitude) && (!finalCity || !finalState)) {
+    try {
+      const geocodeResult = await reverseGeocode(finalLatitude, finalLongitude);
+      
+      if (!geocodeResult.error) {
+        // Usar dados do geocoding se não foram fornecidos
+        if (!finalCity && geocodeResult.city) {
+          finalCity = geocodeResult.city;
+        }
+        if (!finalState && geocodeResult.state) {
+          finalState = geocodeResult.state;
+        }
+        // Usar region_label do geocoding se disponível
+        if (geocodeResult.region_label) {
+          finalRegionLabel = geocodeResult.region_label;
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao fazer reverse geocoding:", error);
+      // Continua sem reverse geocoding se der erro
+    }
+  }
+
+  // Se ainda não temos localização, buscar do perfil do contratante
   if (!finalLatitude || !finalLongitude || !finalCity || !finalState) {
     const { data: contractorProfile } = await supabase
       .from("profiles")
@@ -57,8 +84,8 @@ export async function createGigWithRegion(data: {
     }
   }
 
-  // Calcular region_label
-  const regionLabel = computeRegionLabel(
+  // Calcular region_label (usar o do geocoding se disponível, senão calcular)
+  const regionLabel = finalRegionLabel || computeRegionLabel(
     finalState,
     finalCity,
     finalLatitude ?? undefined,
@@ -132,15 +159,44 @@ export async function updateGigWithRegion(
     .single();
 
   // Usar valores fornecidos ou manter os existentes
-  const finalCity = data.city !== undefined ? data.city : currentGig?.city;
-  const finalState = data.state !== undefined ? data.state : currentGig?.state;
-  const finalLatitude =
+  let finalCity = data.city !== undefined ? data.city : currentGig?.city;
+  let finalState = data.state !== undefined ? data.state : currentGig?.state;
+  let finalLatitude =
     data.latitude !== undefined ? data.latitude : currentGig?.latitude;
-  const finalLongitude =
+  let finalLongitude =
     data.longitude !== undefined ? data.longitude : currentGig?.longitude;
+  let finalRegionLabel: string | null = null;
 
-  // Recalcular region_label se location mudou
-  const regionLabel = computeRegionLabel(
+  // Se temos coordenadas mas não temos cidade/estado (ou coordenadas mudaram), fazer reverse geocoding
+  const coordsChanged = 
+    (data.latitude !== undefined && data.latitude !== currentGig?.latitude) ||
+    (data.longitude !== undefined && data.longitude !== currentGig?.longitude);
+
+  if ((finalLatitude && finalLongitude) && ((!finalCity || !finalState) || coordsChanged)) {
+    try {
+      const geocodeResult = await reverseGeocode(finalLatitude, finalLongitude);
+      
+      if (!geocodeResult.error) {
+        // Usar dados do geocoding se não foram fornecidos ou se coordenadas mudaram
+        if ((!finalCity || coordsChanged) && geocodeResult.city) {
+          finalCity = geocodeResult.city;
+        }
+        if ((!finalState || coordsChanged) && geocodeResult.state) {
+          finalState = geocodeResult.state;
+        }
+        // Usar region_label do geocoding se disponível
+        if (geocodeResult.region_label) {
+          finalRegionLabel = geocodeResult.region_label;
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao fazer reverse geocoding:", error);
+      // Continua sem reverse geocoding se der erro
+    }
+  }
+
+  // Recalcular region_label se location mudou (usar o do geocoding se disponível, senão calcular)
+  const regionLabel = finalRegionLabel || computeRegionLabel(
     finalState,
     finalCity,
     finalLatitude ?? undefined,
@@ -157,8 +213,8 @@ export async function updateGigWithRegion(
     updateData.location_name = data.location_name?.trim() || null;
   if (data.address_text !== undefined)
     updateData.address_text = data.address_text?.trim() || null;
-  if (data.city !== undefined) updateData.city = finalCity?.trim() || null;
-  if (data.state !== undefined) updateData.state = finalState?.trim() || null;
+  if (data.city !== undefined || coordsChanged) updateData.city = finalCity?.trim() || null;
+  if (data.state !== undefined || coordsChanged) updateData.state = finalState?.trim() || null;
   if (data.latitude !== undefined) updateData.latitude = finalLatitude;
   if (data.longitude !== undefined) updateData.longitude = finalLongitude;
   if (data.timezone !== undefined) updateData.timezone = data.timezone;

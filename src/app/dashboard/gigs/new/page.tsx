@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Navigation, Loader2 } from "lucide-react";
 import { createGigWithRegion } from "@/app/actions/gigs";
 import { computeRegionLabel } from "@/lib/geo";
+import { reverseGeocode } from "@/app/actions/geocoding";
 
 type GigRole = {
   id: string;
@@ -150,7 +151,7 @@ export default function NewGigPage() {
   }, [city, state, latitude, longitude]);
 
   // Função para obter geolocalização do navegador
-  const handleGetLocation = () => {
+  const handleGetLocation = async () => {
     setGettingLocation(true);
     setError(null);
 
@@ -167,14 +168,38 @@ export default function NewGigPage() {
         setLatitude(lat);
         setLongitude(lng);
         
-        // Tentar obter cidade e estado via reverse geocoding (simples)
-        // Nota: Isso é um fallback, idealmente você usaria uma API de geocoding
+        // Fazer reverse geocoding para obter cidade, estado e região
         try {
-          // Usar uma API pública ou integrar com Google Maps API
-          // Por enquanto, apenas definimos as coordenadas
+          const geocodeResult = await reverseGeocode(lat, lng);
+          
+          if (geocodeResult.error && geocodeResult.error !== "API key não configurada") {
+            console.warn("Erro no reverse geocoding:", geocodeResult.error);
+            // Continua mesmo com erro, usando apenas coordenadas
+          } else {
+            // Atualizar cidade e estado se obtidos do geocoding
+            if (geocodeResult.city && !city) {
+              setCity(geocodeResult.city);
+            }
+            if (geocodeResult.state && !state) {
+              setState(geocodeResult.state);
+            }
+            
+            // Atualizar preview da região se obtido
+            if (geocodeResult.region_label) {
+              setPreviewRegion(geocodeResult.region_label);
+            }
+            
+            // Se tiver endereço formatado, pode atualizar addressText como sugestão
+            if (geocodeResult.formatted_address && !addressText) {
+              // Opcional: pode atualizar addressText se quiser
+              // setAddressText(geocodeResult.formatted_address);
+            }
+          }
+          
           setGettingLocation(false);
         } catch (err) {
           console.error("Error getting location details:", err);
+          setError("Não foi possível obter detalhes da localização, mas as coordenadas foram salvas.");
           setGettingLocation(false);
         }
       },
