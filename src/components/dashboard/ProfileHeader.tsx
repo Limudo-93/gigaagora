@@ -6,6 +6,7 @@ import LogoutButton from "@/app/dashboard/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import BadgeDisplay from "./BadgeDisplay";
+import AmbassadorBadge from "./AmbassadorBadge";
 
 export default async function ProfileHeader() {
   const supabase = await createClient();
@@ -61,6 +62,9 @@ export default async function ProfileHeader() {
     .eq("user_id", user.id)
     .or("expires_at.is.null,expires_at.gt.now()");
 
+  // Verificar se é embaixador
+  const isAmbassador = profile?.is_ambassador || badges?.some((b: any) => b.badge_type === 'ambassador') || false;
+
   // Calcular iniciais do nome (corrigido para TypeScript)
   const displayName = profile?.display_name || user.email?.split("@")[0] || "Usuário";
   const initials = displayName
@@ -89,6 +93,12 @@ export default async function ProfileHeader() {
               {initials}
             </AvatarFallback>
           </Avatar>
+          {/* Badge de Embaixador */}
+          {isAmbassador && (
+            <div className="absolute -bottom-1 -right-1 z-20">
+              <AmbassadorBadge size="sm" showText={false} />
+            </div>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -112,6 +122,9 @@ export default async function ProfileHeader() {
               </div>
             )}
             
+            {isAmbassador && (
+              <AmbassadorBadge size="sm" showText={true} />
+            )}
             {badges && badges.length > 0 && (
               <BadgeDisplay badges={badges} size="sm" />
             )}

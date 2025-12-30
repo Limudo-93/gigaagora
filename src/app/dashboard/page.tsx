@@ -13,6 +13,7 @@ import UpcomingConfirmedGigs from "@/components/dashboard/UpcomingConfirmedGigs"
 import CompletedGigsToRate from "@/components/dashboard/CompletedGigsToRate";
 import ReferralSystem from "@/components/dashboard/ReferralSystem";
 import ThemeSelector from "@/components/dashboard/ThemeSelector";
+import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import { Button } from "@/components/ui/button";
 
 export default async function DashboardPage() {
@@ -25,6 +26,9 @@ export default async function DashboardPage() {
 
   return (
     <DashboardLayoutWithSidebar>
+      {/* Card de Boas-vindas - Primeira vez */}
+      <WelcomeCard />
+
       {/* Mobile: Header compacto primeiro */}
       <div className="md:hidden">
         <ProfileHeader />

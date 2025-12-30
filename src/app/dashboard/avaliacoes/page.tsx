@@ -195,48 +195,48 @@ export default function AvaliacoesPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 w-full">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Avaliações</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Avaliações</h1>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="rounded-lg border border-destructive bg-destructive/10 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-destructive">
             <p className="font-semibold">Erro:</p>
-            <p className="mt-1">{error}</p>
+            <p className="mt-1 break-words">{error}</p>
           </div>
         )}
 
         {/* Card de Resumo */}
         {!loading && stats && stats.total > 0 && (
-          <Card className="border-gray-200 bg-gradient-to-br from-orange-50 to-purple-50">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-gray-900">Resumo das Avaliações</CardTitle>
+          <Card className="border-border bg-card">
+            <CardHeader className="pb-3 sm:pb-6">
+              <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Resumo das Avaliações</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               {/* Estatísticas principais */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-500 to-purple-500 flex items-center justify-center">
-                    <Star className="h-8 w-8 text-white fill-white" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-orange-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                    <Star className="h-6 w-6 sm:h-8 sm:w-8 text-white fill-white" />
                   </div>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground">
                       {stats.average.toFixed(1)}
                     </p>
-                    <p className="text-sm text-gray-600">Média de avaliações</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground">Média de avaliações</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {stats.total} {stats.total === 1 ? 'avaliação' : 'avaliações'} recebidas
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                    <User className="h-8 w-8 text-white" />
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                    <User className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </div>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-                    <p className="text-sm text-gray-600">Total de avaliações</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.total}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Total de avaliações</p>
                   </div>
                 </div>
               </div>
@@ -244,7 +244,7 @@ export default function AvaliacoesPage() {
               {/* Comentários pré-fixados mais escolhidos */}
               {topPredefinedComments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  <h3 className="text-xs sm:text-sm font-semibold text-foreground mb-2 sm:mb-3">
                     Características mais mencionadas
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -252,12 +252,12 @@ export default function AvaliacoesPage() {
                       <Badge
                         key={comment}
                         variant="secondary"
-                        className="bg-white/80 text-gray-900 border border-gray-300 px-3 py-1.5"
+                        className="bg-background text-foreground border-border px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
                       >
                         <span className="font-medium">
                           {translatePredefinedComment(comment)}
                         </span>
-                        <span className="ml-2 text-xs text-gray-600">
+                        <span className="ml-1 sm:ml-2 text-xs text-muted-foreground">
                           ({count}x)
                         </span>
                       </Badge>
@@ -270,42 +270,44 @@ export default function AvaliacoesPage() {
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-700" />
-            <span className="ml-2 text-sm text-gray-700">Carregando avaliações...</span>
+          <div className="flex items-center justify-center py-8 sm:py-12">
+            <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-xs sm:text-sm text-muted-foreground">Carregando avaliações...</span>
           </div>
         ) : ratings.length === 0 ? (
-          <Card className="border-gray-200">
-            <CardContent className="p-12 text-center">
-              <Star className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-sm font-medium text-gray-900 mb-1">
+          <Card className="border-border bg-card">
+            <CardContent className="p-6 sm:p-12 text-center">
+              <Star className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+              <p className="text-xs sm:text-sm font-medium text-foreground mb-1">
                 Nenhuma avaliação encontrada
               </p>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 Você ainda não tem avaliações para exibir.
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {ratings.map((rating) => (
-              <Card key={rating.id} className="border-gray-200">
-                <CardContent className="p-5">
-                  <div className="space-y-4">
+              <Card key={rating.id} className="border-border bg-card">
+                <CardContent className="p-4 sm:p-5">
+                  <div className="space-y-3 sm:space-y-4">
                     {/* Estrelas */}
-                    <div className="flex items-center gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-5 w-5 ${
-                            star <= (rating.rating || 0)
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${
+                              star <= (rating.rating || 0)
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
                       {rating.rating && (
-                        <span className="ml-2 text-sm font-medium text-gray-700">
+                        <span className="ml-1 sm:ml-2 text-xs sm:text-sm font-medium text-foreground">
                           {rating.rating.toFixed(1)}/5.0
                         </span>
                       )}
@@ -313,12 +315,12 @@ export default function AvaliacoesPage() {
 
                     {/* Comentários pré-fixados */}
                     {rating.predefined_comments && rating.predefined_comments.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {rating.predefined_comments.map((comment: string, idx: number) => (
                           <Badge
                             key={idx}
                             variant="secondary"
-                            className="bg-gray-100 text-gray-900 border border-gray-300"
+                            className="bg-muted text-foreground border-border text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1"
                           >
                             {translatePredefinedComment(comment)}
                           </Badge>
@@ -328,8 +330,8 @@ export default function AvaliacoesPage() {
 
                     {/* Comentário customizado */}
                     {rating.comment && (
-                      <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      <div className="p-3 sm:p-4 rounded-lg bg-muted/50 border border-border">
+                        <p className="text-xs sm:text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">
                           {rating.comment}
                         </p>
                       </div>

@@ -221,6 +221,7 @@ CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 CREATE INDEX IF NOT EXISTS idx_reports_category ON reports(category);
 
 -- Trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_reports_updated_at ON reports;
 CREATE TRIGGER update_reports_updated_at
     BEFORE UPDATE ON reports
     FOR EACH ROW
