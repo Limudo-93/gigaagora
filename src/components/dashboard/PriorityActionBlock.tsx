@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -29,8 +29,6 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
 
   useEffect(() => {
     const determinePriorityAction = async () => {
-      const supabase = createClient();
-      
       try {
         // 1. Verificar completude do perfil
         const { data: profile } = await supabase
