@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 import Header from "./Header";
 import Footer from "./Footer";
 import ThemedBackground from "./ThemedBackground";
 import LocationUpdater from "./LocationUpdater";
+import PushNotificationManager from "@/components/push-notifications/PushNotificationManager";
 
 export default function DashboardLayout({
   children,
@@ -14,6 +17,16 @@ export default function DashboardLayout({
   sidebar?: React.ReactNode;
   fullWidth?: boolean;
 }) {
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Background com tema dinâmico */}
@@ -21,6 +34,9 @@ export default function DashboardLayout({
       
       {/* Atualizar localização do usuário após login */}
       <LocationUpdater />
+
+      {/* Gerenciador de notificações push */}
+      {userId && <PushNotificationManager userId={userId} />}
       
       <Header />
       <main className="flex-1 relative z-10 overflow-x-hidden">
