@@ -87,6 +87,28 @@ export default function LoginPage() {
       // Aguarda um momento para garantir que os cookies sejam definidos
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      // Tentar atualizar localização antes de redirecionar (opcional, não bloqueia o login)
+      // Usar timeout curto para não atrasar o redirecionamento
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const { updateUserLocation } = await import("@/app/actions/location");
+              await updateUserLocation(position.coords.latitude, position.coords.longitude);
+              console.log("Localização atualizada após login");
+            } catch (err) {
+              // Não bloqueia o login se falhar
+              console.log("Erro ao atualizar localização após login:", err);
+            }
+          },
+          () => {
+            // Se falhar, continua normalmente (pode ser negado pelo usuário)
+            // O LocationUpdater no dashboard tentará novamente
+          },
+          { timeout: 3000, maximumAge: 0 }
+        );
+      }
+
       // Redireciona usando window.location para forçar reload completo
       // Isso garante que o servidor veja os cookies atualizados
       window.location.href = "/dashboard";

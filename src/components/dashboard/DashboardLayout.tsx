@@ -3,6 +3,7 @@
 import Header from "./Header";
 import Footer from "./Footer";
 import ThemedBackground from "./ThemedBackground";
+import LocationUpdater from "./LocationUpdater";
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,9 @@ export default function DashboardLayout({
     <div className="min-h-screen flex flex-col relative">
       {/* Background com tema dinâmico */}
       <ThemedBackground />
+      
+      {/* Atualizar localização do usuário após login */}
+      <LocationUpdater />
       
       <Header />
       <main className="flex-1 relative z-10 overflow-x-hidden">
