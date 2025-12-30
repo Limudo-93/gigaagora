@@ -199,7 +199,7 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
               className={`bg-gradient-to-r ${config.color} hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all`}
               size="lg"
             >
-              <Link href={config.href}>
+              <Link href={config.href as any}>
                 {config.cta}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
