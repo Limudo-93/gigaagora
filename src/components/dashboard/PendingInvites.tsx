@@ -565,51 +565,95 @@ export default function PendingInvites({ userId }: { userId: string }) {
                           </div>
                         </div>
 
-                        {/* Distância e Tempo de Viagem */}
-                        {(r.distance_km != null || r.estimated_travel_time_minutes != null) && (
-                          <div className="flex items-center gap-3 flex-wrap">
-                            {r.distance_km != null && (
-                              <>
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs ${
-                                    maxRadiusKm != null && r.distance_km <= maxRadiusKm
-                                      ? "border-green-500 text-green-700 bg-green-50"
-                                      : maxRadiusKm != null && r.distance_km > maxRadiusKm
-                                      ? "border-orange-500 text-orange-700 bg-orange-50"
-                                      : ""
-                                  }`}
-                                >
-                                  <Navigation className="h-3 w-3 mr-1" />
-                                  {r.distance_km.toFixed(1)} km
-                                </Badge>
-                                {maxRadiusKm != null && (
-                                  <Badge 
-                                    className={`text-xs ${
-                                      r.distance_km <= maxRadiusKm
-                                        ? "bg-green-500 text-white"
-                                        : "bg-orange-500 text-white"
-                                    }`}
-                                  >
-                                    {r.distance_km <= maxRadiusKm ? "Dentro do raio" : "Fora do raio"}
-                                  </Badge>
+                        {/* Distância, Perto/Longe e Tempo de Viagem - Destaque Visual */}
+                        {(r.distance_km != null || r.estimated_travel_time_minutes != null) ? (
+                          <div className="space-y-2">
+                            {/* Card de Distância e Status */}
+                            <div className={`rounded-lg border-2 p-3 ${
+                              r.distance_km != null && maxRadiusKm != null
+                                ? r.distance_km <= maxRadiusKm
+                                  ? "border-green-500/50 bg-green-50 dark:bg-green-900/20"
+                                  : "border-orange-500/50 bg-orange-50 dark:bg-orange-900/20"
+                                : "border-border bg-muted/30"
+                            }`}>
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                {/* Distância */}
+                                {r.distance_km != null && (
+                                  <div className="flex items-center gap-2">
+                                    <Navigation className={`h-4 w-4 ${
+                                      maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                        ? "text-green-600 dark:text-green-400"
+                                        : maxRadiusKm != null && r.distance_km > maxRadiusKm
+                                        ? "text-orange-600 dark:text-orange-400"
+                                        : "text-primary"
+                                    }`} />
+                                    <div>
+                                      <p className="text-xs text-muted-foreground">Distância</p>
+                                      <p className={`text-base font-bold ${
+                                        maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                          ? "text-green-700 dark:text-green-300"
+                                          : maxRadiusKm != null && r.distance_km > maxRadiusKm
+                                          ? "text-orange-700 dark:text-orange-300"
+                                          : "text-foreground"
+                                      }`}>
+                                        {r.distance_km.toFixed(1)} km
+                                      </p>
+                                    </div>
+                                  </div>
                                 )}
-                              </>
-                            )}
-                            {r.estimated_travel_time_minutes != null && (
-                              <Badge variant="outline" className="text-xs">
-                                <Clock className="h-3 w-3 mr-1" />
-                                ~{r.estimated_travel_time_minutes} min
-                              </Badge>
+                                
+                                {/* Status Perto/Longe */}
+                                {r.distance_km != null && (
+                                  <div className="flex items-center gap-2">
+                                    <Badge 
+                                      className={`text-xs font-semibold ${
+                                        maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                          ? "bg-green-500 text-white"
+                                          : maxRadiusKm != null && r.distance_km > maxRadiusKm
+                                          ? "bg-orange-500 text-white"
+                                          : r.distance_km <= 10
+                                          ? "bg-green-500 text-white"
+                                          : r.distance_km <= 25
+                                          ? "bg-blue-500 text-white"
+                                          : "bg-gray-500 text-white"
+                                      }`}
+                                    >
+                                      {maxRadiusKm != null 
+                                        ? (r.distance_km <= maxRadiusKm ? "✓ Próximo" : "⚠ Longe")
+                                        : (r.distance_km <= 10 ? "✓ Muito Próximo" : r.distance_km <= 25 ? "✓ Próximo" : "⚠ Longe")
+                                      }
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Tempo de Viagem de Carro */}
+                              {r.estimated_travel_time_minutes != null && (
+                                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Tempo estimado de carro</p>
+                                    <p className="text-sm font-semibold text-foreground">
+                                      ~{r.estimated_travel_time_minutes} minutos
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Aviso se está fora do raio configurado */}
+                            {maxRadiusKm != null && r.distance_km != null && r.distance_km > maxRadiusKm && (
+                              <div className="rounded-lg border-2 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20 p-2.5">
+                                <p className="text-xs font-medium text-orange-800 dark:text-orange-200">
+                                  ⚠️ Este convite está fora do seu raio de busca configurado ({maxRadiusKm} km)
+                                </p>
+                              </div>
                             )}
                           </div>
-                        )}
-                        
-                        {/* Aviso se está fora do raio configurado */}
-                        {maxRadiusKm != null && r.distance_km != null && r.distance_km > maxRadiusKm && (
-                          <div className="rounded-lg border-2 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20 p-3">
-                            <p className="text-xs font-medium text-orange-800 dark:text-orange-200">
-                              ⚠️ Este convite está {r.distance_km.toFixed(1)} km de distância, fora do seu raio de busca configurado ({maxRadiusKm} km).
+                        ) : musicianLocation && (
+                          <div className="rounded-lg border-2 border-border bg-muted/30 p-3">
+                            <p className="text-xs text-muted-foreground">
+                              Distância não disponível (gig sem coordenadas)
                             </p>
                           </div>
                         )}
