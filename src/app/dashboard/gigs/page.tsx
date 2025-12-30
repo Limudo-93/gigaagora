@@ -26,6 +26,8 @@ import Link from "next/link";
 import Image from "next/image";
 import GigDetailsDialog from "@/components/dashboard/GigDetailsDialog";
 import ShareGigButton from "@/components/dashboard/ShareGigButton";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useNotification } from "@/components/ui/notification-provider";
 
 type GigRow = {
   id: string;
@@ -90,6 +92,12 @@ export default function GigsPage() {
   const [userType, setUserType] = useState<"musician" | "contractor" | null>(null);
   const [deletingGigId, setDeletingGigId] = useState<string | null>(null);
   const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
+  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingDeclineInviteId, setPendingDeclineInviteId] = useState<string | null>(null);
+  const [pendingDeclineGigId, setPendingDeclineGigId] = useState<string | null>(null);
+  const [pendingDeleteGigId, setPendingDeleteGigId] = useState<string | null>(null);
+  const notification = useNotification();
 
   // Busca o usuário atual e seu tipo
   useEffect(() => {
@@ -480,9 +488,15 @@ export default function GigsPage() {
       return;
     }
 
-    if (!confirm("Tem certeza que deseja recusar este convite?")) {
-      return;
-    }
+    setPendingDeclineInviteId(inviteId);
+    setPendingDeclineGigId(gigId);
+    setShowDeclineConfirm(true);
+  };
+
+  const handleDeclineConfirm = async () => {
+    const inviteId = pendingDeclineInviteId;
+    const gigId = pendingDeclineGigId;
+    if (!inviteId || !gigId) return;
 
     setProcessingInviteId(inviteId);
     setError(null);
@@ -521,18 +535,35 @@ export default function GigsPage() {
       console.error("declineInvite exception:", err);
       setError(err?.message ?? "Erro inesperado ao recusar convite.");
       setProcessingInviteId(null);
+      setShowDeclineConfirm(false);
+      setPendingDeclineInviteId(null);
+      setPendingDeclineGigId(null);
+      notification.showNotification({
+        type: "success",
+        title: "Convite recusado",
+        message: "O convite foi recusado com sucesso.",
+      });
+    } catch (err: any) {
+      console.error("declineInvite exception:", err);
+      setError(err?.message ?? "Erro inesperado ao recusar convite.");
+      setProcessingInviteId(null);
     }
   };
 
-  const handleDeleteGig = async (gigId: string, e: React.MouseEvent) => {
+  const handleDeleteGig = (gigId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    if (!confirm("Tem certeza que deseja apagar esta gig? Esta ação não pode ser desfeita.")) {
-      return;
-    }
+    setPendingDeleteGigId(gigId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const gigId = pendingDeleteGigId;
+    if (!gigId) return;
 
     if (!userId) {
       setError("Usuário não identificado.");
+      setShowDeleteConfirm(false);
+      setPendingDeleteGigId(null);
       return;
     }
 
@@ -578,6 +609,13 @@ export default function GigsPage() {
       console.error("deleteGig exception:", err);
       setError(err?.message ?? "Erro inesperado ao apagar gig.");
       setDeletingGigId(null);
+      setShowDeleteConfirm(false);
+      setPendingDeleteGigId(null);
+      notification.showNotification({
+        type: "success",
+        title: "Gig excluída",
+        message: "A gig foi excluída com sucesso.",
+      });
     }
   };
 
@@ -943,6 +981,31 @@ export default function GigsPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           gigId={selectedGigId}
+        />
+
+        {/* Diálogos de confirmação */}
+        <ConfirmDialog
+          open={showDeclineConfirm}
+          onOpenChange={setShowDeclineConfirm}
+          onConfirm={handleDeclineConfirm}
+          title="Recusar Convite"
+          description="Tem certeza que deseja recusar este convite?"
+          confirmText="Sim, Recusar"
+          cancelText="Cancelar"
+          variant="default"
+          loading={processingInviteId !== null}
+        />
+
+        <ConfirmDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          onConfirm={handleDeleteConfirm}
+          title="Excluir Gig"
+          description="Tem certeza que deseja apagar esta gig? Esta ação não pode ser desfeita."
+          confirmText="Sim, Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+          loading={deletingGigId !== null}
         />
       </div>
     </DashboardLayout>

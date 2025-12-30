@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Calendar, Clock, MapPin, DollarSign, Edit, Users, MessageSquare, X, Download, Image as ImageIcon, Eye, UserCheck } from "lucide-react";
 import ShareGigButton from "./ShareGigButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type ConfirmedMusician = {
   musician_id: string;
@@ -83,6 +84,7 @@ function normalizeStatus(status?: string | null) {
 
 export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = false }: GigCardProps) {
   const router = useRouter();
+  const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
 
   const date = fmtDateBR(gig.start_time);
   const time = fmtTimeBR(gig.start_time);
@@ -104,13 +106,13 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancelClick = () => {
     if (!onCancel) return;
-    
-    if (!confirm("Tem certeza que deseja cancelar esta gig? Esta ação não pode ser desfeita.")) {
-      return;
-    }
+    setShowCancelConfirm(true);
+  };
 
+  const handleCancelConfirm = async () => {
+    if (!onCancel) return;
     await onCancel(gig.id);
   };
 
@@ -129,7 +131,19 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
   };
 
   return (
-    <Card>
+    <>
+      <ConfirmDialog
+        open={showCancelConfirm}
+        onOpenChange={setShowCancelConfirm}
+        onConfirm={handleCancelConfirm}
+        title="Cancelar Gig"
+        description="Tem certeza que deseja cancelar esta gig? Esta ação não pode ser desfeita."
+        confirmText="Sim, Cancelar"
+        cancelText="Não"
+        variant="destructive"
+        loading={isCancelling}
+      />
+      <Card className="border-2 border-border shadow-lg">
       {/* Miniatura do flyer ou logo padrão */}
       <div className="mb-3 relative group">
         <div 
@@ -299,7 +313,7 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
           variant="destructive" 
           size="sm" 
           className="flex-1"
-          onClick={handleCancel}
+          onClick={handleCancelClick}
           disabled={isCancelling || gig.status === "cancelled"}
         >
           <X className="mr-2 h-4 w-4" />
@@ -307,5 +321,6 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
         </Button>
       </div>
     </Card>
+    </>
   );
 }
