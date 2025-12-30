@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock, MapPin, DollarSign, Edit, Users, MessageSquare, X, Download, Image as ImageIcon, Eye, UserCheck } from "lucide-react";
 import ShareGigButton from "./ShareGigButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -143,184 +143,190 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
         variant="destructive"
         loading={isCancelling}
       />
-      <Card className="border-2 border-border shadow-lg">
-      {/* Miniatura do flyer ou logo padrão */}
-      <div className="mb-3 relative group">
-        <div 
-          className={`relative w-full h-32 rounded-lg overflow-hidden border border-border ${gig.flyer_url ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
-          onClick={gig.flyer_url ? handleDownloadFlyer : undefined}
-          title={gig.flyer_url ? "Clique para baixar o flyer" : undefined}
-        >
-          {gig.flyer_url ? (
-            <>
-              <img
-                src={gig.flyer_url}
-                alt={gig.title || "Flyer do evento"}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 rounded-full p-2">
-                  <Download className="h-4 w-4 text-card-foreground" />
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-              <div className="relative w-24 h-24">
-                <Image
-                  src="/logo.png"
-                  alt="Logo Chama o Músico"
-                  fill
-                  className="object-contain"
+      <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <CardContent className="p-0">
+          {/* Flyer do evento ou logo padrão */}
+          <div className="w-full h-48 relative group overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5">
+            {gig.flyer_url ? (
+              <>
+                <img
+                  src={gig.flyer_url}
+                  alt={gig.title || "Flyer do evento"}
+                  className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                  onClick={handleDownloadFlyer}
+                  title="Clique para baixar o flyer"
                 />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tags de gênero/tipo */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        <Badge variant="secondary">Pagode</Badge>
-        <Badge variant="secondary">Show</Badge>
-      </div>
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          {/* Localização */}
-          <div className="text-sm font-medium text-foreground mb-2">
-            {place}
-          </div>
-
-          {/* Data, Hora e Valor */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-2">
-            <div className="inline-flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>{date || "Data a definir"}</span>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              <span>{time || "Horário a definir"}</span>
-            </div>
-
-            {(gig.min_cache || gig.max_cache) && (
-              <div className="inline-flex items-center gap-1.5">
-                <DollarSign className="h-4 w-4" />
-                <span>
-                  {gig.min_cache && gig.max_cache && gig.min_cache !== gig.max_cache
-                    ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.min_cache)} - R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.max_cache)}`
-                    : gig.min_cache
-                    ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.min_cache)}`
-                    : gig.max_cache
-                    ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.max_cache)}`
-                    : ""}
-                </span>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 rounded-full p-2.5 shadow-lg">
+                    <Download className="h-5 w-5 text-card-foreground" />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="relative w-32 h-32 opacity-50">
+                  <Image
+                    src="/logo.png"
+                    alt="Logo Chama o Músico"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </div>
             )}
           </div>
 
-          {/* Endereço */}
-          {address && (
-            <div className="text-xs text-muted-foreground mb-2">
-              {address}
-            </div>
-          )}
-
-          {/* Badge de status e tipo */}
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="secondary">Normal</Badge>
-            <Badge variant={statusUI.variant}>
-              {statusUI.label}
-            </Badge>
-          </div>
-
-          {/* Músicos Confirmados */}
-          {gig.confirmed_musicians && gig.confirmed_musicians.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <div className="flex items-center gap-2 mb-2">
-                <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <span className="text-xs font-semibold text-foreground">Músicos Confirmados:</span>
+          <div className="p-5 space-y-4">
+            {/* Título */}
+            <div>
+              <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2">
+                {gig.title || "Gig sem título"}
+              </h3>
+              
+              {/* Tags de gênero/tipo */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">Pagode</Badge>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">Show</Badge>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {gig.confirmed_musicians.map((musician, idx) => (
-                  <div
-                    key={musician.musician_id || idx}
-                    className="flex items-center gap-2 px-2 py-1 rounded-md bg-green-500/10 border border-green-500/20"
-                  >
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={musician.musician_photo_url || ""} />
-                      <AvatarFallback className="bg-green-500 text-white text-xs">
-                        {musician.musician_name
-                          ?.split(" ")
-                          .map((n: string) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2) || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-medium text-foreground truncate">
-                        {musician.musician_name || "Músico"}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {musician.instrument}
-                      </span>
-                    </div>
+            </div>
+
+            {/* Informações principais */}
+            <div className="space-y-2.5">
+              {/* Localização */}
+              <div className="flex items-start gap-2.5">
+                <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm text-foreground truncate">{place}</p>
+                  {address && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{address}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Data, Hora e Valor */}
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>{date || "Data a definir"}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>{time || "Horário a definir"}</span>
+                </div>
+                {(gig.min_cache || gig.max_cache) && (
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="font-medium text-foreground">
+                      {gig.min_cache && gig.max_cache && gig.min_cache !== gig.max_cache
+                        ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.min_cache)} - R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.max_cache)}`
+                        : gig.min_cache
+                        ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.min_cache)}`
+                        : gig.max_cache
+                        ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.max_cache)}`
+                        : ""}
+                    </span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Botões de ação */}
-      <div className="mt-4 flex items-center gap-2 flex-wrap">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex-1"
-          onClick={handleOpen}
-        >
-          <Eye className="mr-2 h-4 w-4" />
-          Ver Detalhes
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex-1"
-          onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches` as any)} // Corrigido para typedRoutes
-        >
-          <Users className="mr-2 h-4 w-4" />
-          Ver Matches
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex-1"
-          onClick={handleEdit}
-        >
-          <Edit className="mr-2 h-4 w-4" />
-          Editar
-        </Button>
-        <ShareGigButton 
-          gigId={gig.id} 
-          gigTitle={gig.title}
-          className="flex-1"
-        />
-        <Button 
-          variant="destructive" 
-          size="sm" 
-          className="flex-1"
-          onClick={handleCancelClick}
-          disabled={isCancelling || gig.status === "cancelled"}
-        >
-          <X className="mr-2 h-4 w-4" />
-          {isCancelling ? "Cancelando..." : "Cancelar"}
-        </Button>
-      </div>
-    </Card>
+            {/* Badges de status */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Badge variant="secondary" className="text-xs font-medium">Normal</Badge>
+              <Badge variant={statusUI.variant} className="text-xs font-medium">
+                {statusUI.label}
+              </Badge>
+            </div>
+
+            {/* Músicos Confirmados */}
+            {gig.confirmed_musicians && gig.confirmed_musicians.length > 0 && (
+              <div className="pt-3 border-t-2 border-border/30">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <span className="text-sm font-semibold text-foreground">Músicos Confirmados</span>
+                  <Badge variant="secondary" className="text-xs ml-auto">
+                    {gig.confirmed_musicians.length}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {gig.confirmed_musicians.map((musician, idx) => (
+                    <div
+                      key={musician.musician_id || idx}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border-2 border-green-500/30 hover:bg-green-500/15 transition-colors"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={musician.musician_photo_url || ""} />
+                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold shadow-sm">
+                          {musician.musician_name
+                            ?.split(" ")
+                            .map((n: string) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2) || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-semibold text-foreground truncate">
+                          {musician.musician_name || "Músico"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {musician.instrument}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Botões de ação */}
+            <div className="flex flex-col gap-2.5 pt-4 border-t-2 border-border/30">
+              <Button
+                variant="outline"
+                className="w-full border-2 hover:bg-accent/50 font-medium"
+                onClick={handleOpen}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Ver Detalhes
+              </Button>
+              <div className="grid grid-cols-2 gap-2.5">
+                <Button
+                  variant="outline"
+                  className="border-2 hover:bg-accent/50 font-medium"
+                  onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches` as any)}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Ver Matches
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-2 hover:bg-accent/50 font-medium"
+                  onClick={handleEdit}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <ShareGigButton
+                  gigId={gig.id}
+                  gigTitle={gig.title}
+                  className="border-2"
+                />
+                <Button
+                  variant="destructive"
+                  className="border-2 font-medium"
+                  onClick={handleCancelClick}
+                  disabled={isCancelling || gig.status === "cancelled"}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  {isCancelling ? "Cancelando..." : "Cancelar"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 }
