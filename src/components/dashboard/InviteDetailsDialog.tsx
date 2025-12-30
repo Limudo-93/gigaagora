@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, ClipboardList, DollarSign } from "lucide-react";
+import { Calendar, Clock, MapPin, ClipboardList, DollarSign, Navigation } from "lucide-react";
 
 function formatDateTime(iso?: string) {
   if (!iso) return { date: "-", time: "-" };
@@ -30,6 +30,11 @@ export default function InviteDetailsDialog({
   // Suporta tanto o formato novo (gig/role) quanto o antigo (gigs/gig_roles)
   const gig = invite?.gig || (Array.isArray(invite?.gigs) ? invite?.gigs[0] : invite?.gigs);
   const role = invite?.role || (Array.isArray(invite?.gig_roles) ? invite?.gig_roles[0] : invite?.gig_roles);
+  
+  // Informações de distância e tempo de viagem
+  const distanceKm = invite?.distance_km ?? null;
+  const estimatedTravelTimeMinutes = invite?.estimated_travel_time_minutes ?? null;
+  const maxRadiusKm = invite?.max_radius_km ?? null;
 
   const { date, time } = formatDateTime(gig?.start_time);
   const { time: endTime } = formatDateTime(gig?.end_time);
@@ -67,6 +72,95 @@ export default function InviteDetailsDialog({
                 </Badge>
               )}
             </div>
+
+            {/* Distância e Tempo de Viagem - Card Destacado */}
+            {(distanceKm != null || estimatedTravelTimeMinutes != null) && (
+              <div className={`rounded-2xl border-2 p-5 shadow-lg ${
+                distanceKm != null && maxRadiusKm != null
+                  ? distanceKm <= maxRadiusKm
+                    ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30"
+                    : "border-orange-500 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30"
+                  : "border-primary/50 bg-gradient-to-br from-primary/10 to-purple-50 dark:from-primary/20 dark:to-purple-900/20"
+              }`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Distância */}
+                  {distanceKm != null && (
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2.5 rounded-lg ${
+                        maxRadiusKm != null && distanceKm <= maxRadiusKm
+                          ? "bg-green-500/20"
+                          : maxRadiusKm != null && distanceKm > maxRadiusKm
+                          ? "bg-orange-500/20"
+                          : "bg-primary/20"
+                      }`}>
+                        <Navigation className={`h-6 w-6 ${
+                          maxRadiusKm != null && distanceKm <= maxRadiusKm
+                            ? "text-green-600 dark:text-green-400"
+                            : maxRadiusKm != null && distanceKm > maxRadiusKm
+                            ? "text-orange-600 dark:text-orange-400"
+                            : "text-primary"
+                        }`} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Distância</p>
+                        <p className={`text-3xl font-bold mb-2 ${
+                          maxRadiusKm != null && distanceKm <= maxRadiusKm
+                            ? "text-green-700 dark:text-green-300"
+                            : maxRadiusKm != null && distanceKm > maxRadiusKm
+                            ? "text-orange-700 dark:text-orange-300"
+                            : "text-foreground"
+                        }`}>
+                          {distanceKm.toFixed(1)} km
+                        </p>
+                        <Badge 
+                          className={`text-xs font-semibold ${
+                            maxRadiusKm != null && distanceKm <= maxRadiusKm
+                              ? "bg-green-500 text-white"
+                              : maxRadiusKm != null && distanceKm > maxRadiusKm
+                              ? "bg-orange-500 text-white"
+                              : distanceKm <= 10
+                              ? "bg-green-500 text-white"
+                              : distanceKm <= 25
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-500 text-white"
+                          }`}
+                        >
+                          {maxRadiusKm != null 
+                            ? (distanceKm <= maxRadiusKm ? "✓ Próximo" : "⚠ Longe")
+                            : (distanceKm <= 10 ? "✓ Muito Próximo" : distanceKm <= 25 ? "✓ Próximo" : "⚠ Longe")
+                          }
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Tempo de Viagem */}
+                  {estimatedTravelTimeMinutes != null && (
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-lg bg-blue-500/20">
+                        <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Tempo de carro</p>
+                        <p className="text-3xl font-bold text-foreground mb-2">
+                          ~{estimatedTravelTimeMinutes} min
+                        </p>
+                        <p className="text-xs text-muted-foreground">Tempo estimado</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Aviso se está fora do raio */}
+                {maxRadiusKm != null && distanceKm != null && distanceKm > maxRadiusKm && (
+                  <div className="mt-4 rounded-lg border-2 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20 p-3">
+                    <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                      ⚠️ Este convite está fora do seu raio de busca configurado ({maxRadiusKm} km)
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Gig info - Card moderno */}
             <div className="rounded-2xl border border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/70 p-5 shadow-lg space-y-4">
