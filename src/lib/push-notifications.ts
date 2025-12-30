@@ -18,7 +18,11 @@ export interface NotificationPayload {
   tag?: string;
   requireInteraction?: boolean;
   data?: any;
-  actions?: NotificationAction[];
+  actions?: Array<{
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
   vibrate?: number[];
   url?: string;
 }
