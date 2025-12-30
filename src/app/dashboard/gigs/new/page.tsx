@@ -1051,6 +1051,7 @@ export default function NewGigPage() {
                       </label>
                       <input
                         type="text"
+                        inputMode="numeric"
                         className={`w-full rounded-lg border-2 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
                           role.instrument && (() => {
                             const hasVocal = hasVocalInRole(role);
@@ -1061,35 +1062,60 @@ export default function NewGigPage() {
                             return "border-input bg-background";
                           })()
                         }`}
-                        value={role.cache === "" ? "" : typeof role.cache === "number" ? new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache) : ""}
+                        value={
+                          role.cache === "" 
+                            ? "" 
+                            : typeof role.cache === "number" 
+                              ? new Intl.NumberFormat("pt-BR", { 
+                                  minimumFractionDigits: 2, 
+                                  maximumFractionDigits: 2 
+                                }).format(role.cache)
+                              : ""
+                        }
                         onChange={(e) => {
+                          // Remove tudo exceto números e vírgula
                           let value = e.target.value.replace(/[^\d,]/g, "");
-                          let numValue = value === "" ? "" : parseFloat(value.replace(",", ".")) || 0;
                           
-                          if (role.instrument && numValue !== "" && typeof numValue === "number") {
-                            const hasVocal = hasVocalInRole(role);
-                            const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
+                          // Substitui vírgula por ponto para parseFloat
+                          let numValue: number | "" = "";
+                          if (value !== "") {
+                            // Se tem vírgula, trata como decimal
+                            if (value.includes(",")) {
+                              numValue = parseFloat(value.replace(",", ".")) || 0;
+                            } else {
+                              // Se não tem vírgula, trata como número inteiro
+                              numValue = parseFloat(value) || 0;
+                            }
                             
-                            if (minCache > 0 && numValue < minCache) {
-                              numValue = minCache;
+                            // Valida valor mínimo se houver instrumento selecionado
+                            if (role.instrument && typeof numValue === "number" && numValue > 0) {
+                              const hasVocal = hasVocalInRole(role);
+                              const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
+                              
+                              if (minCache > 0 && numValue < minCache) {
+                                numValue = minCache;
+                              }
+                            }
+                            
+                            // Se o valor for 0, permite digitar (não força mínimo durante digitação)
+                            if (numValue === 0 && value !== "0") {
+                              numValue = "";
                             }
                           }
                           
                           updateRole(role.id, "cache", numValue);
                         }}
                         onBlur={(e) => {
-                          if (role.instrument) {
-                            const hasVocal = hasVocalInRole(role);
-                            const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
-                            
-                            if (minCache > 0 && role.cache && typeof role.cache === "number" && role.cache < minCache) {
-                              updateRole(role.id, "cache", minCache);
-                              e.target.value = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(minCache);
-                            } else if (role.cache !== "" && typeof role.cache === "number") {
-                              e.target.value = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache);
+                          // Garante formatação correta e validação mínima ao sair do campo
+                          if (role.cache !== "" && typeof role.cache === "number") {
+                            if (role.instrument) {
+                              const hasVocal = hasVocalInRole(role);
+                              const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
+                              
+                              if (minCache > 0 && role.cache < minCache) {
+                                updateRole(role.id, "cache", minCache);
+                              }
                             }
-                          } else if (role.cache !== "" && typeof role.cache === "number") {
-                            e.target.value = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache);
                           }
                         }}
                         placeholder="0,00"
@@ -1130,7 +1156,9 @@ export default function NewGigPage() {
                             <button
                               key={genero}
                               type="button"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 const newGenres = isSelected
                                   ? role.desired_genres.filter((g) => g !== genero)
                                   : [...role.desired_genres, genero];
@@ -1176,7 +1204,9 @@ export default function NewGigPage() {
                             <button
                               key={habilidade}
                               type="button"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 const newSkills = isSelected
                                   ? role.desired_skills.filter((s) => s !== habilidade)
                                   : [...role.desired_skills, habilidade];
@@ -1215,7 +1245,9 @@ export default function NewGigPage() {
                             <button
                               key={setup}
                               type="button"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 const newSetup = isSelected
                                   ? role.desired_setup.filter((s) => s !== setup)
                                   : [...role.desired_setup, setup];
