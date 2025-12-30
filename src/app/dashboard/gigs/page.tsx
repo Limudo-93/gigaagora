@@ -19,7 +19,8 @@ import {
   Check,
   X,
   User,
-  Loader2
+  Loader2,
+  UserCheck
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -46,6 +47,12 @@ type GigRow = {
   invite_id: string | null;
   invite_status: string | null;
   compatible_instruments: string[];
+  confirmed_musicians?: {
+    musician_id: string;
+    musician_name: string | null;
+    musician_photo_url: string | null;
+    instrument: string;
+  }[];
 };
 
 function formatDateBR(iso?: string | null) {
@@ -259,6 +266,32 @@ export default function GigsPage() {
           return;
         }
 
+        // Busca músicos confirmados para todas as gigs de uma vez
+        const gigIds = (data || []).map((g: any) => g.id);
+        const confirmedMusiciansMap = new Map<string, any[]>();
+        
+        if (gigIds.length > 0) {
+          // Buscar confirmados para todas as gigs
+          for (const gigId of gigIds) {
+            try {
+              const { data: confirmedData } = await supabase.rpc(
+                "rpc_list_confirmed_musicians_for_gig",
+                { p_gig_id: gigId }
+              );
+              if (confirmedData && confirmedData.length > 0) {
+                confirmedMusiciansMap.set(gigId, confirmedData.map((m: any) => ({
+                  musician_id: m.musician_id,
+                  musician_name: m.musician_name,
+                  musician_photo_url: m.musician_photo_url,
+                  instrument: m.instrument,
+                })));
+              }
+            } catch (err) {
+              console.error(`Error loading confirmed musicians for gig ${gigId}:`, err);
+            }
+          }
+        }
+
         const processedGigs: GigRow[] = (data || []).map((gig: any) => ({
           ...gig,
           contractor_name: null,
@@ -266,6 +299,7 @@ export default function GigsPage() {
           invite_id: null,
           invite_status: null,
           compatible_instruments: [],
+          confirmed_musicians: confirmedMusiciansMap.get(gig.id) || [],
         }));
 
         setGigs(processedGigs);
@@ -760,6 +794,41 @@ export default function GigsPage() {
                           </Badge>
                         )}
                       </div>
+
+                      {/* Músicos Confirmados - apenas para contractors */}
+                      {userType === "contractor" && gig.confirmed_musicians && gig.confirmed_musicians.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-border/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <span className="text-xs font-semibold text-foreground">Músicos Confirmados:</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {gig.confirmed_musicians.map((musician, idx) => (
+                              <div
+                                key={musician.musician_id || idx}
+                                className="flex items-center gap-2 px-2 py-1 rounded-md bg-green-500/10 border border-green-500/20"
+                              >
+                                <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-semibold">
+                                  {musician.musician_name
+                                    ?.split(" ")
+                                    .map((n: string) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                    .slice(0, 2) || "?"}
+                                </div>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs font-medium text-foreground truncate">
+                                    {musician.musician_name || "Músico"}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {musician.instrument}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Botões de ação */}
                       <div className="flex flex-col gap-2 pt-2 border-t border-border/50">

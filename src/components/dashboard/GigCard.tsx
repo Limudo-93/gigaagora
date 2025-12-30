@@ -6,8 +6,16 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, DollarSign, Edit, Users, MessageSquare, X, Download, Image as ImageIcon, Eye } from "lucide-react";
+import { Calendar, Clock, MapPin, DollarSign, Edit, Users, MessageSquare, X, Download, Image as ImageIcon, Eye, UserCheck } from "lucide-react";
 import ShareGigButton from "./ShareGigButton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+type ConfirmedMusician = {
+  musician_id: string;
+  musician_name: string | null;
+  musician_photo_url: string | null;
+  instrument: string;
+};
 
 type GigCardProps = {
   gig: {
@@ -20,6 +28,7 @@ type GigCardProps = {
     flyer_url?: string | null;
     min_cache?: number | null;
     max_cache?: number | null;
+    confirmed_musicians?: ConfirmedMusician[];
   };
   /** opcional: se quiser sobrescrever a navegação padrão */
   onOpen?: (gigId: string) => void;
@@ -211,6 +220,44 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
               {statusUI.label}
             </Badge>
           </div>
+
+          {/* Músicos Confirmados */}
+          {gig.confirmed_musicians && gig.confirmed_musicians.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <div className="flex items-center gap-2 mb-2">
+                <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-semibold text-foreground">Músicos Confirmados:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {gig.confirmed_musicians.map((musician, idx) => (
+                  <div
+                    key={musician.musician_id || idx}
+                    className="flex items-center gap-2 px-2 py-1 rounded-md bg-green-500/10 border border-green-500/20"
+                  >
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={musician.musician_photo_url || ""} />
+                      <AvatarFallback className="bg-green-500 text-white text-xs">
+                        {musician.musician_name
+                          ?.split(" ")
+                          .map((n: string) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-medium text-foreground truncate">
+                        {musician.musician_name || "Músico"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {musician.instrument}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

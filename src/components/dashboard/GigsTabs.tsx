@@ -11,6 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import GigCard from "./GigCard";
 import GigDetailsDialog from "./GigDetailsDialog";
 
+type ConfirmedMusician = {
+  musician_id: string;
+  musician_name: string | null;
+  musician_photo_url: string | null;
+  instrument: string;
+};
+
 type GigRow = {
   id: string;
   title: string | null;
@@ -25,6 +32,7 @@ type GigRow = {
   flyer_url?: string | null;
   min_cache?: number | null;
   max_cache?: number | null;
+  confirmed_musicians?: ConfirmedMusician[];
 };
 
 type TabKey = "draft" | "upcoming" | "past" | "canceled";
@@ -107,7 +115,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
           console.log("GigsTabs: Todas as gigs do contratante (para debug):", allGigs);
         }
 
-        // Busca os valores de cache das roles para cada gig
+        // Busca os valores de cache das roles e músicos confirmados para cada gig
         const gigsWithCache = await Promise.all(
           (data ?? []).map(async (gig) => {
             const { data: rolesData } = await supabase
@@ -120,10 +128,22 @@ export default function GigsTabs({ userId }: { userId: string }) {
               .map((r) => r.cache)
               .filter((c): c is number => c !== null && c !== undefined);
 
+            // Busca músicos confirmados para esta gig
+            const { data: confirmedData } = await supabase.rpc(
+              "rpc_list_confirmed_musicians_for_gig",
+              { p_gig_id: gig.id }
+            );
+
             return {
               ...gig,
               min_cache: cacheValues.length > 0 ? Math.min(...cacheValues) : null,
               max_cache: cacheValues.length > 0 ? Math.max(...cacheValues) : null,
+              confirmed_musicians: (confirmedData || []).map((m: any) => ({
+                musician_id: m.musician_id,
+                musician_name: m.musician_name,
+                musician_photo_url: m.musician_photo_url,
+                instrument: m.instrument,
+              })),
             };
           })
         );

@@ -634,8 +634,34 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
 
         // Processar músicos confirmados
         if (confirmedRpcData && confirmedRpcData.length > 0) {
-          setConfirmedMusicians((confirmedRpcData || []) as AcceptedMusician[]);
+          // Transformar os dados da RPC para o formato esperado
+          const transformed = (confirmedRpcData || []).map((m: any) => ({
+            invite_id: m.invite_id,
+            musician_id: m.musician_id,
+            musician_name: m.musician_name,
+            musician_photo_url: m.musician_photo_url,
+            instrument: m.instrument,
+            gig_role_id: m.gig_role_id,
+            accepted_at: m.confirmed_at || new Date().toISOString(),
+            avg_rating: m.avg_rating || null,
+            rating_count: m.rating_count || null,
+            city: m.city || null,
+            state: m.state || null,
+            phone: null,
+            bio: null,
+            instruments: [],
+            genres: [],
+            skills: [],
+            setup: [],
+            portfolio_links: [],
+            attendance_rate: null,
+            response_time_seconds_avg: null,
+            is_trusted: false,
+          }));
+          console.log('Músicos confirmados processados:', transformed.length);
+          setConfirmedMusicians(transformed as AcceptedMusician[]);
         } else if (confirmedRpcError) {
+          console.error('RPC confirmed error details:', confirmedRpcError);
           // Fallback: buscar diretamente
           const { data: gigInvites } = await supabase
             .from("invites")
@@ -645,7 +671,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
           const inviteIds = (gigInvites || []).map((inv: any) => inv.id);
 
           if (inviteIds.length > 0) {
-            const { data: confirmationsData } = await supabase
+            const { data: confirmationsData, error: confirmationsError } = await supabase
               .from("confirmations")
               .select(`
                 invite_id,
@@ -663,7 +689,10 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
               .eq("confirmed", true)
               .in("invite_id", inviteIds);
 
-            if (confirmationsData && confirmationsData.length > 0) {
+            if (confirmationsError) {
+              console.error('Error loading confirmations:', confirmationsError);
+              setConfirmedMusicians([]);
+            } else if (confirmationsData && confirmationsData.length > 0) {
               const transformed = confirmationsData.map((c: any) => {
                 const inv = Array.isArray(c.invites) ? c.invites[0] : c.invites;
                 return {
@@ -673,16 +702,35 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                   musician_photo_url: inv?.profiles?.photo_url || null,
                   instrument: inv?.gig_roles?.instrument || "",
                   gig_role_id: inv?.gig_role_id || "",
-                  accepted_at: c.confirmed_at,
+                  accepted_at: c.confirmed_at || new Date().toISOString(),
                   avg_rating: inv?.musician_profiles?.avg_rating || null,
                   rating_count: inv?.musician_profiles?.rating_count || null,
                   city: inv?.profiles?.city || null,
                   state: inv?.profiles?.state || null,
+                  phone: inv?.profiles?.phone_e164 || null,
+                  bio: null,
+                  instruments: [],
+                  genres: [],
+                  skills: [],
+                  setup: [],
+                  portfolio_links: [],
+                  attendance_rate: null,
+                  response_time_seconds_avg: null,
+                  is_trusted: false,
                 };
               });
+              console.log('Músicos confirmados (fallback):', transformed.length);
               setConfirmedMusicians(transformed as AcceptedMusician[]);
+            } else {
+              setConfirmedMusicians([]);
             }
+          } else {
+            setConfirmedMusicians([]);
           }
+        } else {
+          // Se não há erro e não há dados, significa que não há músicos confirmados
+          console.log('Nenhum músico confirmado encontrado');
+          setConfirmedMusicians([]);
         }
 
         // Recarregar badges
