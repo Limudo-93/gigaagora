@@ -129,23 +129,22 @@ export default function GigMatchesPage() {
       return;
     }
 
-    try {
-      // Carregar favoritos
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: favs } = await supabase
-          .from("favorites")
-          .select("musician_id")
-          .eq("contractor_id", user.id);
-        
-        if (favs) {
-          setFavorites(new Set(favs.map((f: any) => f.musician_id)));
-        }
+    // Carregar favoritos
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: favs } = await supabase
+        .from("favorites")
+        .select("musician_id")
+        .eq("contractor_id", user.id);
+      
+      if (favs) {
+        setFavorites(new Set(favs.map((f: any) => f.musician_id)));
       }
-      setLoading(true);
-      setError(null);
+    }
+    setLoading(true);
+    setError(null);
 
-      try {
+    try {
         // Busca título da gig
         const { data: gigData, error: gigError } = await supabase
           .from("gigs")
