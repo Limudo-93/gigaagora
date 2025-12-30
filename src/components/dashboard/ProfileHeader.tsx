@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import BadgeDisplay from "./BadgeDisplay";
 import AmbassadorBadge from "./AmbassadorBadge";
+import RankingBadge from "./RankingBadge";
 
 export default async function ProfileHeader() {
   const supabase = await createClient();
@@ -64,6 +65,13 @@ export default async function ProfileHeader() {
 
   // Verificar se é embaixador
   const isAmbassador = profile?.is_ambassador || badges?.some((b: any) => b.badge_type === 'ambassador') || false;
+
+  // Buscar ranking do usuário
+  const { data: ranking } = await supabase
+    .from("user_rankings")
+    .select("current_tier")
+    .eq("user_id", user.id)
+    .single();
 
   // Calcular iniciais do nome (corrigido para TypeScript)
   const displayName = profile?.display_name || user.email?.split("@")[0] || "Usuário";
@@ -124,6 +132,9 @@ export default async function ProfileHeader() {
             
             {isAmbassador && (
               <AmbassadorBadge size="sm" showText={true} />
+            )}
+            {ranking?.current_tier && (
+              <RankingBadge tier={ranking.current_tier as any} size="sm" showText={true} />
             )}
             {badges && badges.length > 0 && (
               <BadgeDisplay badges={badges} size="sm" />
