@@ -1,11 +1,15 @@
 "use server";
 
+import { computeRegionLabel } from "@/lib/geo";
+
 /**
- * Server action para fazer reverse geocoding usando Google Maps Geocoding API
- * Converte coordenadas (latitude, longitude) em endereço e região
+ * Server action para fazer geocoding usando Google Maps Geocoding API
+ * Converte endereço em coordenadas (latitude, longitude)
  */
 
-interface GeocodingResult {
+interface GeocodeAddressResult {
+  latitude: number | null;
+  longitude: number | null;
   city: string | null;
   state: string | null;
   region_label: string | null;
@@ -13,10 +17,125 @@ interface GeocodingResult {
   error?: string;
 }
 
+interface ReverseGeocodeResult {
+  city: string | null;
+  state: string | null;
+  region_label: string | null;
+  formatted_address: string | null;
+  error?: string;
+}
+
+/**
+ * Converte endereço (texto) em coordenadas usando Google Maps Geocoding API
+ */
+export async function geocodeAddress(
+  address: string
+): Promise<GeocodeAddressResult> {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+  if (!apiKey) {
+    console.warn("GOOGLE_MAPS_API_KEY não configurada. Usando fallback.");
+    return {
+      latitude: null,
+      longitude: null,
+      city: null,
+      state: null,
+      region_label: null,
+      formatted_address: null,
+      error: "API key não configurada",
+    };
+  }
+
+  if (!address || address.trim().length === 0) {
+    return {
+      latitude: null,
+      longitude: null,
+      city: null,
+      state: null,
+      region_label: null,
+      formatted_address: null,
+      error: "Endereço vazio",
+    };
+  }
+
+  try {
+    const encodedAddress = encodeURIComponent(address.trim());
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}&language=pt-BR&region=br`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== "OK" || !data.results || data.results.length === 0) {
+      console.warn("Geocoding API retornou:", data.status);
+      return {
+        latitude: null,
+        longitude: null,
+        city: null,
+        state: null,
+        region_label: null,
+        formatted_address: null,
+        error: `Status: ${data.status}`,
+      };
+    }
+
+    const result = data.results[0];
+    const location = result.geometry.location;
+    const latitude = location.lat;
+    const longitude = location.lng;
+    const formattedAddress = result.formatted_address;
+
+    // Extrair componentes do endereço
+    let city: string | null = null;
+    let state: string | null = null;
+
+    for (const component of result.address_components) {
+      const types = component.types;
+
+      if (types.includes("administrative_area_level_2")) {
+        city = component.long_name;
+      }
+      if (types.includes("administrative_area_level_1")) {
+        state = component.short_name; // UF (SP, RJ, etc)
+      }
+      // Fallback: usar locality se não tiver administrative_area_level_2
+      if (!city && types.includes("locality")) {
+        city = component.long_name;
+      }
+    }
+
+    // Calcular região usando a função existente
+    const regionLabel = computeRegionLabel(state, city, latitude, longitude);
+
+    return {
+      latitude,
+      longitude,
+      city: city || null,
+      state: state || null,
+      region_label: regionLabel,
+      formatted_address: formattedAddress,
+    };
+  } catch (error: any) {
+    console.error("Erro ao fazer geocoding:", error);
+    return {
+      latitude: null,
+      longitude: null,
+      city: null,
+      state: null,
+      region_label: null,
+      formatted_address: null,
+      error: error.message || "Erro desconhecido",
+    };
+  }
+}
+
+/**
+ * Server action para fazer reverse geocoding usando Google Maps Geocoding API
+ * Converte coordenadas (latitude, longitude) em endereço e região
+ */
 export async function reverseGeocode(
   latitude: number,
   longitude: number
-): Promise<GeocodingResult> {
+): Promise<ReverseGeocodeResult> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {

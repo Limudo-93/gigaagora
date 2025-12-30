@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Navigation, Loader2 } from "lucide-react";
 import { createGigWithRegion } from "@/app/actions/gigs";
 import { computeRegionLabel } from "@/lib/geo";
-import { reverseGeocode } from "@/app/actions/geocoding";
+import { reverseGeocode, geocodeAddress } from "@/app/actions/geocoding";
 
 type GigRole = {
   id: string;
@@ -38,6 +38,7 @@ export default function NewGigPage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [geocodingAddress, setGeocodingAddress] = useState(false);
   const [timezone] = useState("America/Sao_Paulo");
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("20:00");
@@ -149,6 +150,47 @@ export default function NewGigPage() {
       setPreviewRegion(null);
     }
   }, [city, state, latitude, longitude]);
+
+  // Função para obter coordenadas do endereço digitado
+  const handleGeocodeAddress = async () => {
+    if (!addressText || addressText.trim().length === 0) {
+      setError("Por favor, digite o endereço completo do evento.");
+      return;
+    }
+
+    setGeocodingAddress(true);
+    setError(null);
+
+    try {
+      const result = await geocodeAddress(addressText.trim());
+      
+      if (result.error) {
+        setError(`Erro ao buscar coordenadas: ${result.error}`);
+        setGeocodingAddress(false);
+        return;
+      }
+
+      if (result.latitude && result.longitude) {
+        setLatitude(result.latitude);
+        setLongitude(result.longitude);
+        
+        // Preencher cidade e estado se não estiverem preenchidos
+        if (result.city && !city) {
+          setCity(result.city);
+        }
+        if (result.state && !state) {
+          setState(result.state);
+        }
+      } else {
+        setError("Não foi possível encontrar as coordenadas do endereço.");
+      }
+    } catch (err: any) {
+      console.error("Erro ao fazer geocoding:", err);
+      setError(`Erro ao buscar coordenadas: ${err.message}`);
+    } finally {
+      setGeocodingAddress(false);
+    }
+  };
 
   // Função para obter geolocalização do navegador
   const handleGetLocation = async () => {
@@ -740,14 +782,38 @@ export default function NewGigPage() {
                 <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="addressText">
                   Endereço Completo
                 </label>
-                <input
-                  id="addressText"
-                  type="text"
-                  className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                  value={addressText}
-                  onChange={(e) => setAddressText(e.target.value)}
-                  placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
-                />
+                <div className="flex gap-2">
+                  <input
+                    id="addressText"
+                    type="text"
+                    className="flex-1 rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    value={addressText}
+                    onChange={(e) => setAddressText(e.target.value)}
+                    placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGeocodeAddress}
+                    disabled={geocodingAddress || !addressText.trim()}
+                    className="shrink-0"
+                  >
+                    {geocodingAddress ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="mr-2 h-4 w-4" />
+                        Buscar Coordenadas
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Digite o endereço completo e clique em "Buscar Coordenadas" para obter a localização exata do evento
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
