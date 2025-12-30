@@ -10,6 +10,13 @@ export default function SearchRadiusSlider() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Garantir que o valor nunca ultrapasse 50km
+  useEffect(() => {
+    if (searchRadius > 50) {
+      setSearchRadius(50);
+    }
+  }, [searchRadius]);
+
   // Carregar raio salvo
   useEffect(() => {
     const loadRadius = async () => {
