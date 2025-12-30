@@ -531,10 +531,6 @@ export default function GigsPage() {
         )
       );
       setProcessingInviteId(null);
-    } catch (err: any) {
-      console.error("declineInvite exception:", err);
-      setError(err?.message ?? "Erro inesperado ao recusar convite.");
-      setProcessingInviteId(null);
       setShowDeclineConfirm(false);
       setPendingDeclineInviteId(null);
       setPendingDeclineGigId(null);
@@ -547,6 +543,9 @@ export default function GigsPage() {
       console.error("declineInvite exception:", err);
       setError(err?.message ?? "Erro inesperado ao recusar convite.");
       setProcessingInviteId(null);
+      setShowDeclineConfirm(false);
+      setPendingDeclineInviteId(null);
+      setPendingDeclineGigId(null);
     }
   };
 
