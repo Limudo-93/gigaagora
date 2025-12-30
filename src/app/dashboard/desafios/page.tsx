@@ -180,7 +180,7 @@ export default function DesafiosPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout fullWidth>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           <span className="ml-2 text-sm text-muted-foreground">Carregando desafios...</span>
@@ -192,7 +192,7 @@ export default function DesafiosPage() {
   const tierInfo = ranking ? TIER_CONFIG[ranking.current_tier] : TIER_CONFIG.bronze;
 
   return (
-    <DashboardLayout>
+    <DashboardLayout fullWidth>
       <div className="space-y-6">
         {/* Header */}
         <div>

@@ -143,10 +143,10 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
         variant="destructive"
         loading={isCancelling}
       />
-      <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+      <Card className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
         <CardContent className="p-0">
           {/* Flyer do evento ou logo padrão */}
-          <div className="w-full h-48 relative group overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5">
+          <div className="w-full h-48 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
             {gig.flyer_url ? (
               <>
                 <img
@@ -163,15 +163,13 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
                 </div>
               </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="relative w-32 h-32 opacity-50">
-                  <Image
-                    src="/logo.png"
-                    alt="Logo Chama o Músico"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
+              <div className="relative w-32 h-32">
+                <Image
+                  src="/logo.png"
+                  alt="Logo Chama o Músico"
+                  fill
+                  className="object-contain opacity-50"
+                />
               </div>
             )}
           </div>
@@ -182,59 +180,38 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
               <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2">
                 {gig.title || "Gig sem título"}
               </h3>
-              
-              {/* Tags de gênero/tipo */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">Pagode</Badge>
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">Show</Badge>
-              </div>
             </div>
 
-            {/* Informações principais */}
-            <div className="space-y-2.5">
-              {/* Localização */}
+            {/* Informações principais - Reorganizadas para escaneabilidade */}
+            <div className="space-y-3 bg-muted/30 rounded-lg p-3 border border-border/50">
+              {/* Região - Destacada */}
               <div className="flex items-start gap-2.5">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-sm text-foreground truncate">{place}</p>
                   {address && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{address}</p>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">{address}</p>
                   )}
                 </div>
               </div>
 
-              {/* Data, Hora e Valor */}
-              <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
+              {/* Data e Hora - Em linha única para escaneabilidade */}
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5 font-medium text-foreground">
+                  <Calendar className="h-4 w-4 text-primary" />
                   <span>{date || "Data a definir"}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Clock className="h-4 w-4" />
+                <div className="flex items-center gap-1.5 font-medium text-foreground">
+                  <Clock className="h-4 w-4 text-primary" />
                   <span>{time || "Horário a definir"}</span>
                 </div>
-                {(gig.min_cache || gig.max_cache) && (
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <DollarSign className="h-4 w-4" />
-                    <span className="font-medium text-foreground">
-                      {gig.min_cache && gig.max_cache && gig.min_cache !== gig.max_cache
-                        ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.min_cache)} - R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.max_cache)}`
-                        : gig.min_cache
-                        ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.min_cache)}`
-                        : gig.max_cache
-                        ? `R$ ${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.max_cache)}`
-                        : ""}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
 
             {/* Badges de status */}
             <div className="flex flex-wrap gap-2 pt-1">
-              <Badge variant="secondary" className="text-xs font-medium">Normal</Badge>
               <Badge variant={statusUI.variant} className="text-xs font-medium">
-                {statusUI.label}
+                {statusUI.label === "Aberta" ? "Publicada" : statusUI.label}
               </Badge>
             </div>
 

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Navigation, Loader2 } from "lucide-react";
+import { createGigWithRegion } from "@/app/actions/gigs";
+import { computeRegionLabel } from "@/lib/geo";
 
 type GigRole = {
   id: string;
@@ -31,20 +33,26 @@ export default function NewGigPage() {
   const [locationName, setLocationName] = useState("");
   const [addressText, setAddressText] = useState("");
   const [city, setCity] = useState("");
-  const [state, setState] = useState("SP"); // Pré-preenchido com SP
-  const [timezone, setTimezone] = useState("America/Sao_Paulo");
+  const [state, setState] = useState("SP");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [timezone] = useState("America/Sao_Paulo");
   const [startDate, setStartDate] = useState("");
-  const [startTime, setStartTime] = useState("20:00"); // Horário padrão: 20h
-  const [numEntradas, setNumEntradas] = useState<number | "">(2); // Padrão: 2 entradas (Pagode)
-  const [duracaoEntrada, setDuracaoEntrada] = useState("1:15"); // Padrão: 1h15min (Pagode)
-  const [intervaloMinutos, setIntervaloMinutos] = useState<number | "">(30); // Padrão: 30 minutos (Pagode)
+  const [startTime, setStartTime] = useState("20:00");
+  const [numEntradas, setNumEntradas] = useState<number | "">(2);
+  const [duracaoEntrada, setDuracaoEntrada] = useState("1:15");
+  const [intervaloMinutos, setIntervaloMinutos] = useState<number | "">(30);
   const [cache, setCache] = useState<number | "">("");
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
   const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
   const [uploadingFlyer, setUploadingFlyer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Lista de instrumentos para o dropdown (Pagode e Sertanejo) - Ordem alfabética
+  // Preview da região calculada
+  const [previewRegion, setPreviewRegion] = useState<string | null>(null);
+
+  // Lista de instrumentos
   const instrumentos = [
     "Acordeon",
     "Agogô",
@@ -83,7 +91,7 @@ export default function NewGigPage() {
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);
 
-  // Gêneros musicais disponíveis
+  // Gêneros musicais
   const generos = [
     "Pagode",
     "Sertanejo",
@@ -131,55 +139,98 @@ export default function NewGigPage() {
     "Backline fornecido",
   ];
 
+  // Atualizar preview da região quando location mudar
+  useEffect(() => {
+    if (city || state || (latitude && longitude)) {
+      const region = computeRegionLabel(state, city, latitude ?? undefined, longitude ?? undefined);
+      setPreviewRegion(region);
+    } else {
+      setPreviewRegion(null);
+    }
+  }, [city, state, latitude, longitude]);
+
+  // Função para obter geolocalização do navegador
+  const handleGetLocation = () => {
+    setGettingLocation(true);
+    setError(null);
+
+    if (!navigator.geolocation) {
+      setError("Geolocalização não é suportada pelo seu navegador.");
+      setGettingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setLatitude(lat);
+        setLongitude(lng);
+        
+        // Tentar obter cidade e estado via reverse geocoding (simples)
+        // Nota: Isso é um fallback, idealmente você usaria uma API de geocoding
+        try {
+          // Usar uma API pública ou integrar com Google Maps API
+          // Por enquanto, apenas definimos as coordenadas
+          setGettingLocation(false);
+        } catch (err) {
+          console.error("Error getting location details:", err);
+          setGettingLocation(false);
+        }
+      },
+      (err) => {
+        console.error("Error getting location:", err);
+        setError("Não foi possível obter sua localização. Você pode preencher manualmente.");
+        setGettingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
   // Função para calcular valor mínimo de cachê baseado no instrumento
   const getMinCacheForInstrument = (instrument: string, quantity: number, hasVocal: boolean): number => {
     const inst = instrument.toLowerCase();
     
-    // Verificar se tem vocal
     if (hasVocal) {
-      // Percussão + Voz Principal: mínimo $220
       if (inst.includes("percussão") || inst.includes("pandeiro") || inst.includes("surdo") || 
           inst.includes("tamborim") || inst.includes("agogô") || inst.includes("cuíca") || 
           inst.includes("reco-reco") || inst.includes("repique") || inst.includes("tantã")) {
         return 220;
       }
-      // Cordas + Voz Principal: mínimo $270
       if (inst.includes("violão") || inst.includes("cavaquinho") || inst.includes("viola") || 
           inst.includes("bandolim") || inst.includes("banjo") || inst.includes("guitarra")) {
         return 270;
       }
     }
     
-    // Percussão: 1 instrumento $170, 2+ $200
     if (inst.includes("percussão") || inst.includes("pandeiro") || inst.includes("surdo") || 
         inst.includes("tamborim") || inst.includes("agogô") || inst.includes("cuíca") || 
         inst.includes("reco-reco") || inst.includes("repique") || inst.includes("tantã")) {
       return quantity >= 2 ? 200 : 170;
     }
     
-    // Cordas (violão, cavaco): mínimo $220
     if (inst.includes("violão") || inst.includes("cavaquinho") || inst.includes("viola") || 
         inst.includes("bandolim") || inst.includes("banjo") || inst.includes("guitarra")) {
       return 220;
     }
     
-    // Bateria, baixo, teclado: mínimo $230
     if (inst.includes("bateria") || inst.includes("baixo") || inst.includes("contrabaixo") || 
         inst.includes("teclado") || inst.includes("piano")) {
       return 230;
     }
     
-    // Sopros: mínimo $270
     if (inst.includes("saxofone") || inst.includes("trompete") || inst.includes("trombone") || 
         inst.includes("flauta") || inst.includes("acordeon") || inst.includes("sanfona")) {
       return 270;
     }
     
-    // Outros: sem mínimo definido (retorna 0)
     return 0;
   };
 
-  // Verificar se a vaga tem vocal
   const hasVocalInRole = (role: GigRole): boolean => {
     const inst = role.instrument.toLowerCase();
     return inst === "vocal" || inst.includes("voz") || 
@@ -194,9 +245,9 @@ export default function NewGigPage() {
         id: newRoleId,
         instrument: "",
         quantity: 1,
-        desired_genres: ["Pagode"], // Pré-preenchido com Pagode
-        desired_skills: [], // Vazio por padrão, mas pode ser preenchido
-        desired_setup: ["Instrumento próprio", "Afinador", "Cabo próprio"], // Pré-preenchido para Pagode
+        desired_genres: ["Pagode"],
+        desired_skills: [],
+        desired_setup: ["Instrumento próprio", "Afinador", "Cabo próprio"],
         notes: "",
         cache: "",
       },
@@ -218,13 +269,11 @@ export default function NewGigPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Valida tipo de arquivo
     if (!file.type.startsWith("image/")) {
       setError("Por favor, selecione um arquivo de imagem válido.");
       return;
     }
 
-    // Valida tamanho (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError("O arquivo deve ter no máximo 5MB.");
       return;
@@ -233,7 +282,6 @@ export default function NewGigPage() {
     setFlyerFile(file);
     setError(null);
 
-    // Cria preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setFlyerPreview(reader.result as string);
@@ -241,7 +289,6 @@ export default function NewGigPage() {
     reader.readAsDataURL(file);
   };
 
-  // Função para remover flyer selecionado
   const handleRemoveFlyer = () => {
     setFlyerFile(null);
     setFlyerPreview(null);
@@ -250,18 +297,15 @@ export default function NewGigPage() {
     }
   };
 
-  // Função para fazer upload do flyer para Supabase Storage
   const uploadFlyer = async (gigId: string, userId: string): Promise<string | null> => {
     if (!flyerFile) return null;
 
     setUploadingFlyer(true);
     try {
-      // Gera nome único para o arquivo
       const fileExt = flyerFile.name.split(".").pop();
       const fileName = `${gigId}-${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
 
-      // Faz upload para o bucket 'gig-flyers' (ou 'public' se não existir)
       const { data, error } = await supabase.storage
         .from("gig-flyers")
         .upload(filePath, flyerFile, {
@@ -270,7 +314,6 @@ export default function NewGigPage() {
         });
 
       if (error) {
-        // Se o bucket não existir, tenta usar 'public'
         if (error.message.includes("Bucket not found")) {
           const { data: publicData, error: publicError } = await supabase.storage
             .from("public")
@@ -284,7 +327,6 @@ export default function NewGigPage() {
             throw publicError;
           }
 
-          // Obtém URL pública
           const { data: urlData } = supabase.storage
             .from("public")
             .getPublicUrl(`${userId}/${fileName}`);
@@ -296,7 +338,6 @@ export default function NewGigPage() {
         throw error;
       }
 
-      // Obtém URL pública
       const { data: urlData } = supabase.storage
         .from("gig-flyers")
         .getPublicUrl(filePath);
@@ -311,7 +352,6 @@ export default function NewGigPage() {
     }
   };
 
-  // Função para converter HH:MM em minutos
   const horasMinutosParaMinutos = (horasMinutos: string): number => {
     if (!horasMinutos || !horasMinutos.includes(":")) return 0;
     const parts = horasMinutos.split(":");
@@ -320,7 +360,6 @@ export default function NewGigPage() {
     return horas * 60 + minutos;
   };
 
-  // Função para calcular o horário de término automaticamente
   const calcularHorarioTermino = () => {
     if (!startDate || !startTime || !numEntradas || !duracaoEntrada) {
       return null;
@@ -335,7 +374,6 @@ export default function NewGigPage() {
     return new Date(startDateTime.getTime() + totalMinutos * 60000);
   };
 
-  // Calcula show_minutes e break_minutes para salvar no banco
   const calcularMinutosParaBanco = () => {
     if (!numEntradas || !duracaoEntrada) {
       return { showMinutes: null, breakMinutes: 0 };
@@ -353,7 +391,6 @@ export default function NewGigPage() {
     setSaving(true);
 
     try {
-      // Validações básicas
       if (!title.trim()) {
         setError("O título é obrigatório.");
         setSaving(false);
@@ -372,7 +409,6 @@ export default function NewGigPage() {
         return;
       }
 
-      // Valida formato HH:MM
       const duracaoRegex = /^\d{1,2}:\d{2}$/;
       if (!duracaoEntrada || !duracaoRegex.test(duracaoEntrada)) {
         setError("A duração de cada entrada deve estar no formato HH:MM (ex: 1:15 para 1h15min).");
@@ -380,7 +416,6 @@ export default function NewGigPage() {
         return;
       }
 
-      // Valida que os valores são válidos
       const duracaoMinutos = horasMinutosParaMinutos(duracaoEntrada);
       if (duracaoMinutos <= 0) {
         setError("A duração de cada entrada deve ser maior que zero.");
@@ -394,7 +429,6 @@ export default function NewGigPage() {
         return;
       }
 
-      // Valida roles
       for (const role of roles) {
         if (!role.instrument.trim()) {
           setError("Todos os instrumentos devem ser preenchidos.");
@@ -408,7 +442,6 @@ export default function NewGigPage() {
         }
       }
 
-      // Busca o usuário atual
       const {
         data: { user },
         error: userError,
@@ -420,10 +453,7 @@ export default function NewGigPage() {
         return;
       }
 
-      // Monta a data de início
       const startDateTime = new Date(`${startDate}T${startTime}`);
-
-      // Calcula o horário de término automaticamente
       const finalEndTime = calcularHorarioTermino();
       if (!finalEndTime) {
         setError("Erro ao calcular o horário de término.");
@@ -431,52 +461,33 @@ export default function NewGigPage() {
         return;
       }
 
-      // Calcula show_minutes e break_minutes
       const { showMinutes: calculatedShowMinutes, breakMinutes: calculatedBreakMinutes } =
         calcularMinutosParaBanco();
 
-      // Cria a gig
-      const { data: gigData, error: gigError } = await supabase
-        .from("gigs")
-        .insert({
-          contractor_id: user.id,
-          title: title.trim(),
-          description: description.trim() || null,
-          location_name: locationName.trim() || null,
-          address_text: addressText.trim() || null,
-          city: city.trim() || null,
-          state: state.trim() || null,
-          timezone: "America/Sao_Paulo",
-          start_time: startDateTime.toISOString(),
-          end_time: finalEndTime.toISOString(),
-          show_minutes: calculatedShowMinutes,
-          break_minutes: calculatedBreakMinutes,
-          status: saveStatus,
-          created_by_musician: false,
-        })
-        .select()
-        .single();
+      // Usar createGigWithRegion ao invés de inserir diretamente
+      const { data: gigData, error: gigError } = await createGigWithRegion({
+        contractor_id: user.id,
+        title: title.trim(),
+        description: description.trim() || null,
+        location_name: locationName.trim() || null,
+        address_text: addressText.trim() || null,
+        city: city.trim() || null,
+        state: state.trim() || null,
+        latitude: latitude,
+        longitude: longitude,
+        timezone: "America/Sao_Paulo",
+        start_time: startDateTime.toISOString(),
+        end_time: finalEndTime.toISOString(),
+        show_minutes: calculatedShowMinutes || 0,
+        break_minutes: calculatedBreakMinutes,
+        status: saveStatus,
+        created_by_musician: false,
+        privacy_level: "approx",
+      });
 
-      if (gigError) {
+      if (gigError || !gigData) {
         console.error("Error creating gig:", gigError);
-        
-        // Mensagem mais útil para erros de RLS
-        if (gigError.message.includes("row-level security") || gigError.code === "42501") {
-          setError(
-            `Erro de segurança: As políticas RLS (Row Level Security) não estão configuradas corretamente. ` +
-            `Execute o arquivo rls_policies.sql no SQL Editor do Supabase para corrigir isso. ` +
-            `Detalhes: ${gigError.message}`
-          );
-        } else {
-          setError(`Erro ao criar gig: ${gigError.message}`);
-        }
-        
-        setSaving(false);
-        return;
-      }
-
-      if (!gigData) {
-        setError("Erro ao criar gig: nenhum dado retornado.");
+        setError(gigError?.message ?? "Erro ao criar gig.");
         setSaving(false);
         return;
       }
@@ -486,7 +497,6 @@ export default function NewGigPage() {
       if (flyerFile) {
         flyerUrl = await uploadFlyer(gigData.id, user.id);
         if (flyerUrl) {
-          // Atualiza a gig com a URL do flyer
           const { error: updateError } = await supabase
             .from("gigs")
             .update({ flyer_url: flyerUrl })
@@ -494,13 +504,11 @@ export default function NewGigPage() {
 
           if (updateError) {
             console.error("Error updating flyer URL:", updateError);
-            // Não falha a criação se o update do flyer der erro
           }
         }
       }
 
       // Cria as roles
-      // Nota: Se as colunas são NOT NULL, enviamos arrays vazios ao invés de null
       const rolesToInsert = roles.map((role) => ({
         gig_id: gigData.id,
         instrument: role.instrument.trim(),
@@ -518,28 +526,14 @@ export default function NewGigPage() {
 
       if (rolesError) {
         console.error("Error creating roles:", rolesError);
-        // Tenta deletar a gig criada
         await supabase.from("gigs").delete().eq("id", gigData.id);
-        
-        // Mensagem mais útil para erros de RLS
-        if (rolesError.message.includes("row-level security") || rolesError.code === "42501") {
-          setError(
-            `Erro de segurança ao criar vagas: As políticas RLS (Row Level Security) não estão configuradas corretamente. ` +
-            `Execute o arquivo rls_policies.sql no SQL Editor do Supabase para corrigir isso. ` +
-            `Detalhes: ${rolesError.message}`
-          );
-        } else {
-          setError(`Erro ao criar vagas: ${rolesError.message}`);
-        }
-        
+        setError(`Erro ao criar vagas: ${rolesError.message}`);
         setSaving(false);
         return;
       }
 
-      // Sucesso
       console.log("Gig created successfully:", gigData.id);
       
-      // Redireciona para o dashboard ou para a página de detalhes da gig
       if (saveStatus === "draft") {
         router.push("/dashboard?tab=draft");
       } else {
@@ -558,46 +552,47 @@ export default function NewGigPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <DashboardLayout fullWidth>
+      <div className="space-y-6 max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.back()}
+            className="hover:bg-muted"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Criar Nova Gig</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-3xl font-bold text-foreground">Criar Nova Gig</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               Preencha os dados da gig e adicione as vagas necessárias
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
+          <div className="rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-800 dark:text-red-200">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Informações Básicas */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Informações Básicas</CardTitle>
+          <Card className="border-2 border-border shadow-lg">
+            <CardHeader className="bg-muted/30 border-b border-border">
+              <CardTitle className="text-xl">Informações Básicas</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-5">
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="title">
+                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="title">
                   Título <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="title"
                   type="text"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -606,12 +601,12 @@ export default function NewGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="description">
+                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="description">
                   Descrição
                 </label>
                 <textarea
                   id="description"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -621,10 +616,10 @@ export default function NewGigPage() {
 
               {/* Campo de Flyer */}
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="flyer">
+                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="flyer">
                   Flyer do Evento
                 </label>
-                <div className="mt-1 space-y-2">
+                <div className="space-y-3">
                   <input
                     ref={fileInputRef}
                     id="flyer"
@@ -639,32 +634,28 @@ export default function NewGigPage() {
                       type="button"
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full bg-white border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                      className="w-full border-2 border-dashed hover:border-primary hover:bg-muted/50 transition-colors"
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       Selecionar Flyer
                     </Button>
                   ) : (
-                    <div className="relative">
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-20 w-20 rounded-md overflow-hidden border border-gray-200 bg-white flex items-center justify-center">
-                            {flyerPreview ? (
-                              <img
-                                src={flyerPreview}
-                                alt="Preview do flyer"
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <ImageIcon className="h-8 w-8 text-gray-400" />
-                            )}
+                    <div className="space-y-3">
+                      <div className="rounded-lg border-2 border-border bg-muted/30 p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-24 w-24 rounded-lg overflow-hidden border-2 border-border bg-background flex items-center justify-center flex-shrink-0">
+                            <img
+                              src={flyerPreview}
+                              alt="Preview do flyer"
+                              className="h-full w-full object-cover"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {flyerFile?.name || "Flyer selecionado"}
                             </p>
-                            <p className="text-xs text-gray-700">
-                              {(flyerFile?.size || 0) / 1024} KB
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {((flyerFile?.size || 0) / 1024).toFixed(2)} KB
                             </p>
                           </div>
                           <Button
@@ -682,14 +673,14 @@ export default function NewGigPage() {
                         type="button"
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
-                        className="mt-2 w-full border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                        className="w-full border-2"
                       >
                         <Upload className="mr-2 h-4 w-4" />
                         Trocar Flyer
                       </Button>
                     </div>
                   )}
-                  <p className="text-xs text-gray-700">
+                  <p className="text-xs text-muted-foreground">
                     Formatos aceitos: JPG, PNG, GIF (máximo 5MB)
                   </p>
                 </div>
@@ -698,19 +689,22 @@ export default function NewGigPage() {
           </Card>
 
           {/* Localização */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Localização</CardTitle>
+          <Card className="border-2 border-border shadow-lg">
+            <CardHeader className="bg-muted/30 border-b border-border">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                Localização
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-5">
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="locationName">
+                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="locationName">
                   Nome do Local
                 </label>
                 <input
                   id="locationName"
                   type="text"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   value={locationName}
                   onChange={(e) => setLocationName(e.target.value)}
                   placeholder="Ex: Bar do João"
@@ -718,28 +712,28 @@ export default function NewGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="addressText">
+                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="addressText">
                   Endereço Completo
                 </label>
                 <input
                   id="addressText"
                   type="text"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   value={addressText}
                   onChange={(e) => setAddressText(e.target.value)}
                   placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="city">
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="city">
                     Cidade
                   </label>
                   <input
                     id="city"
                     type="text"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="São Paulo"
@@ -747,39 +741,92 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="state">
-                    Estado
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="state">
+                    Estado (UF)
                   </label>
                   <input
                     id="state"
                     type="text"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors uppercase"
                     value={state}
-                    onChange={(e) => setState(e.target.value)}
+                    onChange={(e) => setState(e.target.value.toUpperCase())}
                     placeholder="SP"
                     maxLength={2}
                   />
                 </div>
               </div>
 
+              {/* Geolocalização */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-semibold text-foreground block">Coordenadas (opcional)</label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      As coordenadas ajudam a calcular a região aproximada (ex: "São Paulo — Zona Sul")
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGetLocation}
+                    disabled={gettingLocation}
+                    className="border-2"
+                  >
+                    {gettingLocation ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Navigation className="mr-2 h-4 w-4" />
+                    )}
+                    {gettingLocation ? "Obtendo..." : "Usar Minha Localização"}
+                  </Button>
+                </div>
+
+                {(latitude || longitude) && (
+                  <div className="rounded-lg border-2 border-border bg-muted/30 p-4">
+                    <p className="text-xs text-muted-foreground mb-1">Coordenadas definidas:</p>
+                    <p className="text-sm font-mono text-foreground">
+                      {latitude?.toFixed(6)}, {longitude?.toFixed(6)}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setLatitude(null);
+                        setLongitude(null);
+                      }}
+                      className="mt-2 text-xs text-red-600 hover:text-red-700"
+                    >
+                      Remover coordenadas
+                    </Button>
+                  </div>
+                )}
+
+                {previewRegion && (
+                  <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
+                    <p className="text-xs text-muted-foreground mb-1">Região calculada:</p>
+                    <p className="text-sm font-semibold text-foreground">{previewRegion}</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
           {/* Data e Horário */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Data e Horário</CardTitle>
+          <Card className="border-2 border-border shadow-lg">
+            <CardHeader className="bg-muted/30 border-b border-border">
+              <CardTitle className="text-xl">Data e Horário</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="p-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="startDate">
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="startDate">
                     Data de Início <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="startDate"
                     type="date"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
@@ -787,13 +834,13 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="startTime">
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="startTime">
                     Horário de Início <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="startTime"
                     type="time"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -801,16 +848,16 @@ export default function NewGigPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="numEntradas">
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="numEntradas">
                     Número de Entradas <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="numEntradas"
                     type="number"
                     min="1"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={numEntradas}
                     onChange={(e) =>
                       setNumEntradas(e.target.value ? Number(e.target.value) : "")
@@ -824,18 +871,17 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="duracaoEntrada">
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="duracaoEntrada">
                     Duração de Cada Entrada <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="duracaoEntrada"
                     type="text"
                     pattern="^\d{1,2}:\d{2}$"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={duracaoEntrada}
                     onChange={(e) => {
                       const value = e.target.value;
-                      // Valida formato HH:MM
                       if (value === "" || /^\d{1,2}:\d{0,2}$/.test(value)) {
                         setDuracaoEntrada(value);
                       }
@@ -849,14 +895,14 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="intervaloMinutos">
+                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="intervaloMinutos">
                     Intervalo entre Entradas (minutos)
                   </label>
                   <input
                     id="intervaloMinutos"
                     type="number"
                     min="0"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={intervaloMinutos}
                     onChange={(e) =>
                       setIntervaloMinutos(e.target.value ? Number(e.target.value) : "")
@@ -871,9 +917,9 @@ export default function NewGigPage() {
 
               {/* Mostra o horário de término calculado */}
               {startDate && startTime && numEntradas && duracaoEntrada && (
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <p className="text-sm font-medium text-gray-900">Horário de Término Calculado:</p>
-                  <p className="mt-1 text-sm text-gray-700">
+                <div className="rounded-lg border-2 border-border bg-muted/30 p-4">
+                  <p className="text-sm font-semibold text-foreground mb-2">Horário de Término Calculado:</p>
+                  <p className="text-base font-medium text-foreground mb-2">
                     {calcularHorarioTermino()?.toLocaleString("pt-BR", {
                       day: "2-digit",
                       month: "2-digit",
@@ -882,7 +928,7 @@ export default function NewGigPage() {
                       minute: "2-digit",
                     }) || "—"}
                   </p>
-                  <p className="mt-2 text-xs text-gray-600">
+                  <p className="text-xs text-muted-foreground">
                     Duração total: {calcularMinutosParaBanco().showMinutes} minutos
                     {calcularMinutosParaBanco().breakMinutes > 0 &&
                       ` + ${calcularMinutosParaBanco().breakMinutes} minutos de intervalo`}
@@ -893,61 +939,62 @@ export default function NewGigPage() {
           </Card>
 
           {/* Vagas (Roles) */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-gray-900">Vagas Necessárias</CardTitle>
+          <Card className="border-2 border-border shadow-lg">
+            <CardHeader className="bg-muted/30 border-b border-border flex flex-row items-center justify-between">
+              <CardTitle className="text-xl">Vagas Necessárias</CardTitle>
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
                 size="sm"
                 onClick={addRole}
-                className="bg-white border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                className="font-semibold"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Vaga
               </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-5">
               {roles.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma vaga adicionada. Clique em "Adicionar Vaga" para começar.
-                </p>
+                <div className="text-center py-8 rounded-lg border-2 border-dashed border-border">
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma vaga adicionada. Clique em "Adicionar Vaga" para começar.
+                  </p>
+                </div>
               ) : (
                 roles.map((role) => (
                   <div
                     key={role.id}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
+                    className="rounded-lg border-2 border-border bg-muted/30 p-5 space-y-4"
                   >
                     <div className="flex items-start justify-between">
-                      <h4 className="font-medium text-gray-900">Vaga {roles.indexOf(role) + 1}</h4>
+                      <h4 className="font-semibold text-lg text-foreground">Vaga {roles.indexOf(role) + 1}</h4>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
                         onClick={() => removeRole(role.id)}
+                        className="text-red-600 hover:bg-red-50 hover:text-red-700"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-900">
+                        <label className="text-sm font-semibold text-foreground mb-2 block">
                           Instrumento <span className="text-red-500">*</span>
                         </label>
                         <select
-                          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           value={role.instrument}
                           onChange={(e) => {
                             const newInstrument = e.target.value;
                             updateRole(role.id, "instrument", newInstrument);
                             
-                            // Calcular e aplicar valor mínimo quando instrumento é selecionado
                             if (newInstrument) {
                               const hasVocal = newInstrument.toLowerCase().includes("vocal");
                               const minCache = getMinCacheForInstrument(newInstrument, role.quantity, hasVocal);
                               if (minCache > 0) {
-                                // Aplicar valor mínimo se não houver valor ou se o valor atual for menor
                                 if (!role.cache || (typeof role.cache === "number" && role.cache < minCache)) {
                                   updateRole(role.id, "cache", minCache);
                                 }
@@ -966,19 +1013,18 @@ export default function NewGigPage() {
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-gray-900">
+                        <label className="text-sm font-semibold text-foreground mb-2 block">
                           Quantidade <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
                           min="1"
-                          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                           value={role.quantity}
                           onChange={(e) => {
                             const newQuantity = Number(e.target.value) || 1;
                             updateRole(role.id, "quantity", newQuantity);
                             
-                            // Recalcular valor mínimo se for percussão
                             if (role.instrument) {
                               const inst = role.instrument.toLowerCase();
                               if (inst.includes("percussão") || inst.includes("pandeiro") || 
@@ -1000,34 +1046,30 @@ export default function NewGigPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-900">
+                      <label className="text-sm font-semibold text-foreground mb-2 block">
                         Cachê (R$)
                       </label>
                       <input
                         type="text"
-                        className={`mt-1 w-full rounded-md border px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                        className={`w-full rounded-lg border-2 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
                           role.instrument && (() => {
                             const hasVocal = hasVocalInRole(role);
                             const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
                             if (minCache > 0 && role.cache && typeof role.cache === "number" && role.cache < minCache) {
                               return "border-red-500 bg-red-50";
                             }
-                            return "border-gray-200 bg-white";
+                            return "border-input bg-background";
                           })()
                         }`}
                         value={role.cache === "" ? "" : typeof role.cache === "number" ? new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache) : ""}
                         onChange={(e) => {
-                          // Remove tudo exceto números e vírgula
                           let value = e.target.value.replace(/[^\d,]/g, "");
-                          // Substitui vírgula por ponto para parseFloat
                           let numValue = value === "" ? "" : parseFloat(value.replace(",", ".")) || 0;
                           
-                          // Validar valor mínimo se houver instrumento selecionado
                           if (role.instrument && numValue !== "" && typeof numValue === "number") {
                             const hasVocal = hasVocalInRole(role);
                             const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
                             
-                            // Se o valor digitado for menor que o mínimo, usar o mínimo
                             if (minCache > 0 && numValue < minCache) {
                               numValue = minCache;
                             }
@@ -1040,7 +1082,6 @@ export default function NewGigPage() {
                             const hasVocal = hasVocalInRole(role);
                             const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
                             
-                            // Se o valor for menor que o mínimo, ajustar para o mínimo
                             if (minCache > 0 && role.cache && typeof role.cache === "number" && role.cache < minCache) {
                               updateRole(role.id, "cache", minCache);
                               e.target.value = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(minCache);
@@ -1058,20 +1099,20 @@ export default function NewGigPage() {
                         const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
                         if (minCache > 0) {
                           return (
-                            <p className={`mt-1 text-xs ${role.cache && typeof role.cache === "number" && role.cache < minCache ? "text-red-600 font-medium" : "text-gray-600"}`}>
+                            <p className={`mt-1 text-xs ${role.cache && typeof role.cache === "number" && role.cache < minCache ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
                               Valor mínimo: R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(minCache)}
                               {role.cache && typeof role.cache === "number" && role.cache < minCache && " (valor ajustado automaticamente)"}
                             </p>
                           );
                         }
                         return (
-                          <p className="mt-1 text-xs text-gray-600">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             Valor do cachê para este instrumento (ex: 1.500,00)
                           </p>
                         );
                       })()}
                       {!role.instrument && (
-                        <p className="mt-1 text-xs text-gray-600">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           Valor do cachê para este instrumento (ex: 1.500,00)
                         </p>
                       )}
@@ -1079,7 +1120,7 @@ export default function NewGigPage() {
 
                     {/* Gênero */}
                     <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
+                      <label className="text-sm font-semibold text-foreground mb-3 block">
                         Gênero Musical
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -1095,16 +1136,13 @@ export default function NewGigPage() {
                                   : [...role.desired_genres, genero];
                                 updateRole(role.id, "desired_genres", newGenres);
                                 
-                                // Se Pagode foi selecionado, aplicar configurações padrão
                                 if (genero === "Pagode" && !isSelected) {
-                                  // Aplicar apenas na primeira vaga ou se não houver configurações
                                   if (roles.indexOf(role) === 0 || numEntradas === 1) {
                                     setNumEntradas(2);
                                     setDuracaoEntrada("1:15");
                                     setIntervaloMinutos(30);
                                   }
                                   
-                                  // Adicionar setup padrão do Pagode se não estiver presente
                                   const defaultSetup = ["Instrumento próprio", "Afinador", "Cabo próprio"];
                                   const currentSetup = role.desired_setup || [];
                                   const missingSetup = defaultSetup.filter(item => !currentSetup.includes(item));
@@ -1113,10 +1151,10 @@ export default function NewGigPage() {
                                   }
                                 }
                               }}
-                              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                 isSelected
-                                  ? "bg-orange-500 text-white border border-orange-500"
-                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-orange-50 hover:border-orange-300"
+                                  ? "bg-primary text-primary-foreground shadow-md"
+                                  : "bg-background text-foreground border-2 border-input hover:border-primary hover:bg-muted/50"
                               }`}
                             >
                               {genero}
@@ -1124,14 +1162,11 @@ export default function NewGigPage() {
                           );
                         })}
                       </div>
-                      <p className="mt-1 text-xs text-gray-600">
-                        Selecione um ou mais gêneros musicais
-                      </p>
                     </div>
 
                     {/* Habilidades Requeridas */}
                     <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
+                      <label className="text-sm font-semibold text-foreground mb-3 block">
                         Habilidades Requeridas
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -1147,19 +1182,18 @@ export default function NewGigPage() {
                                   : [...role.desired_skills, habilidade];
                                 updateRole(role.id, "desired_skills", newSkills);
                                 
-                                // Recalcular valor mínimo se "Backing vocal" foi adicionado/removido
                                 if (habilidade === "Backing vocal" && role.instrument) {
-                                  const hasVocal = !isSelected; // Se foi selecionado, agora tem vocal
+                                  const hasVocal = !isSelected;
                                   const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
                                   if (minCache > 0 && (!role.cache || (typeof role.cache === "number" && role.cache < minCache))) {
                                     updateRole(role.id, "cache", minCache);
                                   }
                                 }
                               }}
-                              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                 isSelected
-                                  ? "bg-purple-500 text-white border border-purple-500"
-                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-purple-50 hover:border-purple-300"
+                                  ? "bg-purple-500 text-white shadow-md"
+                                  : "bg-background text-foreground border-2 border-input hover:border-purple-500 hover:bg-purple-50"
                               }`}
                             >
                               {habilidade}
@@ -1167,14 +1201,11 @@ export default function NewGigPage() {
                           );
                         })}
                       </div>
-                      <p className="mt-1 text-xs text-gray-600">
-                        Selecione as habilidades necessárias para esta vaga
-                      </p>
                     </div>
 
                     {/* Setup/Equipamentos */}
                     <div>
-                      <label className="text-sm font-medium text-gray-900 mb-2 block">
+                      <label className="text-sm font-semibold text-foreground mb-3 block">
                         Setup/Equipamentos
                       </label>
                       <div className="flex flex-wrap gap-2">
@@ -1190,10 +1221,10 @@ export default function NewGigPage() {
                                   : [...role.desired_setup, setup];
                                 updateRole(role.id, "desired_setup", newSetup);
                               }}
-                              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                 isSelected
-                                  ? "bg-blue-500 text-white border border-blue-500"
-                                  : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50 hover:border-blue-300"
+                                  ? "bg-blue-500 text-white shadow-md"
+                                  : "bg-background text-foreground border-2 border-input hover:border-blue-500 hover:bg-blue-50"
                               }`}
                             >
                               {setup}
@@ -1201,15 +1232,12 @@ export default function NewGigPage() {
                           );
                         })}
                       </div>
-                      <p className="mt-1 text-xs text-gray-600">
-                        Selecione os equipamentos necessários ou fornecidos
-                      </p>
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-900">Observações</label>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">Observações</label>
                       <textarea
-                        className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
                         rows={2}
                         value={role.notes}
                         onChange={(e) => updateRole(role.id, "notes", e.target.value)}
@@ -1223,13 +1251,13 @@ export default function NewGigPage() {
           </Card>
 
           {/* Ações */}
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t-2 border-border">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
               disabled={saving}
-              className="bg-white border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+              className="w-full sm:w-auto border-2"
             >
               Cancelar
             </Button>
@@ -1238,15 +1266,30 @@ export default function NewGigPage() {
               variant="secondary"
               onClick={() => saveGig("draft")}
               disabled={saving || uploadingFlyer}
-              className="bg-gray-100 text-gray-900 hover:bg-gray-200"
+              className="w-full sm:w-auto"
             >
-              {saving || uploadingFlyer ? (uploadingFlyer ? "Enviando flyer..." : "Salvando...") : "Salvar como Rascunho"}
+              {saving || uploadingFlyer ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {uploadingFlyer ? "Enviando flyer..." : "Salvando..."}
+                </>
+              ) : (
+                "Salvar como Rascunho"
+              )}
             </Button>
             <Button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploadingFlyer}
+              className="w-full sm:w-auto font-semibold"
             >
-              {saving ? "Publicando..." : "Publicar Gig"}
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Publicando...
+                </>
+              ) : (
+                "Publicar Gig"
+              )}
             </Button>
           </div>
         </form>
@@ -1254,4 +1297,3 @@ export default function NewGigPage() {
     </DashboardLayout>
   );
 }
-

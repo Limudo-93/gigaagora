@@ -338,14 +338,14 @@ export default function MessagesPage() {
   });
 
   return (
-    <DashboardLayout>
+    <DashboardLayout fullWidth>
       <div className="flex h-[calc(100vh-120px)] sm:h-[calc(100vh-200px)] gap-0 sm:gap-4 relative overflow-hidden">
         {/* Lista de Conversas - Oculto em mobile quando chat está aberto */}
         <div className={`${
           showChat ? 'hidden' : 'flex'
-        } lg:flex w-full lg:w-80 flex-col border-r border-gray-200 bg-white`}>
-          <div className="p-3 sm:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-            <h1 className="text-lg sm:text-xl font-semibold text-foreground mb-3 sm:mb-4">Mensagens</h1>
+        } lg:flex w-full lg:w-80 flex-col border-r border-border bg-card`}>
+          <div className="p-4 border-b border-border sticky top-0 bg-card z-10 backdrop-blur-sm bg-card/95">
+            <h1 className="text-xl font-bold text-foreground mb-4">Mensagens</h1>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
@@ -353,7 +353,7 @@ export default function MessagesPage() {
                 placeholder="Buscar conversas..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                className="w-full pl-10 pr-4 py-2.5 rounded-lg border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
               />
             </div>
           </div>
@@ -389,8 +389,8 @@ export default function MessagesPage() {
                       setShowChat(true);
                     }
                   }}
-                  className={`p-3 sm:p-4 border-b border-border cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors ${
-                    selectedConversation?.id === conv.id ? "bg-primary/10" : ""
+                  className={`p-4 border-b border-border cursor-pointer hover:bg-muted/50 active:bg-muted transition-all ${
+                    selectedConversation?.id === conv.id ? "bg-primary/10 border-l-4 border-l-primary" : ""
                   }`}
                 >
                   <div className="flex items-start gap-2 sm:gap-3">
@@ -438,11 +438,11 @@ export default function MessagesPage() {
         {/* Área de Chat - Oculto em mobile quando lista está visível */}
         <div className={`${
           !showChat && selectedConversation ? 'hidden lg:flex' : 'flex'
-        } flex-1 flex-col bg-white min-w-0`}>
+        } flex-1 flex-col bg-card min-w-0`}>
           {selectedConversation ? (
             <>
               {/* Header do Chat */}
-              <div className="p-3 sm:p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+              <div className="p-4 border-b border-border bg-card sticky top-0 z-10 backdrop-blur-sm bg-card/95">
                 <div className="flex items-center gap-3">
                   {/* Botão voltar - apenas em mobile */}
                   <Button
@@ -473,7 +473,7 @@ export default function MessagesPage() {
               {/* Mensagens */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-muted/30"
+                className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/20"
               >
                 {messages.map((msg) => {
                   const isOwn = msg.sender_id === userId;
@@ -505,7 +505,7 @@ export default function MessagesPage() {
               </div>
 
               {/* Input de Mensagem */}
-              <div className="p-3 sm:p-4 border-t border-border bg-white sticky bottom-0">
+              <div className="p-4 border-t border-border bg-card sticky bottom-0 backdrop-blur-sm bg-card/95">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -518,7 +518,7 @@ export default function MessagesPage() {
                     placeholder="Digite sua mensagem..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1 px-3 sm:px-4 py-2 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50"
+                    className="flex-1 px-4 py-2.5 rounded-lg border-2 border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50 transition-all"
                     disabled={sending}
                     onKeyPress={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
@@ -531,7 +531,7 @@ export default function MessagesPage() {
                     type="submit"
                     disabled={!newMessage.trim() || sending}
                     size="icon"
-                    className="shrink-0"
+                    className="shrink-0 h-10 w-10"
                   >
                     <Send className="h-4 w-4" />
                   </Button>

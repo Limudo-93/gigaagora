@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, X, Clock, Download, Eye, Star } from "lucide-react";
+import { MessageSquare, X, Clock, Download, Eye, Star, Calendar, MapPin } from "lucide-react";
 import InviteDetailsDialog from "./InviteDetailsDialog";
 import RatingDialog from "./RatingDialog";
 
@@ -496,180 +496,199 @@ export default function UpcomingConfirmedGigs({ userId }: { userId: string }) {
                 document.body.removeChild(link);
               };
 
+              const dateParts = when ? when.split(" ") : [];
+              const dateStr = dateParts[0] || "";
+              const timeStr = dateParts[1] || "";
+
               return (
-                <Card key={r.confirmation_id}>
-                  <CardContent className="p-4">
-                    {/* Miniatura do flyer ou logo padrão */}
-                    <div className="mb-3 relative group">
-                      <div 
-                        className={`relative w-full h-32 rounded-lg overflow-hidden border border-border ${r.flyer_url ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
-                        onClick={r.flyer_url ? handleDownloadFlyer : undefined}
-                        title={r.flyer_url ? "Clique para baixar o flyer" : undefined}
-                      >
-                        {r.flyer_url ? (
-                          <>
-                            <img
-                              src={r.flyer_url}
-                              alt={r.gig_title || "Flyer do evento"}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-card/90 rounded-full p-2">
-                                <Download className="h-4 w-4 text-card-foreground" />
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                            <div className="relative w-24 h-24">
-                              <Image
-                                src="/logo.png"
-                                alt="Logo Chama o Músico"
-                                fill
-                                className="object-contain"
-                              />
-                            </div>
+                <Card 
+                  key={r.confirmation_id}
+                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                >
+                  <CardContent className="p-0">
+                    {/* Flyer do evento ou logo padrão */}
+                    <div className="w-full h-48 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
+                      {r.flyer_url ? (
+                        <img
+                          src={r.flyer_url}
+                          alt={r.gig_title || "Flyer do evento"}
+                          className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={handleDownloadFlyer}
+                          title="Clique para baixar o flyer"
+                        />
+                      ) : (
+                        <div className="relative w-32 h-32">
+                          <Image
+                            src="/logo.png"
+                            alt="Logo Chama o Músico"
+                            fill
+                            className="object-contain opacity-50"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-5 space-y-4">
+                      {/* Título */}
+                      <div>
+                        <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2">
+                          {r.gig_title || "Gig sem título"}
+                        </h3>
+
+                        {/* Instrumento */}
+                        {r.instrument && (
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                              {r.instrument}
+                            </Badge>
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    <div className="flex items-start gap-4">
-                      {/* Data grande à esquerda */}
-                      {dayMonth && monthName && (
-                        <div className="flex flex-col items-center justify-center bg-primary text-primary-foreground rounded-lg px-4 py-3 min-w-[80px]">
-                          <div className="text-2xl font-bold">{dayMonth.split(" ")[0]}</div>
-                          <div className="text-sm font-medium">{monthName}</div>
+                      {/* Informações principais - Reorganizadas para escaneabilidade */}
+                      <div className="space-y-3 bg-muted/30 rounded-lg p-3 border border-border/50">
+                        {/* Região - Destacada */}
+                        <div className="flex items-start gap-2.5">
+                          <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm text-foreground truncate">{location || "Local não informado"}</p>
+                          </div>
                         </div>
-                      )}
 
-                      <div className="flex-1 min-w-0">
-                        {/* Tags */}
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <Badge variant="secondary">Pagode</Badge>
-                          <Badge>Confirmada</Badge>
-                          {timeRemaining && (
-                            <Badge className="bg-blue-500 text-white text-xs flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {timeRemaining}
-                            </Badge>
+                        {/* Data e Hora - Em linha única para escaneabilidade */}
+                        <div className="flex items-center gap-4 text-sm">
+                          {dateStr && (
+                            <div className="flex items-center gap-1.5 font-medium text-foreground">
+                              <Calendar className="h-4 w-4 text-primary" />
+                              <span>{dateStr}</span>
+                            </div>
+                          )}
+                          {timeStr && (
+                            <div className="flex items-center gap-1.5 font-medium text-foreground">
+                              <Clock className="h-4 w-4 text-primary" />
+                              <span>{timeStr}</span>
+                            </div>
                           )}
                         </div>
+                      </div>
 
-                        {/* Título e localização */}
-                        <div className="text-sm font-semibold truncate text-foreground mb-1">
-                          {r.gig_title ?? "Show"}
-                        </div>
-                        <div className="text-xs text-muted-foreground mb-1">
-                          {location || "Local não informado"}
-                        </div>
-                        {dateParts && (
-                          <div className="text-xs text-muted-foreground">
-                            {dateParts[1]} {r.instrument ? `• ${r.instrument}` : ""}
-                          </div>
+                      {/* Badges de status */}
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
+                          ✓ Confirmada
+                        </Badge>
+                        {timeRemaining && (
+                          <Badge className="text-xs bg-blue-500 text-white border-0 font-medium flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {timeRemaining}
+                          </Badge>
                         )}
                       </div>
 
                       {/* Botões de ação */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          title="Ver Detalhes"
-                        onClick={async () => {
-                          try {
-                            const { data: inviteData, error: inviteError } = await supabase
-                              .from("invites")
-                              .select("*")
-                              .eq("id", r.invite_id)
-                              .single();
+                      <div className="flex flex-col gap-2.5 pt-4 border-t-2 border-border/30">
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="border-2 hover:bg-accent/50"
+                            onClick={async () => {
+                              try {
+                                const { data: inviteData, error: inviteError } = await supabase
+                                  .from("invites")
+                                  .select("*")
+                                  .eq("id", r.invite_id)
+                                  .single();
 
-                            if (inviteError) throw inviteError;
-                            if (!inviteData) throw new Error("Convite não encontrado");
+                                if (inviteError) throw inviteError;
+                                if (!inviteData) throw new Error("Convite não encontrado");
 
-                            const { data: gigData, error: gigError } = await supabase
-                              .from("gigs")
-                              .select("*")
-                              .eq("id", inviteData.gig_id)
-                              .single();
+                                const { data: gigData, error: gigError } = await supabase
+                                  .from("gigs")
+                                  .select("*")
+                                  .eq("id", inviteData.gig_id)
+                                  .single();
 
-                            if (gigError) throw new Error("Erro ao carregar dados da gig");
+                                if (gigError) throw new Error("Erro ao carregar dados da gig");
 
-                            const { data: roleData, error: roleError } = await supabase
-                              .from("gig_roles")
-                              .select("*")
-                              .eq("id", inviteData.gig_role_id)
-                              .single();
+                                const { data: roleData, error: roleError } = await supabase
+                                  .from("gig_roles")
+                                  .select("*")
+                                  .eq("id", inviteData.gig_role_id)
+                                  .single();
 
-                            if (roleError) throw new Error("Erro ao carregar dados da vaga");
+                                if (roleError) throw new Error("Erro ao carregar dados da vaga");
 
-                            const formattedInvite = {
-                              ...inviteData,
-                              gig: gigData,
-                              role: roleData,
-                            };
-                            
-                            setSelectedInvite(formattedInvite);
-                            setDialogOpen(true);
-                          } catch (err: any) {
-                            console.error("Error loading invite details:", err);
-                            setErrorMsg(`Erro ao carregar detalhes: ${err.message}`);
-                          }
-                        }}
-                      >
-                        <Eye className="h-5 w-5" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        title="Chat"
-                      >
-                        <MessageSquare className="h-5 w-5" />
-                      </Button>
-                      {/* Botão de Avaliar - só aparece após a gig ter passado */}
-                      {r.start_time && new Date(r.start_time) < new Date() && !hasRated.has(r.invite_id) && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={async () => {
-                            try {
-                              const { data: inviteData } = await supabase
-                                .from("invites")
-                                .select("contractor_id, gig_id")
-                                .eq("id", r.invite_id)
-                                .single();
-                              
-                              if (inviteData) {
-                                setRatingInvite({
-                                  inviteId: r.invite_id,
-                                  gigId: inviteData.gig_id,
-                                  contractorId: inviteData.contractor_id,
-                                });
-                                setRatingDialogOpen(true);
+                                const formattedInvite = {
+                                  ...inviteData,
+                                  gig: gigData,
+                                  role: roleData,
+                                };
+                                
+                                setSelectedInvite(formattedInvite);
+                                setDialogOpen(true);
+                              } catch (err: any) {
+                                console.error("Error loading invite details:", err);
+                                setErrorMsg(`Erro ao carregar detalhes: ${err.message}`);
                               }
-                            } catch (err) {
-                              console.error("Error loading invite for rating:", err);
-                            }
-                          }}
-                          title="Avaliar"
+                            }}
+                            title="Ver Detalhes"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="icon"
+                            className="border-2 hover:bg-accent/50"
+                            title="Chat"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                          {r.start_time && new Date(r.start_time) < new Date() && !hasRated.has(r.invite_id) && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border-2 hover:bg-accent/50"
+                              onClick={async () => {
+                                try {
+                                  const { data: inviteData } = await supabase
+                                    .from("invites")
+                                    .select("contractor_id, gig_id")
+                                    .eq("id", r.invite_id)
+                                    .single();
+                                  
+                                  if (inviteData) {
+                                    setRatingInvite({
+                                      inviteId: r.invite_id,
+                                      gigId: inviteData.gig_id,
+                                      contractorId: inviteData.contractor_id,
+                                    });
+                                    setRatingDialogOpen(true);
+                                  }
+                                } catch (err) {
+                                  console.error("Error loading invite for rating:", err);
+                                }
+                              }}
+                              title="Avaliar"
+                            >
+                              <Star className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        <Button
+                          variant="destructive"
+                          className="w-full border-2 font-medium"
+                          onClick={() => cancelConfirmation(r.confirmation_id, r.invite_id)}
+                          disabled={busyId === r.confirmation_id}
                         >
-                          <Star className="h-5 w-5" />
+                          <X className="mr-2 h-4 w-4" />
+                          Cancelar Gig
                         </Button>
-                      )}
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => cancelConfirmation(r.confirmation_id, r.invite_id)}
-                        disabled={busyId === r.confirmation_id}
-                        title="Cancelar"
-                      >
-                        <X className="h-5 w-5" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
+                  </CardContent>
+                </Card>
+              );
             })}
             </div>
           )}
