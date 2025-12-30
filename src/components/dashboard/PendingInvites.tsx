@@ -570,9 +570,11 @@ export default function PendingInvites({ userId }: { userId: string }) {
                           <div className="space-y-2">
                             {/* Card de Distância e Tempo - DESTAQUE */}
                             <div className={`rounded-xl border-2 p-4 shadow-md ${
-                              r.distance_km != null && maxRadiusKm != null
-                                ? r.distance_km <= maxRadiusKm
+                              r.distance_km != null
+                                ? r.distance_km <= 7
                                   ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30"
+                                  : r.distance_km <= 15
+                                  ? "border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30"
                                   : "border-orange-500 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30"
                                 : "border-primary/50 bg-gradient-to-br from-primary/10 to-purple-50 dark:from-primary/20 dark:to-purple-900/20"
                             }`}>
@@ -581,48 +583,46 @@ export default function PendingInvites({ userId }: { userId: string }) {
                                 {r.distance_km != null && (
                                   <div className="flex items-start gap-3">
                                     <div className={`p-2 rounded-lg ${
-                                      maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                      r.distance_km <= 7
                                         ? "bg-green-500/20"
-                                        : maxRadiusKm != null && r.distance_km > maxRadiusKm
-                                        ? "bg-orange-500/20"
-                                        : "bg-primary/20"
+                                        : r.distance_km <= 15
+                                        ? "bg-blue-500/20"
+                                        : "bg-orange-500/20"
                                     }`}>
                                       <Navigation className={`h-5 w-5 ${
-                                        maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                        r.distance_km <= 7
                                           ? "text-green-600 dark:text-green-400"
-                                          : maxRadiusKm != null && r.distance_km > maxRadiusKm
-                                          ? "text-orange-600 dark:text-orange-400"
-                                          : "text-primary"
+                                          : r.distance_km <= 15
+                                          ? "text-blue-600 dark:text-blue-400"
+                                          : "text-orange-600 dark:text-orange-400"
                                       }`} />
                                     </div>
                                     <div className="flex-1">
                                       <p className="text-xs font-medium text-muted-foreground mb-1">Distância</p>
                                       <p className={`text-2xl font-bold ${
-                                        maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                        r.distance_km <= 7
                                           ? "text-green-700 dark:text-green-300"
-                                          : maxRadiusKm != null && r.distance_km > maxRadiusKm
-                                          ? "text-orange-700 dark:text-orange-300"
-                                          : "text-foreground"
+                                          : r.distance_km <= 15
+                                          ? "text-blue-700 dark:text-blue-300"
+                                          : "text-orange-700 dark:text-orange-300"
                                       }`}>
                                         {r.distance_km.toFixed(1)} km
                                       </p>
-                                      {/* Status Perto/Longe */}
+                                      {/* Status Perto/Normal/Longe */}
                                       <Badge 
                                         className={`mt-1.5 text-xs font-semibold ${
-                                          maxRadiusKm != null && r.distance_km <= maxRadiusKm
+                                          r.distance_km <= 7
                                             ? "bg-green-500 text-white"
-                                            : maxRadiusKm != null && r.distance_km > maxRadiusKm
-                                            ? "bg-orange-500 text-white"
-                                            : r.distance_km <= 10
-                                            ? "bg-green-500 text-white"
-                                            : r.distance_km <= 25
+                                            : r.distance_km <= 15
                                             ? "bg-blue-500 text-white"
-                                            : "bg-gray-500 text-white"
+                                            : "bg-orange-500 text-white"
                                         }`}
                                       >
-                                        {maxRadiusKm != null 
-                                          ? (r.distance_km <= maxRadiusKm ? "✓ Próximo" : "⚠ Longe")
-                                          : (r.distance_km <= 10 ? "✓ Muito Próximo" : r.distance_km <= 25 ? "✓ Próximo" : "⚠ Longe")
+                                        {r.distance_km <= 7 
+                                          ? "✓ Próximo"
+                                          : r.distance_km <= 15
+                                          ? "• Normal"
+                                          : "⚠ Longe"
                                         }
                                       </Badge>
                                     </div>
@@ -691,40 +691,31 @@ export default function PendingInvites({ userId }: { userId: string }) {
                             {hoursRemaining}h restantes
                           </Badge>
                         )}
-                        {/* Badges de distância baseados no raio configurado */}
-                        {r.distance_km != null && maxRadiusKm != null && (
+                        {/* Badges de distância */}
+                        {r.distance_km != null && (
                           <>
-                            {r.distance_km <= maxRadiusKm && r.distance_km <= 10 && (
+                            {r.distance_km <= 7 && (
                               <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
-                                Muito Próximo
-                              </Badge>
-                            )}
-                            {r.distance_km <= maxRadiusKm && r.distance_km > 10 && r.distance_km <= 25 && (
-                              <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
                                 Próximo
                               </Badge>
                             )}
-                            {r.distance_km > maxRadiusKm && (
+                            {r.distance_km > 7 && r.distance_km <= 15 && (
+                              <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
+                                Normal
+                              </Badge>
+                            )}
+                            {r.distance_km > 15 && (
                               <Badge className="text-xs bg-orange-500 text-white border-0 font-medium">
-                                Fora do Raio
+                                Longe
                               </Badge>
                             )}
                           </>
                         )}
-                        {/* Fallback se não tem raio configurado */}
-                        {r.distance_km != null && maxRadiusKm == null && (
-                          <>
-                            {r.distance_km <= 10 && (
-                              <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
-                                Muito Próximo
-                              </Badge>
-                            )}
-                            {r.distance_km > 10 && r.distance_km <= 25 && (
-                              <Badge className="text-xs bg-blue-500 text-white border-0 font-medium">
-                                Próximo
-                              </Badge>
-                            )}
-                          </>
+                        {/* Badge de fora do raio se configurado */}
+                        {r.distance_km != null && maxRadiusKm != null && r.distance_km > maxRadiusKm && (
+                          <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
+                            Fora do Raio
+                          </Badge>
                         )}
                       </div>
 
