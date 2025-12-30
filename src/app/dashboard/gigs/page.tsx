@@ -331,7 +331,8 @@ export default function GigsPage() {
         // Filtrar por raio de busca se temos localização do músico e raio configurado
         let finalGigs = processedGigs;
         if (musicianLat != null && musicianLng != null && radius != null) {
-          console.log(`[GigsPage] Filtrando gigs por raio: ${radius} km. Total antes: ${processedGigs.length}`);
+          const radiusValue = radius; // Garantir que radius não é null neste escopo
+          console.log(`[GigsPage] Filtrando gigs por raio: ${radiusValue} km. Total antes: ${processedGigs.length}`);
           finalGigs = processedGigs.filter((gig) => {
             // Se não tem distância calculada, exclui (não podemos filtrar sem distância)
             if (gig.distance_km == null) {
@@ -339,9 +340,9 @@ export default function GigsPage() {
               return false;
             }
             // Filtra pelo raio configurado - só inclui se estiver dentro do raio
-            const isWithinRadius = gig.distance_km <= radius;
+            const isWithinRadius = gig.distance_km <= radiusValue;
             if (!isWithinRadius) {
-              console.log(`[GigsPage] Excluindo gig ${gig.id} - distância ${gig.distance_km.toFixed(1)} km > raio ${radius} km`);
+              console.log(`[GigsPage] Excluindo gig ${gig.id} - distância ${gig.distance_km.toFixed(1)} km > raio ${radiusValue} km`);
             }
             return isWithinRadius;
           });

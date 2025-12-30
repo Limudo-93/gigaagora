@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import DashboardLayoutWithSidebar from "@/components/dashboard/DashboardLayoutWithSidebar";
 import ProfileHeader from "@/components/dashboard/ProfileHeader";
-import ProfileCompletion from "@/components/dashboard/ProfileCompletion";
 import PriorityActionBlock from "@/components/dashboard/PriorityActionBlock";
 import CancellationAlertCard from "@/components/dashboard/CancellationAlertCard";
 import GigsTabs from "@/components/dashboard/GigsTabs";
@@ -43,13 +42,6 @@ export default async function DashboardPage() {
         <ProfileHeader />
       </div>
 
-      {/* Profile Completion - sempre visível mas mais compacto em mobile */}
-      <div className="md:hidden -mt-4 mb-4">
-        <ProfileCompletion />
-      </div>
-      <div className="hidden md:block">
-        <ProfileCompletion />
-      </div>
 
       {/* ✅ PRIORIDADE 1: Alertas de Cancelamento (urgente) */}
       <CancellationAlertCard userId={user.id} />
