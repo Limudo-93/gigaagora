@@ -323,7 +323,7 @@ export default function FinanceiroPage() {
           <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-blue-900">
-                Últimos 30 Dias
+                Este Mês
               </CardTitle>
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </CardHeader>
@@ -332,8 +332,18 @@ export default function FinanceiroPage() {
                 {formatCurrency(earningsLast30Days)}
               </div>
               <p className="text-xs text-blue-700 mt-1">
-                {gigs.filter(gig => gig.confirmed_at && new Date(gig.confirmed_at) >= thirtyDaysAgo).length} trabalhos
+                {(() => {
+                  const monthGigs = gigs.filter(gig => gig.confirmed_at && new Date(gig.confirmed_at) >= thirtyDaysAgo).length;
+                  if (monthGigs === 0) return "Nenhum trabalho este mês ainda";
+                  if (monthGigs === 1) return "1 trabalho confirmado";
+                  return `${monthGigs} trabalhos confirmados`;
+                })()}
               </p>
+              {earningsLast30Days > 0 && totalEarnings > earningsLast30Days && (
+                <p className="text-xs text-blue-600/80 mt-1">
+                  {((earningsLast30Days / totalEarnings) * 100).toFixed(0)}% do seu total
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -368,6 +378,11 @@ export default function FinanceiroPage() {
               <p className="text-xs text-orange-700 mt-1">
                 {formatCurrency(averagePerGig)} por trabalho
               </p>
+              {topInstruments.length > 0 && (
+                <p className="text-xs text-orange-600/80 mt-1 font-medium">
+                  Seu instrumento mais rentável: {topInstruments[0].instrument}
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -386,16 +401,27 @@ export default function FinanceiroPage() {
               <div className="bg-white/60 rounded-xl p-4 border border-indigo-100">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-indigo-700 mb-1">Total Esperado</p>
+                    <p className="text-sm font-medium text-indigo-700 mb-1">
+                      {totalExpectedEarnings > 0 ? "💰 Você vai receber" : "Nenhum trabalho confirmado"}
+                    </p>
                     <p className="text-2xl font-bold text-indigo-900">
                       {formatCurrency(totalExpectedEarnings)}
                     </p>
+                    {totalExpectedEarnings > 0 && (
+                      <p className="text-xs text-indigo-600/80 mt-1">
+                        {upcomingGigs.length === 1 
+                          ? "1 gig confirmada nas próximas semanas"
+                          : `${upcomingGigs.length} gigs confirmadas nas próximas semanas`}
+                      </p>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-indigo-600">
-                      {upcomingGigs.length} {upcomingGigs.length === 1 ? "trabalho" : "trabalhos"} confirmados
-                    </p>
-                  </div>
+                  {totalExpectedEarnings > 0 && (
+                    <div className="text-right">
+                      <p className="text-sm text-indigo-600 font-semibold">
+                        {upcomingGigs.length} {upcomingGigs.length === 1 ? "gig" : "gigs"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

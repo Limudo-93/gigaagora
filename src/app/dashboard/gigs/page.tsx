@@ -20,7 +20,8 @@ import {
   X,
   User,
   Loader2,
-  UserCheck
+  UserCheck,
+  DollarSign
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -49,6 +50,7 @@ type GigRow = {
   invite_id: string | null;
   invite_status: string | null;
   compatible_instruments: string[];
+  cache?: number | null;
   confirmed_musicians?: {
     musician_id: string;
     musician_name: string | null;
@@ -179,7 +181,7 @@ export default function GigsPage() {
             status,
             flyer_url,
             contractor_id,
-            gig_roles(id, instrument)
+            gig_roles(id, instrument, cache)
           `)
           .eq("status", "published")
           .neq("contractor_id", userId)
@@ -229,6 +231,7 @@ export default function GigsPage() {
           const compatibleInstruments = (gig.gig_roles || [])
             .map((gr: any) => gr.instrument)
             .filter((inst: string) => instruments.includes(inst));
+          const compatibleRole = (gig.gig_roles || []).find((gr: any) => instruments.includes(gr.instrument));
           const contractorInfo = contractorsMap.get(gig.contractor_id);
 
           processedGigs.push({
@@ -251,6 +254,7 @@ export default function GigsPage() {
             invite_id: invite?.id || null,
             invite_status: invite?.status || null,
             compatible_instruments: compatibleInstruments,
+            cache: compatibleRole?.cache || null,
           });
         }
 
@@ -753,6 +757,21 @@ export default function GigsPage() {
                     </div>
 
                     <div className="p-5 space-y-4">
+                      {/* Cachê em Destaque - Primeiro elemento visual */}
+                      {userType === "musician" && gig.cache && (
+                        <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-4 text-white shadow-md">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs font-medium opacity-90 mb-1">Cachê</p>
+                              <p className="text-2xl md:text-3xl font-bold">
+                                R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.cache)}
+                              </p>
+                            </div>
+                            <DollarSign className="h-8 w-8 opacity-80" />
+                          </div>
+                        </div>
+                      )}
+
                       {/* Título */}
                       <div>
                         <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2">
@@ -761,7 +780,7 @@ export default function GigsPage() {
 
                         {/* Publicado por */}
                         {userType === "musician" && gig.contractor_name && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                             <User className="h-4 w-4 shrink-0" />
                             <span>
                               Publicado por <span className="font-medium text-foreground">{gig.contractor_name}</span>
@@ -771,7 +790,7 @@ export default function GigsPage() {
 
                         {/* Instrumentos compatíveis */}
                         {userType === "musician" && gig.compatible_instruments.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap gap-1.5 mb-3">
                             {gig.compatible_instruments.map((instrument, idx) => (
                               <Badge key={idx} variant="secondary" className="text-xs px-2 py-0.5">
                                 {instrument}
@@ -781,27 +800,27 @@ export default function GigsPage() {
                         )}
                       </div>
 
-                      {/* Informações principais */}
-                      <div className="space-y-2.5">
-                        {/* Localização */}
+                      {/* Informações principais - Reorganizadas para escaneabilidade */}
+                      <div className="space-y-3 bg-muted/30 rounded-lg p-3 border border-border/50">
+                        {/* Região - Destacada */}
                         <div className="flex items-start gap-2.5">
-                          <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                          <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm text-foreground truncate">{location}</p>
+                            <p className="font-semibold text-sm text-foreground truncate">{location}</p>
                             {cityState && (
-                              <p className="text-xs text-muted-foreground">{cityState}</p>
+                              <p className="text-xs font-medium text-muted-foreground mt-0.5">{cityState}</p>
                             )}
                           </div>
                         </div>
 
-                        {/* Data e Hora */}
+                        {/* Data e Hora - Em linha única para escaneabilidade */}
                         <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
+                          <div className="flex items-center gap-1.5 font-medium text-foreground">
+                            <Calendar className="h-4 w-4 text-primary" />
                             <span>{date || "Data a definir"}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Clock className="h-4 w-4" />
+                          <div className="flex items-center gap-1.5 font-medium text-foreground">
+                            <Clock className="h-4 w-4 text-primary" />
                             <span>{time || "Horário a definir"}</span>
                           </div>
                         </div>
@@ -917,25 +936,26 @@ export default function GigsPage() {
                             )}
                              
                             {(!gig.invite_status || (gig.invite_status !== "accepted" && gig.invite_status !== "declined")) && (
-                              <div className="grid grid-cols-2 gap-2.5">
+                              <div className="space-y-2.5">
                                 <Button
                                   variant="default"
-                                  className="w-full font-medium"
+                                  className="w-full font-semibold text-base py-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all"
                                   onClick={(e) => handleAcceptInvite(gig.id, gig.invite_id, e)}
                                   disabled={processingInviteId === gig.invite_id || !gig.invite_id}
                                 >
                                   {processingInviteId === gig.invite_id ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                   ) : (
-                                    <Check className="mr-2 h-4 w-4" />
+                                    <Check className="mr-2 h-5 w-5" />
                                   )}
-                                  Aceitar
+                                  Aceitar Convite
                                 </Button>
                                 <Button
-                                  variant="outline"
-                                  className="w-full border-2 border-destructive text-destructive hover:bg-destructive/10 font-medium"
+                                  variant="ghost"
+                                  className="w-full text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                                   onClick={(e) => handleDeclineInvite(gig.id, gig.invite_id, e)}
                                   disabled={processingInviteId === gig.invite_id || !gig.invite_id}
+                                  title="Recusar remove este convite da sua lista"
                                 >
                                   {processingInviteId === gig.invite_id ? (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -944,6 +964,9 @@ export default function GigsPage() {
                                   )}
                                   Recusar
                                 </Button>
+                                <p className="text-xs text-muted-foreground text-center">
+                                  Recusar remove este convite da sua lista
+                                </p>
                               </div>
                             )}
                           </>

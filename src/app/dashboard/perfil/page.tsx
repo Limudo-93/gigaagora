@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, Mail, Phone, Music, Globe, Edit } from "lucide-react";
+import { MapPin, Mail, Phone, Music, Globe, Edit, Eye } from "lucide-react";
 import Link from "next/link";
 
 export default async function PerfilPage() {
@@ -78,6 +78,98 @@ export default async function PerfilPage() {
             </Button>
           </Link>
         </div>
+
+        {/* Preview Público e Badges de Confiança */}
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-gray-900 flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Preview Público
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              É assim que os contratantes veem você quando procuram músicos para suas gigs.
+            </p>
+            
+            <div className="space-y-4">
+              {/* Badges de Confiança */}
+              <div className="flex flex-wrap gap-2">
+                {musicianProfile?.is_trusted && (
+                  <Badge className="bg-green-500 hover:bg-green-600 text-white border-0">
+                    ✓ Músico Confiável
+                  </Badge>
+                )}
+                {musicianProfile?.avg_rating && Number(musicianProfile.avg_rating) >= 4.5 && (
+                  <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white border-0">
+                    ⭐ Excelente Avaliação
+                  </Badge>
+                )}
+                {musicianProfile?.attendance_rate && Number(musicianProfile.attendance_rate) >= 0.95 && (
+                  <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0">
+                    📅 Alta Presença
+                  </Badge>
+                )}
+                {musicianProfile?.response_time_seconds_avg && Number(musicianProfile.response_time_seconds_avg) < 3600 && (
+                  <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0">
+                    ⚡ Resposta Rápida
+                  </Badge>
+                )}
+                {(!musicianProfile?.is_trusted && 
+                  (!musicianProfile?.avg_rating || Number(musicianProfile.avg_rating) < 4.5) &&
+                  (!musicianProfile?.attendance_rate || Number(musicianProfile.attendance_rate) < 0.95) &&
+                  (!musicianProfile?.response_time_seconds_avg || Number(musicianProfile.response_time_seconds_avg) >= 3600)) && (
+                  <Badge variant="outline" className="border-gray-300">
+                    Complete mais gigs para ganhar badges
+                  </Badge>
+                )}
+              </div>
+
+              {/* Preview do perfil */}
+              <div className="bg-white/60 rounded-lg p-4 border border-primary/20">
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={profile?.photo_url || ""} />
+                    <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 mb-1">{displayName}</h3>
+                    {profile?.city && profile?.state && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {profile.city}, {profile.state}
+                      </p>
+                    )}
+                    {musicianProfile?.instruments && musicianProfile.instruments.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {musicianProfile.instruments.slice(0, 3).map((instrument: string, idx: number) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {instrument}
+                          </Badge>
+                        ))}
+                        {musicianProfile.instruments.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{musicianProfile.instruments.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    {musicianProfile?.avg_rating && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-900">
+                          {Number(musicianProfile.avg_rating).toFixed(1)}
+                        </span>
+                        <span className="text-yellow-500">⭐</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({musicianProfile.rating_count || 0} {musicianProfile.rating_count === 1 ? 'avaliação' : 'avaliações'})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Informações Básicas */}
         <Card className="bg-white border-gray-200">
