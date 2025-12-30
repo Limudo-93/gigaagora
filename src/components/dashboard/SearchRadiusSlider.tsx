@@ -27,7 +27,9 @@ export default function SearchRadiusSlider() {
         if (musicianProfile?.strengths_counts) {
           const metadata = musicianProfile.strengths_counts as any;
           if (metadata.searchRadius) {
-            setSearchRadius(metadata.searchRadius);
+            // Garantir que o raio carregado não ultrapasse 50km
+            const loadedRadius = Math.min(Number(metadata.searchRadius), 50);
+            setSearchRadius(loadedRadius);
           }
         }
       } catch (error) {
@@ -42,7 +44,9 @@ export default function SearchRadiusSlider() {
 
   // Salvar raio quando mudar
   const handleRadiusChange = async (newRadius: number) => {
-    setSearchRadius(newRadius);
+    // Garantir que o raio não ultrapasse 50km
+    const finalRadius = Math.min(newRadius, 50);
+    setSearchRadius(finalRadius);
     setSaving(true);
 
     try {
@@ -59,7 +63,7 @@ export default function SearchRadiusSlider() {
       const currentMetadata = (musicianProfile?.strengths_counts as any) || {};
       const updatedMetadata = {
         ...currentMetadata,
-        searchRadius: newRadius,
+        searchRadius: finalRadius,
       };
 
       // Atualizar no banco
@@ -101,18 +105,18 @@ export default function SearchRadiusSlider() {
                 <span className="text-xs text-gray-500">Salvando...</span>
               )}
             </div>
-            <span className="text-xs font-medium text-gray-700">200 km</span>
+            <span className="text-xs font-medium text-gray-700">50 km</span>
           </div>
           <input
             type="range"
             min={0}
-            max={200}
-            step={5}
+            max={50}
+            step={1}
             value={searchRadius}
             onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
             className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-orange-500 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:border-none"
             style={{
-              background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(searchRadius / 200) * 100}%, rgb(229 231 235) ${(searchRadius / 200) * 100}%, rgb(229 231 235) 100%)`
+              background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(searchRadius / 50) * 100}%, rgb(229 231 235) ${(searchRadius / 50) * 100}%, rgb(229 231 235) 100%)`
             }}
           />
           <p className="text-xs text-gray-600">
