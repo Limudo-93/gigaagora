@@ -111,6 +111,7 @@ export default function GigMatchesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [musicians, setMusicians] = useState<AcceptedMusician[]>([]);
+  const [confirmedMusicians, setConfirmedMusicians] = useState<AcceptedMusician[]>([]);
   const [gigTitle, setGigTitle] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [selectedMusician, setSelectedMusician] = useState<AcceptedMusician | null>(null);
@@ -155,14 +156,23 @@ export default function GigMatchesPage() {
         if (gigError) throw gigError;
         if (gigData) setGigTitle(gigData.title);
 
-        // Busca músicos que aceitaram usando RPC
+        // Busca músicos que aceitaram (mas não confirmados) usando RPC
         const { data: rpcData, error: rpcError } = await supabase.rpc(
           "rpc_list_accepted_musicians_for_gig",
           { p_gig_id: gigId }
         );
 
-        console.log('RPC result:', { rpcData, rpcError, gigId });
+        console.log('RPC accepted result:', { rpcData, rpcError, gigId });
 
+        // Busca músicos CONFIRMADOS usando nova RPC
+        const { data: confirmedRpcData, error: confirmedRpcError } = await supabase.rpc(
+          "rpc_list_confirmed_musicians_for_gig",
+          { p_gig_id: gigId }
+        );
+
+        console.log('RPC confirmed result:', { confirmedRpcData, confirmedRpcError, gigId });
+
+        // Processar músicos aceitos (não confirmados)
         if (rpcError) {
           console.error('RPC error details:', rpcError);
           // Fallback: busca direta
@@ -203,74 +213,164 @@ export default function GigMatchesPage() {
 
           if (directError) throw directError;
 
-          const transformed = (directData || []).map((inv: any) => ({
-            invite_id: inv.id,
-            musician_id: inv.musician_id,
-            musician_name: inv.profiles?.display_name || null,
-            musician_photo_url: inv.profiles?.photo_url || null,
-            instrument: inv.gig_roles?.instrument || "",
-            gig_role_id: inv.gig_role_id,
-            accepted_at: inv.accepted_at,
-            avg_rating: inv.musician_profiles?.avg_rating || null,
-            rating_count: inv.musician_profiles?.rating_count || null,
-            city: inv.profiles?.city || null,
-            state: inv.profiles?.state || null,
-            phone: inv.profiles?.phone_e164 || null,
-            bio: inv.musician_profiles?.bio || null,
-            instruments: inv.musician_profiles?.instruments || [],
-            genres: inv.musician_profiles?.genres || [],
-            skills: inv.musician_profiles?.skills || [],
-            setup: inv.musician_profiles?.setup || [],
-            portfolio_links: inv.musician_profiles?.portfolio_links || [],
-            attendance_rate: inv.musician_profiles?.attendance_rate || null,
-            response_time_seconds_avg: inv.musician_profiles?.response_time_seconds_avg || null,
-            is_trusted: inv.musician_profiles?.is_trusted || false,
-          }));
+          // Filtrar apenas os que NÃO estão confirmados
+          const { data: confirmedInvites } = await supabase
+            .from("confirmations")
+            .select("invite_id")
+            .eq("confirmed", true);
+
+          const confirmedInviteIds = new Set((confirmedInvites || []).map((c: any) => c.invite_id));
+
+          const transformed = (directData || [])
+            .filter((inv: any) => !confirmedInviteIds.has(inv.id))
+            .map((inv: any) => ({
+              invite_id: inv.id,
+              musician_id: inv.musician_id,
+              musician_name: inv.profiles?.display_name || null,
+              musician_photo_url: inv.profiles?.photo_url || null,
+              instrument: inv.gig_roles?.instrument || "",
+              gig_role_id: inv.gig_role_id,
+              accepted_at: inv.accepted_at,
+              avg_rating: inv.musician_profiles?.avg_rating || null,
+              rating_count: inv.musician_profiles?.rating_count || null,
+              city: inv.profiles?.city || null,
+              state: inv.profiles?.state || null,
+              phone: inv.profiles?.phone_e164 || null,
+              bio: inv.musician_profiles?.bio || null,
+              instruments: inv.musician_profiles?.instruments || [],
+              genres: inv.musician_profiles?.genres || [],
+              skills: inv.musician_profiles?.skills || [],
+              setup: inv.musician_profiles?.setup || [],
+              portfolio_links: inv.musician_profiles?.portfolio_links || [],
+              attendance_rate: inv.musician_profiles?.attendance_rate || null,
+              response_time_seconds_avg: inv.musician_profiles?.response_time_seconds_avg || null,
+              is_trusted: inv.musician_profiles?.is_trusted || false,
+            }));
 
           setMusicians(transformed);
-          
-          // Carregar badges para cada músico
-          const musicianIds = transformed.map((m: any) => m.musician_id);
-          if (musicianIds.length > 0) {
-            const { data: badgesData } = await supabase
-              .from("user_badges")
-              .select("user_id, badge_type, earned_at, expires_at")
-              .in("user_id", musicianIds)
-              .or("expires_at.is.null,expires_at.gt.now()");
-            
-            if (badgesData) {
-              const badgesMap: Record<string, any[]> = {};
-              badgesData.forEach((badge: any) => {
-                if (!badgesMap[badge.user_id]) {
-                  badgesMap[badge.user_id] = [];
-                }
-                badgesMap[badge.user_id].push(badge);
+        } else {
+          // Filtrar apenas os que NÃO estão confirmados
+          const { data: confirmedInvites } = await supabase
+            .from("confirmations")
+            .select("invite_id")
+            .eq("confirmed", true);
+
+          const confirmedInviteIds = new Set((confirmedInvites || []).map((c: any) => c.invite_id));
+          const acceptedNotConfirmed = (rpcData || []).filter((m: any) => !confirmedInviteIds.has(m.invite_id));
+          setMusicians(acceptedNotConfirmed as AcceptedMusician[]);
+        }
+
+        // Processar músicos confirmados
+        if (confirmedRpcError) {
+          console.error('RPC confirmed error details:', confirmedRpcError);
+          // Fallback: busca direta
+          // Primeiro, buscar os invites da gig
+          const { data: gigInvites } = await supabase
+            .from("invites")
+            .select("id")
+            .eq("gig_id", gigId);
+
+          const inviteIds = (gigInvites || []).map((inv: any) => inv.id);
+
+          if (inviteIds.length > 0) {
+            const { data: confirmationsData, error: confirmationsError } = await supabase
+              .from("confirmations")
+              .select(`
+                invite_id,
+                musician_id,
+                confirmed_at,
+                invites!inner(
+                  id,
+                  musician_id,
+                  gig_role_id,
+                  gig_roles!inner(
+                    instrument
+                  ),
+                  profiles!invites_musician_id_fkey(
+                    display_name,
+                    photo_url,
+                    city,
+                    state,
+                    phone_e164
+                  ),
+                  musician_profiles!invites_musician_id_fkey(
+                    avg_rating,
+                    rating_count,
+                    bio,
+                    instruments,
+                    genres,
+                    skills,
+                    setup,
+                    portfolio_links,
+                    attendance_rate,
+                    response_time_seconds_avg,
+                    is_trusted
+                  )
+                )
+              `)
+              .eq("confirmed", true)
+              .in("invite_id", inviteIds);
+
+            if (confirmationsError) {
+              console.error('Error loading confirmations:', confirmationsError);
+              setConfirmedMusicians([]);
+            } else {
+              const transformed = (confirmationsData || []).map((c: any) => {
+                const inv = Array.isArray(c.invites) ? c.invites[0] : c.invites;
+                return {
+                  invite_id: c.invite_id,
+                  musician_id: c.musician_id,
+                  musician_name: inv?.profiles?.display_name || null,
+                  musician_photo_url: inv?.profiles?.photo_url || null,
+                  instrument: inv?.gig_roles?.instrument || "",
+                  gig_role_id: inv?.gig_role_id || "",
+                  accepted_at: c.confirmed_at, // Usar confirmed_at como accepted_at para exibição
+                  avg_rating: inv?.musician_profiles?.avg_rating || null,
+                  rating_count: inv?.musician_profiles?.rating_count || null,
+                  city: inv?.profiles?.city || null,
+                  state: inv?.profiles?.state || null,
+                  phone: inv?.profiles?.phone_e164 || null,
+                  bio: inv?.musician_profiles?.bio || null,
+                  instruments: inv?.musician_profiles?.instruments || [],
+                  genres: inv?.musician_profiles?.genres || [],
+                  skills: inv?.musician_profiles?.skills || [],
+                  setup: inv?.musician_profiles?.setup || [],
+                  portfolio_links: inv?.musician_profiles?.portfolio_links || [],
+                  attendance_rate: inv?.musician_profiles?.attendance_rate || null,
+                  response_time_seconds_avg: inv?.musician_profiles?.response_time_seconds_avg || null,
+                  is_trusted: inv?.musician_profiles?.is_trusted || false,
+                };
               });
-              setBadges(badgesMap);
+              setConfirmedMusicians(transformed);
             }
+          } else {
+            setConfirmedMusicians([]);
           }
         } else {
-          setMusicians((rpcData || []) as AcceptedMusician[]);
+          setConfirmedMusicians((confirmedRpcData || []) as AcceptedMusician[]);
+        }
+
+        // Carregar badges para todos os músicos (aceitos + confirmados)
+        const allMusicianIds = [
+          ...musicians.map((m: any) => m.musician_id),
+          ...confirmedMusicians.map((m: any) => m.musician_id)
+        ];
+        if (allMusicianIds.length > 0) {
+          const { data: badgesData } = await supabase
+            .from("user_badges")
+            .select("user_id, badge_type, earned_at, expires_at")
+            .in("user_id", allMusicianIds)
+            .or("expires_at.is.null,expires_at.gt.now()");
           
-          // Carregar badges para cada músico
-          const musicianIds = (rpcData || []).map((m: any) => m.musician_id);
-          if (musicianIds.length > 0) {
-            const { data: badgesData } = await supabase
-              .from("user_badges")
-              .select("user_id, badge_type, earned_at, expires_at")
-              .in("user_id", musicianIds)
-              .or("expires_at.is.null,expires_at.gt.now()");
-            
-            if (badgesData) {
-              const badgesMap: Record<string, any[]> = {};
-              badgesData.forEach((badge: any) => {
-                if (!badgesMap[badge.user_id]) {
-                  badgesMap[badge.user_id] = [];
-                }
-                badgesMap[badge.user_id].push(badge);
-              });
-              setBadges(badgesMap);
-            }
+          if (badgesData) {
+            const badgesMap: Record<string, any[]> = {};
+            badgesData.forEach((badge: any) => {
+              if (!badgesMap[badge.user_id]) {
+                badgesMap[badge.user_id] = [];
+              }
+              badgesMap[badge.user_id].push(badge);
+            });
+            setBadges(badgesMap);
           }
         }
       } catch (e: any) {
@@ -488,14 +588,40 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
         }
       }
 
-      // Remove da lista local (o músico confirmado não deve mais aparecer na lista de aceitos)
-      setMusicians((prev) => prev.filter((m) => m.invite_id !== inviteId));
+      // Recarrega os dados para atualizar as listas
+      // O músico será movido da lista de aceitos para a lista de confirmados
+      const loadData = async () => {
+        // Recarregar músicos aceitos e confirmados
+        const { data: rpcData } = await supabase.rpc(
+          "rpc_list_accepted_musicians_for_gig",
+          { p_gig_id: gigId }
+        );
+        
+        const { data: confirmedRpcData } = await supabase.rpc(
+          "rpc_list_confirmed_musicians_for_gig",
+          { p_gig_id: gigId }
+        );
+
+        if (rpcData) {
+          const { data: confirmedInvites } = await supabase
+            .from("confirmations")
+            .select("invite_id")
+            .eq("confirmed", true);
+
+          const confirmedInviteIds = new Set((confirmedInvites || []).map((c: any) => c.invite_id));
+          const acceptedNotConfirmed = (rpcData || []).filter((m: any) => !confirmedInviteIds.has(m.invite_id));
+          setMusicians(acceptedNotConfirmed as AcceptedMusician[]);
+        }
+
+        if (confirmedRpcData) {
+          setConfirmedMusicians((confirmedRpcData || []) as AcceptedMusician[]);
+        }
+      };
+
+      await loadData();
 
       // Mostra mensagem de sucesso
       alert("Músico confirmado com sucesso! Uma mensagem foi enviada automaticamente.");
-      
-      // Recarrega a página atual para atualizar a lista
-      window.location.reload();
     } catch (err: any) {
       console.error("Error confirming musician:", err);
       setError(`Erro ao confirmar músico: ${err.message}`);
@@ -544,6 +670,146 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
             <p className="mt-1">{error}</p>
           </div>
         )}
+
+        {/* Seção de Músicos Confirmados */}
+        {confirmedMusicians.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <h2 className="text-xl font-bold text-gray-900">Músicos Confirmados</h2>
+              <Badge className="bg-green-100 text-green-800 border-green-300">
+                {confirmedMusicians.length}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {confirmedMusicians.map((musician) => (
+                <Card
+                  key={musician.invite_id}
+                  className="border-green-200 bg-green-50/50 backdrop-blur-xl hover:shadow-xl transition-all duration-300 flex flex-col"
+                >
+                  <CardContent className="p-6 flex flex-col flex-1">
+                    <div className="flex items-start gap-4 mb-4">
+                      <Avatar className="h-16 w-16 ring-2 ring-green-500 shadow-lg flex-shrink-0">
+                        <AvatarImage src={musician.musician_photo_url || ""} />
+                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-700 text-white font-semibold text-lg">
+                          {getInitials(musician.musician_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate">
+                            {musician.musician_name || "Músico"}
+                          </h3>
+                          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-900 border border-gray-300">
+                            {musician.instrument}
+                          </Badge>
+                          {musician.avg_rating && (
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                              <span className="text-xs font-medium text-gray-700">
+                                {Number(musician.avg_rating).toFixed(1)}
+                              </span>
+                              {musician.rating_count && musician.rating_count > 0 && (
+                                <span className="text-xs text-gray-500">
+                                  ({musician.rating_count})
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {badges[musician.musician_id] && badges[musician.musician_id].length > 0 && (
+                            <BadgeDisplay badges={badges[musician.musician_id]} size="sm" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2 mb-4 flex-1">
+                      <LocationInfo
+                        city={musician.city}
+                        state={musician.state}
+                        neighborhood={null}
+                        municipality={null}
+                        showDistance={false}
+                      />
+                      <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
+                        <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                        <span>Confirmado em {formatDateBR(musician.accepted_at)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-auto">
+                      <Button
+                        variant="outline"
+                        className="flex-1 bg-white border-gray-300 text-gray-900 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 font-medium"
+                        onClick={async () => {
+                          setLoadingProfile(true);
+                          try {
+                            const { data: profileData } = await supabase
+                              .from("musician_profiles")
+                              .select("*")
+                              .eq("user_id", musician.musician_id)
+                              .single();
+                            
+                            const { data: profileBasic } = await supabase
+                              .from("profiles")
+                              .select("*")
+                              .eq("user_id", musician.musician_id)
+                              .single();
+
+                            const metadata = (profileData?.strengths_counts as any) || {};
+                            
+                            setSelectedMusician({
+                              ...musician,
+                              bio: profileData?.bio || musician.bio || null,
+                              instruments: profileData?.instruments || musician.instruments || [],
+                              genres: profileData?.genres || musician.genres || [],
+                              skills: profileData?.skills || musician.skills || [],
+                              setup: profileData?.setup || musician.setup || [],
+                              portfolio_links: profileData?.portfolio_links || musician.portfolio_links || [],
+                              attendance_rate: profileData?.attendance_rate || musician.attendance_rate || null,
+                              response_time_seconds_avg: profileData?.response_time_seconds_avg || musician.response_time_seconds_avg || null,
+                              is_trusted: profileData?.is_trusted || musician.is_trusted || false,
+                              phone: profileBasic?.phone_e164 || musician.phone || null,
+                              email: null,
+                              socialMedia: metadata.socialMedia || {},
+                              sheetMusicReading: metadata.sheetMusicReading || null,
+                              repertoire: metadata.repertoire || null,
+                              yearsExperience: metadata.yearsExperience || null,
+                              musicalEducation: metadata.musicalEducation || null,
+                              basePrice: metadata.basePrice || null,
+                            });
+                            
+                            setProfileDialogOpen(true);
+                          } catch (err) {
+                            console.error("Error loading profile:", err);
+                            setSelectedMusician(musician);
+                            setProfileDialogOpen(true);
+                          } finally {
+                            setLoadingProfile(false);
+                          }
+                        }}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver Perfil
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Seção de Músicos que Aceitaram (não confirmados) */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <User className="h-5 w-5 text-gray-600" />
+            <h2 className="text-xl font-bold text-gray-900">Músicos que Aceitaram</h2>
+            <Badge className="bg-gray-100 text-gray-800 border-gray-300">
+              {musicians.length}
+            </Badge>
+          </div>
 
         {musicians.length === 0 ? (
           <Card className="border-white/20 backdrop-blur-xl bg-white/80">
