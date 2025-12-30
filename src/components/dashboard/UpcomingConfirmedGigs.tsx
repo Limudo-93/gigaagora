@@ -496,9 +496,8 @@ export default function UpcomingConfirmedGigs({ userId }: { userId: string }) {
                 document.body.removeChild(link);
               };
 
-              const dateParts = when ? when.split(" ") : [];
-              const dateStr = dateParts[0] || "";
-              const timeStr = dateParts[1] || "";
+              const dateStr = dateParts ? dateParts[0] || "" : "";
+              const timeStr = dateParts ? dateParts[1] || "" : "";
 
               return (
                 <Card 
