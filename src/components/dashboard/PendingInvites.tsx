@@ -264,12 +264,12 @@ export default function PendingInvites({ userId }: { userId: string }) {
         };
       });
 
-      // Filtrar por raio de busca se temos localização do músico
+      // Filtrar por raio de busca se temos localização do músico e raio configurado
       if (musicianLat != null && musicianLng != null && radius != null) {
         transformed = transformed.filter((item) => {
-          // Se não tem distância calculada, inclui (pode não ter coordenadas da gig)
-          if (item.distance_km == null) return true;
-          // Filtra pelo raio configurado
+          // Se não tem distância calculada, exclui (não podemos filtrar sem distância)
+          if (item.distance_km == null) return false;
+          // Filtra pelo raio configurado - só inclui se estiver dentro do raio
           return item.distance_km <= radius;
         });
       }
