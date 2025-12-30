@@ -155,16 +155,31 @@ export default function GigsPage() {
 
         const instruments = (musicianProfile?.instruments as string[]) || [];
         
-        musicianLat = musicianProfile?.latitude as number | null | undefined;
-        musicianLng = musicianProfile?.longitude as number | null | undefined;
+        musicianLat = (musicianProfile?.latitude as number | null | undefined) ?? null;
+        musicianLng = (musicianProfile?.longitude as number | null | undefined) ?? null;
         
-        // Buscar raio de busca
-        radius = musicianProfile?.max_radius_km as number | null | undefined;
-        if (!radius && musicianProfile?.strengths_counts) {
+        // Buscar raio de busca (priorizar strengths_counts.searchRadius onde o slider salva)
+        if (musicianProfile?.strengths_counts) {
           const metadata = musicianProfile.strengths_counts as any;
-          radius = metadata?.searchRadius || 50;
+          if (metadata?.searchRadius != null) {
+            radius = Number(metadata.searchRadius);
+          }
         }
-        if (!radius) radius = 50;
+        // Fallback para max_radius_km se não encontrou em strengths_counts
+        if (radius == null) {
+          const maxRadius = musicianProfile?.max_radius_km as number | null | undefined;
+          if (maxRadius != null) {
+            radius = Number(maxRadius);
+          }
+        }
+        // Default final se ainda não tem
+        if (radius == null) radius = 50;
+        
+        console.log(`[GigsPage] Raio de busca configurado: ${radius} km`, {
+          fromStrengthsCounts: musicianProfile?.strengths_counts ? (musicianProfile.strengths_counts as any)?.searchRadius : null,
+          fromMaxRadiusKm: musicianProfile?.max_radius_km,
+          finalRadius: radius
+        });
         
         setMaxRadiusKm(radius);
         
@@ -314,12 +329,22 @@ export default function GigsPage() {
         // Filtrar por raio de busca se temos localização do músico e raio configurado
         let finalGigs = processedGigs;
         if (musicianLat != null && musicianLng != null && radius != null) {
+          console.log(`[GigsPage] Filtrando gigs por raio: ${radius} km. Total antes: ${processedGigs.length}`);
           finalGigs = processedGigs.filter((gig) => {
             // Se não tem distância calculada, exclui (não podemos filtrar sem distância)
-            if (gig.distance_km == null) return false;
+            if (gig.distance_km == null) {
+              console.log(`[GigsPage] Excluindo gig ${gig.id} - sem distância calculada`);
+              return false;
+            }
             // Filtra pelo raio configurado - só inclui se estiver dentro do raio
-            return gig.distance_km <= radius;
+            const isWithinRadius = gig.distance_km <= radius;
+            if (!isWithinRadius) {
+              console.log(`[GigsPage] Excluindo gig ${gig.id} - distância ${gig.distance_km.toFixed(1)} km > raio ${radius} km`);
+            }
+            return isWithinRadius;
           });
+          
+          console.log(`[GigsPage] Total após filtro: ${finalGigs.length}`);
           
           // Ordenar por distância (menor primeiro)
           finalGigs.sort((a, b) => {
@@ -330,6 +355,8 @@ export default function GigsPage() {
             if (a.distance_km == null && b.distance_km != null) return 1;
             return 0;
           });
+        } else {
+          console.log(`[GigsPage] Não filtrando por raio - musicianLat: ${musicianLat}, musicianLng: ${musicianLng}, radius: ${radius}`);
         }
 
         setGigs(finalGigs);
@@ -440,6 +467,42 @@ export default function GigsPage() {
         () => {
           console.log('Mudança detectada em invites, recarregando...');
           loadGigs();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'musician_profiles',
+          filter: userType === 'musician' 
+            ? `user_id=eq.${userId}`
+            : undefined,
+        },
+        (payload) => {
+          // Recarregar se o raio de busca ou localização mudou
+          const oldData = payload.old as any;
+          const newData = payload.new as any;
+          
+          const oldRadius = oldData?.max_radius_km || (oldData?.strengths_counts as any)?.searchRadius;
+          const newRadius = newData?.max_radius_km || (newData?.strengths_counts as any)?.searchRadius;
+          
+          const oldLat = oldData?.latitude;
+          const newLat = newData?.latitude;
+          const oldLng = oldData?.longitude;
+          const newLng = newData?.longitude;
+          
+          if (oldRadius !== newRadius || oldLat !== newLat || oldLng !== newLng) {
+            console.log('Mudança detectada em musician_profiles (raio ou localização), recarregando gigs...', {
+              oldRadius,
+              newRadius,
+              oldLat,
+              newLat,
+              oldLng,
+              newLng
+            });
+            loadGigs();
+          }
         }
       )
       .subscribe();
