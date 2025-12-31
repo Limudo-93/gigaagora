@@ -58,6 +58,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href={"/notifications" as any}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
+                >
+                  Notificações
+                </Link>
+              </li>
+              <li>
+                <Link
                   href={"/dashboard/perfil" as any}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
