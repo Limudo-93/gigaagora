@@ -7,6 +7,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import AmbassadorBadge from "@/components/dashboard/AmbassadorBadge";
+import BadgeDisplay from "@/components/dashboard/BadgeDisplay";
+import RankingBadge from "@/components/dashboard/RankingBadge";
 import {
   BadgeCheck,
   CalendarClock,
@@ -85,7 +88,7 @@ export default async function DashboardMusicoProfilePage({
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, photo_url, city, state, user_type")
+    .select("user_id, display_name, photo_url, city, state, user_type, cpf, is_ambassador")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -113,6 +116,24 @@ export default async function DashboardMusicoProfilePage({
     )
     .eq("user_id", userId)
     .maybeSingle();
+
+  const { data: badges } = await supabase
+    .from("user_badges")
+    .select("badge_type, earned_at, expires_at")
+    .eq("user_id", userId)
+    .or("expires_at.is.null,expires_at.gt.now()");
+
+  const { data: ranking } = await supabase
+    .from("user_rankings")
+    .select("current_tier")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const isAmbassador =
+    profile?.is_ambassador ||
+    badges?.some((b: any) => b.badge_type === "ambassador") ||
+    false;
+  const isVerified = Boolean(profile?.cpf);
 
   const musician: MusicianProfile = {
     user_id: profile.user_id,
@@ -155,6 +176,21 @@ export default async function DashboardMusicoProfilePage({
                         <ShieldCheck className="h-3 w-3 mr-1" />
                         confiável
                       </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {isAmbassador && <AmbassadorBadge size="sm" showText={true} />}
+                    {isVerified && (
+                      <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                        <ShieldCheck className="h-3 w-3 mr-1" />
+                        Verificado
+                      </Badge>
+                    )}
+                    {ranking?.current_tier && (
+                      <RankingBadge tier={ranking.current_tier as any} size="sm" showText={true} />
+                    )}
+                    {badges && badges.length > 0 && (
+                      <BadgeDisplay badges={badges} size="sm" />
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-foreground/60 mt-2">
