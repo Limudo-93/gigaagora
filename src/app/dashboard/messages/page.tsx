@@ -527,12 +527,14 @@ export default function MessagesPage() {
                             )}
                           </div>
                         </div>
-                        {selectedConversation.gig.id && (
+                        {selectedConversation.gig?.id && (
                           <Button
                             size="sm"
                             onClick={() => {
-                              const gigUrl = `/dashboard/gigs/${selectedConversation.gig.id}`;
-                              router.push(gigUrl as any);
+                              if (selectedConversation.gig?.id) {
+                                const gigUrl = `/dashboard/gigs/${selectedConversation.gig.id}`;
+                                router.push(gigUrl as any);
+                              }
                             }}
                             className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white shrink-0"
                           >
