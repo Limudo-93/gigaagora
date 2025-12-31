@@ -221,14 +221,15 @@ export default async function Page() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-amber-700">
                 <Sparkles className="h-4 w-4" />
-                Bora lotar a agenda em 2025
+                Agenda lotada em 2025
               </div>
               <h1 className="text-4xl font-display font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                O lugar onde músico fecha show e contratante acha o
-                <span className="gradient-text"> line-up perfeito</span>.
+                O lugar onde músico fecha show e contratante encontra a
+                <span className="gradient-text"> banda perfeita</span>.
               </h1>
               <p className="text-lg text-foreground/80 sm:text-xl">
-                Tudo no esquema: convites certeiros, ranking que te dá moral e gigs\r\n                chegando mais rápido. Entrou, já começa a pingar proposta boa.
+                Convites certeiros, ranking que te coloca em evidência e gigs chegando
+                mais rápido. Entrou, já começa a chegar proposta boa.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button className="btn-gradient text-white" asChild>
@@ -244,15 +245,15 @@ export default async function Page() {
               <div className="flex flex-wrap gap-6 text-sm text-foreground/80">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Convite na veia por instrumento e estilo
+                  Convites certeiros por instrumento e estilo
                 </div>
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4 text-orange-500" />
-                  Missões simples pra te deixar em evidência
+                  Missões simples pra te colocar em evidência
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-[#2aa6a1]" />
-                  Agenda organizada \+ baixa pro seu calendário
+                  Agenda organizada + baixar no calendário
                 </div>
               </div>
               {socialProofMusicians.length > 0 && (
@@ -275,53 +276,6 @@ export default async function Page() {
             </div>
 
             <div className="relative space-y-4">
-              <Card className="card-glass border border-white/70">
-                <CardContent className="space-y-4 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-foreground/60">Seu nível</p>
-                      <p className="text-2xl font-semibold text-foreground">Headliner</p>
-                    </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff6b4a]/15 text-[#ff6b4a]">
-                      <Crown className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-xs text-foreground/60">
-                      <span>Progresso do ranking</span>
-                      <span>78%</span>
-                    </div>
-                    <div className="mt-2 h-2 rounded-full bg-white/70">
-                      <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1]" />
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-900">
-                    Sobe mais um nível e pinta convite top.
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="card-glass border border-white/70">
-                <CardContent className="space-y-4 p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-foreground/60">Tarefa de hoje</p>
-                      <p className="text-lg font-semibold text-foreground">Responder 3 convites</p>
-                    </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2aa6a1]/15 text-[#2aa6a1]">
-                      <Target className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-foreground/70">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                    Sequência ativa: 4 dias direto
-                  </div>
-                  <Button className="w-full" variant="outline" asChild>
-                    <Link href="/signup">Bora começar</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
               <Card className="border border-white/70 bg-white/80 shadow-sm">
                 <CardContent className="space-y-3 p-5">
                   <div className="flex items-center justify-between">
