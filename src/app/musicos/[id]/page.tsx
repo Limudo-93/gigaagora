@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { extractUserIdFromSlug } from "@/lib/slug";
 import HomeHeader from "@/components/HomeHeader";
 import MarketingFooter from "@/components/MarketingFooter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -61,7 +62,11 @@ export default async function MusicoProfilePage({
   params: { id: string };
 }) {
   const supabase = await createClient();
-  const userId = params.id;
+  const userId = extractUserIdFromSlug(params.id);
+
+  if (!userId) {
+    return notFound();
+  }
 
   const { data: profile } = await supabase
     .from("profiles")

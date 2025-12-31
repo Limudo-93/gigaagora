@@ -1,13 +1,10 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 import HomeHeader from "@/components/HomeHeader";
 import MarketingFooter from "@/components/MarketingFooter";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Search, Sparkles, Star } from "lucide-react";
+import { Search } from "lucide-react";
+import MusiciansSearch from "@/components/musicos/MusiciansSearch";
 
 type SearchParams = {
   q?: string;
@@ -29,16 +26,6 @@ type PublicMusician = {
   rating_count?: number | null;
   is_trusted?: boolean | null;
 };
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return "CM";
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export default async function MusicosPage({
   searchParams,
@@ -154,96 +141,13 @@ export default async function MusicosPage({
                 </div>
                 <Button className="btn-gradient px-8">Buscar</Button>
               </form>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs text-foreground/60">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                <span>{results.length} músicos encontrados</span>
-              </div>
             </div>
           </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {results.length === 0 ? (
-              <Card className="card-glass md:col-span-2 xl:col-span-3">
-                <CardContent className="p-8 text-center">
-                  <p className="text-sm text-foreground/70">
-                    Nenhum músico encontrado com esses filtros. Tente ajustar a busca ou explore outros instrumentos.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              results.map((musician) => (
-                <Card key={musician.user_id} className="card-glass hover:shadow-xl transition-shadow">
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex items-start gap-4">
-                      <Avatar className="h-14 w-14 ring-2 ring-white/70">
-                        <AvatarImage src={musician.photo_url || ""} />
-                        <AvatarFallback className="gradient-music text-white font-semibold">
-                          {getInitials(musician.display_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <h2 className="text-lg font-semibold text-foreground truncate">
-                            {musician.display_name || "Músico"}
-                          </h2>
-                          {musician.is_trusted && (
-                            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                              confiável
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-foreground/60 mt-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>
-                            {[musician.city, musician.state].filter(Boolean).join(", ") || "Brasil"}
-                          </span>
-                        </div>
-                        {musician.avg_rating && (
-                          <div className="flex items-center gap-1.5 text-xs text-foreground/70 mt-2">
-                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                            <span className="font-semibold">{musician.avg_rating.toFixed(1)}</span>
-                            <span className="text-foreground/50">
-                              ({musician.rating_count || 0})
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {musician.bio && (
-                      <p className="text-sm text-foreground/70 line-clamp-3">
-                        {musician.bio}
-                      </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {(musician.instruments || []).slice(0, 3).map((instrumentItem) => (
-                        <Badge key={instrumentItem} variant="secondary" className="bg-white/70 border-white/70">
-                          {instrumentItem}
-                        </Badge>
-                      ))}
-                      {(musician.instruments?.length || 0) > 3 && (
-                        <Badge variant="secondary" className="bg-white/70 border-white/70">
-                          +{(musician.instruments?.length || 0) - 3}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button asChild className="btn-gradient flex-1">
-                        <Link href={`/musicos/${musician.user_id}`}>
-                          Ver perfil
-                        </Link>
-                      </Button>
-                      <Button variant="outline" asChild className="flex-1 bg-white/80 border-white/70">
-                        <Link href="/signup">Convidar</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+          <MusiciansSearch
+            initialResults={results}
+            filters={{ q, instrument, city }}
+          />
         </section>
       </main>
       <MarketingFooter />
