@@ -651,10 +651,10 @@ export default function GigsPage() {
 
     setPendingDeclineInviteId(inviteId);
     setPendingDeclineGigId(gigId);
-    setShowDeclineConfirm(true);
+    setShowDeclineReasonDialog(true);
   };
 
-  const handleDeclineConfirm = async () => {
+  const handleDeclineConfirm = async (reason: DeclineReason) => {
     const inviteId = pendingDeclineInviteId;
     const gigId = pendingDeclineGigId;
     if (!inviteId || !gigId) return;
@@ -665,6 +665,7 @@ export default function GigsPage() {
     try {
       const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_decline_invite", {
         p_invite_id: inviteId,
+        p_decline_reason: reason,
       });
 
       if (rpcError) {
@@ -1305,18 +1306,16 @@ export default function GigsPage() {
           gigId={selectedGigId}
         />
 
-        {/* Diálogos de confirmação */}
-        <ConfirmDialog
-          open={showDeclineConfirm}
-          onOpenChange={setShowDeclineConfirm}
-          onConfirm={handleDeclineConfirm}
-          title="Recusar Convite"
-          description="Tem certeza que deseja recusar este convite?"
-          confirmText="Sim, Recusar"
-          cancelText="Cancelar"
-          variant="default"
-          loading={processingInviteId !== null}
-        />
+        {/* Dialog de Motivo de Recusa */}
+        {pendingDeclineInviteId && pendingDeclineGigId && (
+          <DeclineReasonDialog
+            open={showDeclineReasonDialog}
+            onOpenChange={setShowDeclineReasonDialog}
+            onConfirm={handleDeclineConfirm}
+            gigTitle={gigs.find((g) => g.id === pendingDeclineGigId)?.title ?? null}
+            loading={processingInviteId === pendingDeclineInviteId}
+          />
+        )}
 
         <ConfirmDialog
           open={showDeleteConfirm}
