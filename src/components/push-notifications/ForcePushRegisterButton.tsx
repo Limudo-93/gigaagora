@@ -22,6 +22,15 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
   const [status, setStatus] = useState<"idle" | "registering" | "success" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [isSupported, setIsSupported] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<{
+    hasServiceWorker: boolean;
+    hasPushManager: boolean;
+    permission: NotificationPermission;
+    vapidPublicKeyPresent: boolean;
+    vapidPublicKeyLength: number;
+    vapidPublicKeyPrefix: string;
+    registrationScope: string;
+  } | null>(null);
 
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window;
@@ -37,27 +46,48 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
 
     setStatus("registering");
     setMessage("Registrando notificação push...");
+    setDebugInfo(null);
+
+    let registration: ServiceWorkerRegistration | null = null;
+    let currentPermission: NotificationPermission = Notification.permission;
 
     try {
       // 1. Verificar permissão
-      let permission = Notification.permission;
-      if (permission === "default") {
+      if (currentPermission === "default") {
         setMessage("Solicitando permissão de notificações...");
-        permission = await requestNotificationPermission();
+        currentPermission = await requestNotificationPermission();
       }
 
-      if (permission !== "granted") {
+      if (currentPermission !== "granted") {
         setStatus("error");
         setMessage("Permissão de notificações negada. Por favor, permita notificações nas configurações do navegador.");
+        setDebugInfo({
+          hasServiceWorker: "serviceWorker" in navigator,
+          hasPushManager: "PushManager" in window,
+          permission: currentPermission,
+          vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+          vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+          registrationScope: registration?.scope || "",
+        });
         return;
       }
 
       // 2. Registrar Service Worker
       setMessage("Registrando Service Worker...");
-      const registration = await registerServiceWorker();
+      registration = await registerServiceWorker();
       if (!registration) {
         setStatus("error");
         setMessage("Erro ao registrar Service Worker. Verifique se o arquivo sw.js existe.");
+        setDebugInfo({
+          hasServiceWorker: "serviceWorker" in navigator,
+          hasPushManager: "PushManager" in window,
+          permission: currentPermission,
+          vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+          vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+          registrationScope: "",
+        });
         return;
       }
 
@@ -66,6 +96,15 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       if (!vapidPublicKey) {
         setStatus("error");
         setMessage("Erro: NEXT_PUBLIC_VAPID_PUBLIC_KEY não está configurado. Por favor, configure a chave VAPID pública nas variáveis de ambiente.");
+        setDebugInfo({
+          hasServiceWorker: "serviceWorker" in navigator,
+          hasPushManager: "PushManager" in window,
+          permission: currentPermission,
+          vapidPublicKeyPresent: false,
+          vapidPublicKeyLength: 0,
+          vapidPublicKeyPrefix: "",
+          registrationScope: registration.scope || "",
+        });
         return;
       }
 
@@ -80,6 +119,15 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       if (!subscription) {
         setStatus("error");
         setMessage("Erro ao criar subscription. Verifique se NEXT_PUBLIC_VAPID_PUBLIC_KEY está configurado corretamente e se o Service Worker está registrado.");
+        setDebugInfo({
+          hasServiceWorker: "serviceWorker" in navigator,
+          hasPushManager: "PushManager" in window,
+          permission: currentPermission,
+          vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+          vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+          vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+          registrationScope: registration.scope || "",
+        });
         return;
       }
 
@@ -118,6 +166,15 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       console.error("Error forcing push register:", error);
       setStatus("error");
       setMessage(error.message || "Erro ao registrar subscription. Tente novamente.");
+      setDebugInfo({
+        hasServiceWorker: "serviceWorker" in navigator,
+        hasPushManager: "PushManager" in window,
+        permission: currentPermission,
+        vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+        vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+        registrationScope: registration?.scope || "",
+      });
     }
   };
 
@@ -190,6 +247,17 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
             <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-900">{message}</p>
+              {debugInfo && (
+                <div className="mt-2 text-xs text-red-800 space-y-1">
+                  <p>Permissão: {debugInfo.permission}</p>
+                  <p>Service Worker: {debugInfo.hasServiceWorker ? "sim" : "não"}</p>
+                  <p>PushManager: {debugInfo.hasPushManager ? "sim" : "não"}</p>
+                  <p>VAPID public: {debugInfo.vapidPublicKeyPresent ? "sim" : "não"}</p>
+                  <p>VAPID length: {debugInfo.vapidPublicKeyLength}</p>
+                  <p>VAPID prefix: {debugInfo.vapidPublicKeyPrefix || "-"}</p>
+                  <p>SW scope: {debugInfo.registrationScope || "-"}</p>
+                </div>
+              )}
               <Button
                 variant="outline"
                 size="sm"

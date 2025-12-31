@@ -116,8 +116,9 @@ export async function createPushSubscription(
     const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
     if (!vapidPublicKey) {
-      console.error('[Push Notifications] VAPID_PUBLIC_KEY não configurado');
-      return null;
+      const error = new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY não configurado");
+      console.error("[Push Notifications] VAPID_PUBLIC_KEY não configurado");
+      throw error;
     }
 
     const keyArray = urlBase64ToUint8Array(vapidPublicKey);
@@ -131,7 +132,10 @@ export async function createPushSubscription(
     return subscription;
   } catch (error) {
     console.error('[Push Notifications] Erro ao criar subscription:', error);
-    return null;
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Erro desconhecido ao criar subscription");
   }
 }
 
