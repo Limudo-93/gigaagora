@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import {
-  requestNotificationPermission,
   registerServiceWorker,
   createPushSubscription,
   getExistingSubscription,
@@ -56,12 +55,12 @@ export default function PushNotificationManager({ userId }: PushNotificationMana
         return;
       }
 
-      // 2. Solicitar permissão
-      const newPermission = await requestNotificationPermission();
-      setPermission(newPermission);
+      // 2. Continuar apenas se a permissão já estiver concedida
+      const currentPermission = Notification.permission;
+      setPermission(currentPermission);
 
-      if (newPermission !== "granted") {
-        console.log("[Push Notifications] Permissão negada:", newPermission);
+      if (currentPermission !== "granted") {
+        console.log("[Push Notifications] Permissão não concedida:", currentPermission);
         return;
       }
 

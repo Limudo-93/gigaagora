@@ -15,6 +15,7 @@ import ReferralSystem from "@/components/dashboard/ReferralSystem";
 import ThemeSelector from "@/components/dashboard/ThemeSelector";
 import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import { Button } from "@/components/ui/button";
+import EnablePushNotificationsCard from "@/components/push-notifications/EnablePushNotificationsCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -31,6 +32,9 @@ export default async function DashboardPage() {
 
       {/* 🎯 Bloco de Ação Prioritária - Topo do dashboard */}
       <PriorityActionBlock userId={user.id} />
+
+      {/* Ativação natural de notificações */}
+      <EnablePushNotificationsCard userId={user.id} />
 
       {/* Mobile: Header compacto primeiro */}
       <div className="md:hidden">
