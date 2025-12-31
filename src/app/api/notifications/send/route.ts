@@ -82,14 +82,16 @@ export async function POST(request: NextRequest) {
           if (error) {
             console.error(`[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`, error);
             console.error(`[Send Notification] Response data:`, data);
-            throw new Error(`Edge Function error: ${error.message || JSON.stringify(error)}`);
+            // Extrair mensagem de erro limpa
+            const errorMsg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
+            throw new Error(errorMsg);
           }
 
-          // Verificar se data contém um erro
+          // Verificar se data contém um erro (quando a função retorna erro mas invoke não marca como error)
           if (data && typeof data === 'object' && 'error' in data) {
             const errorMessage = (data as any).error || (data as any).message || "Erro desconhecido da Edge Function";
-            console.error(`[Send Notification] Edge Function returned error:`, errorMessage);
-            throw new Error(`Edge Function error: ${errorMessage}`);
+            console.error(`[Send Notification] Edge Function returned error in data:`, errorMessage);
+            throw new Error(errorMessage);
           }
 
           return data;
