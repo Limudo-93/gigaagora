@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { downloadICS, CalendarEvent } from "@/lib/ics-utils";
 import { useRouter } from "next/navigation";
-import { Calendar as BigCalendar, View, CalendarProps } from "react-big-calendar";
+import { Calendar as BigCalendar, View, CalendarProps, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
