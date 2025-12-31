@@ -105,19 +105,113 @@ async function processQueue() {
 
         if (sendError) {
           console.error(`[Notifications Process] Error sending to subscription:`, sendError);
-          throw sendError;
+          console.error(`[Notifications Process] Error type:`, typeof sendError);
+          console.error(`[Notifications Process] Error keys:`, Object.keys(sendError || {}));
+          
+          // Tentar extrair mais detalhes do erro
+          const errorDetails: any = {
+            message: sendError.message || String(sendError),
+            name: sendError.name,
+          };
+          
+          // Tentar extrair body do contexto do erro
+          const errorContext = (sendError as any).context;
+          if (errorContext) {
+            console.error(`[Notifications Process] Error context:`, JSON.stringify(errorContext, null, 2));
+            
+            // Tentar ler o body da resposta se disponível
+            if (errorContext.body !== undefined) {
+              try {
+                if (typeof errorContext.body === 'string') {
+                  errorDetails.body = errorContext.body;
+                  // Tentar parsear se for JSON
+                  try {
+                    const parsed = JSON.parse(errorContext.body);
+                    errorDetails.parsedBody = parsed;
+                  } catch (e) {
+                    // Não é JSON, manter como string
+                  }
+                } else {
+                  errorDetails.body = JSON.stringify(errorContext.body);
+                }
+              } catch (e) {
+                console.error(`[Notifications Process] Error parsing body:`, e);
+              }
+            }
+            
+            // Extrair status code se disponível
+            if (errorContext.status) {
+              errorDetails.statusCode = errorContext.status;
+            }
+          }
+          
+          // Log completo do erro
+          console.error(`[Notifications Process] Full error details:`, JSON.stringify(errorDetails, null, 2));
+          
+          // Construir mensagem de erro mais informativa
+          let errorMessage = errorDetails.message;
+          if (errorDetails.parsedBody?.error) {
+            errorMessage = errorDetails.parsedBody.error;
+            if (errorDetails.parsedBody.details) {
+              errorMessage += `: ${errorDetails.parsedBody.details}`;
+            }
+          } else if (errorDetails.body) {
+            errorMessage = errorDetails.body;
+          }
+          
+          throw new Error(errorMessage || "Edge function error");
         }
+        
         if (data && typeof data === "object" && "error" in data) {
           const errorMsg = (data as any).error || "Edge function error";
+          const errorDetails = (data as any).details || (data as any).body || "";
           console.error(`[Notifications Process] Edge function returned error:`, errorMsg);
-          throw new Error(errorMsg);
+          console.error(`[Notifications Process] Error details:`, errorDetails);
+          throw new Error(errorDetails ? `${errorMsg}: ${errorDetails}` : errorMsg);
         }
 
         console.log(`[Notifications Process] Successfully sent notification to subscription`);
         successCount += 1;
       } catch (err: any) {
-        const errorMsg = err?.message || String(err);
+        // Capturar mais detalhes do erro
+        let errorMsg = err?.message || String(err);
+        
+        // Log completo do erro para debug
+        console.error(`[Notifications Process] Catch block - Error type:`, typeof err);
+        console.error(`[Notifications Process] Catch block - Error keys:`, Object.keys(err || {}));
+        
+        // Tentar serializar o erro completo
+        try {
+          const errorString = JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
+          console.error(`[Notifications Process] Catch block - Full error:`, errorString);
+        } catch (e) {
+          console.error(`[Notifications Process] Catch block - Error (string):`, String(err));
+        }
+        
+        // Se o erro tiver response, tentar extrair o body
+        if (err?.response) {
+          try {
+            const responseText = await err.response.text();
+            if (responseText) {
+              console.error(`[Notifications Process] Response text:`, responseText);
+              try {
+                const errorJson = JSON.parse(responseText);
+                errorMsg = errorJson.error || errorJson.message || errorMsg;
+                if (errorJson.details) {
+                  errorMsg += `: ${errorJson.details}`;
+                }
+                console.error(`[Notifications Process] Parsed error JSON:`, JSON.stringify(errorJson, null, 2));
+              } catch (e) {
+                errorMsg += ` (Response: ${responseText.substring(0, 200)})`;
+              }
+            }
+          } catch (e) {
+            console.error(`[Notifications Process] Error reading response:`, e);
+          }
+        }
+        
         console.error(`[Notifications Process] Failed to send notification:`, errorMsg);
+        console.error(`[Notifications Process] Error stack:`, err?.stack);
         lastError = errorMsg;
       }
     }
