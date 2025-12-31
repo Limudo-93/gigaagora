@@ -175,12 +175,12 @@ export default function MusiciansSearch({
 
                 <div className="flex items-center gap-2">
                   <Button asChild className="btn-gradient flex-1">
-                    <Link href={profileHref}>
+                    <Link href={profileHref as any}>
                       Ver perfil
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="flex-1 bg-white/80 border-white/70">
-                    <Link href="/signup">Convidar</Link>
+                    <Link href="/signup" as any>Convidar</Link>
                   </Button>
                 </div>
               </CardContent>
