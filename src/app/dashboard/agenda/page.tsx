@@ -35,6 +35,9 @@ import {
   Grid3x3,
   Eye,
   EyeOff,
+  Check,
+  X,
+  Music,
 } from "lucide-react";
 import { downloadICS, CalendarEvent } from "@/lib/ics-utils";
 import { useRouter } from "next/navigation";
@@ -671,13 +674,19 @@ export default function AgendaPage() {
             </div>
             
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {allEventsForCards.slice(0, 8).map((event) => {
+              {allEventsForCards.slice(0, 8).map((event, index) => {
                 const eventDate = event.start_time ? new Date(event.start_time) : null;
                 const isConfirmed = event.type === "confirmed";
                 const day = eventDate ? format(eventDate, "dd", { locale: ptBR }) : "";
                 const month = eventDate ? format(eventDate, "MMM", { locale: ptBR }).toUpperCase() : "";
                 const time = eventDate ? format(eventDate, "HH:mm", { locale: ptBR }) : "";
                 const weekday = eventDate ? format(eventDate, "EEEE", { locale: ptBR }) : "";
+                
+                // Seleciona cor baseada no índice, mas usa verde para confirmados
+                const colorIndex = index % cardColors.length;
+                const cardColor = isConfirmed 
+                  ? { header: "from-emerald-500 to-emerald-600", badge: "bg-emerald-700/50 border-emerald-300/30" }
+                  : cardColors[colorIndex];
                 
                 return (
                   <Card
@@ -705,11 +714,7 @@ export default function AgendaPage() {
                     <CardContent className="p-0">
                       {/* Header com data */}
                       <div
-                        className={`relative p-4 text-white ${
-                          isConfirmed
-                            ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
-                            : "bg-gradient-to-br from-amber-500 to-amber-600"
-                        }`}
+                        className={`relative p-4 text-white bg-gradient-to-br ${cardColor.header}`}
                       >
                         <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10" />
                         <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full -ml-8 -mb-8" />
@@ -719,11 +724,7 @@ export default function AgendaPage() {
                             <div className="text-xs font-medium opacity-90">{month}</div>
                           </div>
                           <Badge
-                            className={`${
-                              isConfirmed
-                                ? "bg-emerald-700/50 text-white border-emerald-300/30"
-                                : "bg-amber-700/50 text-white border-amber-300/30"
-                            } border`}
+                            className={`${cardColor.badge} text-white border`}
                           >
                             {isConfirmed ? "Confirmado" : "Pendente"}
                           </Badge>
