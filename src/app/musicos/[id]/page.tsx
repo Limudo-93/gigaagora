@@ -59,10 +59,15 @@ function formatResponseTime(seconds?: number | null) {
 export default async function MusicoProfilePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string };
 }) {
   const supabase = await createClient();
-  const userId = extractUserIdFromSlug(params.id);
+  
+  // Next.js 15+ pode passar params como Promise
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const slugId = resolvedParams.id;
+  
+  const userId = extractUserIdFromSlug(slugId);
 
   if (!userId) {
     return notFound();

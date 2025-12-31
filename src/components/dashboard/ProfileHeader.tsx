@@ -144,7 +144,17 @@ export default async function ProfileHeader() {
               <RankingBadge tier={ranking.current_tier as any} size="sm" showText={true} />
             )}
             {badges && badges.length > 0 && (
-              <BadgeDisplay badges={badges} size="sm" />
+              <BadgeDisplay 
+                badges={badges.filter((b: any) => {
+                  // Se já estamos mostrando o badge "Verificado" baseado em isVerified,
+                  // não mostrar o badge "verified" do sistema de badges para evitar duplicação
+                  if (isVerified && b.badge_type === 'verified') {
+                    return false;
+                  }
+                  return true;
+                })} 
+                size="sm" 
+              />
             )}
           </div>
 

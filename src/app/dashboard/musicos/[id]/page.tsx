@@ -59,7 +59,7 @@ function formatResponseTime(seconds?: number | null) {
 export default async function DashboardMusicoProfilePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }> | { id: string };
 }) {
   const supabase = await createClient();
   const {
@@ -68,12 +68,20 @@ export default async function DashboardMusicoProfilePage({
 
   if (!user) redirect("/login");
 
-  const userId = extractUserIdFromSlug(params.id);
+  // Next.js 15+ pode passar params como Promise
+  const resolvedParams = params instanceof Promise ? await params : params;
+  const slugId = resolvedParams.id;
+
+  console.log("[DashboardMusicoProfile] Received slug:", slugId);
+
+  const userId = extractUserIdFromSlug(slugId);
 
   if (!userId) {
-    console.error("[DashboardMusicoProfile] Failed to extract userId from slug:", params.id);
+    console.error("[DashboardMusicoProfile] Failed to extract userId from slug:", slugId);
     return notFound();
   }
+
+  console.log("[DashboardMusicoProfile] Extracted userId:", userId);
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -83,12 +91,20 @@ export default async function DashboardMusicoProfilePage({
 
   if (profileError) {
     console.error("[DashboardMusicoProfile] Error fetching profile:", profileError);
-  }
-
-  if (!profile || profile.user_type !== "musician") {
-    console.error("[DashboardMusicoProfile] Profile not found or not a musician:", { userId, profile });
     return notFound();
   }
+
+  if (!profile) {
+    console.error("[DashboardMusicoProfile] Profile not found for userId:", userId);
+    return notFound();
+  }
+
+  if (profile.user_type !== "musician") {
+    console.error("[DashboardMusicoProfile] Profile is not a musician:", { userId, user_type: profile.user_type });
+    return notFound();
+  }
+
+  console.log("[DashboardMusicoProfile] Profile found:", profile.display_name);
 
   const { data: musicianProfile } = await supabase
     .from("musician_profiles")
