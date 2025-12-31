@@ -372,15 +372,15 @@ export default function FinanceiroPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-5xl">💰</div>
                 </div>
-                <h2 className="text-xl md:text-2xl font-semibold mb-2">Total já ganho</h2>
-                <p className="text-4xl md:text-5xl font-bold mb-4">{formatCurrency(totalEarnings)}</p>
-                <div className="flex items-center gap-2 text-white/90">
-                  <span className="text-lg font-medium">
+                <h2 className="text-xl md:text-2xl font-semibold mb-2 text-white">Total já ganho</h2>
+                <p className="text-4xl md:text-5xl font-bold mb-4 text-white">{formatCurrency(totalEarnings)}</p>
+                <div className="flex items-center gap-2 text-white">
+                  <span className="text-lg font-medium text-white">
                     {pastGigs.length} {pastGigs.length === 1 ? "show confirmado" : "shows confirmados"}
                   </span>
                 </div>
                 {totalEarnings > 0 && (
-                  <p className="mt-4 text-lg font-medium">
+                  <p className="mt-4 text-lg font-medium text-white">
                     Você já ganhou dinheiro tocando 🎶
                   </p>
                 )}
