@@ -32,6 +32,9 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
     registrationScope: string;
   } | null>(null);
 
+  const getRegistrationScope = (value: ServiceWorkerRegistration | null) =>
+    value ? value.scope : "";
+
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window;
     setIsSupported(supported);
@@ -68,7 +71,7 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
           vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
           vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
-          registrationScope: registration?.scope || "",
+          registrationScope: getRegistrationScope(registration),
         });
         return;
       }
@@ -103,7 +106,7 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
           vapidPublicKeyPresent: false,
           vapidPublicKeyLength: 0,
           vapidPublicKeyPrefix: "",
-          registrationScope: registration.scope || "",
+          registrationScope: getRegistrationScope(registration),
         });
         return;
       }
@@ -126,7 +129,7 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
           vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
           vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
-          registrationScope: registration.scope || "",
+          registrationScope: getRegistrationScope(registration),
         });
         return;
       }
@@ -173,7 +176,7 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
         vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
         vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
         vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
-        registrationScope: registration?.scope || "",
+        registrationScope: getRegistrationScope(registration),
       });
     }
   };
