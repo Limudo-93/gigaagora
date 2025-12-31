@@ -385,7 +385,7 @@ export default function MessagesPage() {
                       : "Quando um contratante entrar em contato sobre uma gig, você será notificado e a conversa aparecerá aqui."}
                   </p>
                   {!searchTerm && (
-                    <Link href="/dashboard/gigs" as any>
+                    <Link href="/dashboard/gigs">
                       <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white">
                         Ver gigs disponíveis
                       </Button>
@@ -528,7 +528,7 @@ export default function MessagesPage() {
                           </div>
                         </div>
                         {selectedConversation.gig.id && (
-                          <Link href={`/dashboard/gigs/${selectedConversation.gig.id}` as any}>
+                          <Link href={"/dashboard/gigs/" + selectedConversation.gig.id}>
                             <Button
                               size="sm"
                               className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white shrink-0"
@@ -629,7 +629,7 @@ export default function MessagesPage() {
                 <p className="text-sm text-gray-600 mb-6">
                   Escolha uma conversa na lista ao lado para começar a trocar mensagens
                 </p>
-                <Link href="/dashboard/gigs" as any>
+                <Link href="/dashboard/gigs">
                   <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white">
                     Ver gigs disponíveis
                   </Button>
