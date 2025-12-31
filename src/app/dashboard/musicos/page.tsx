@@ -4,12 +4,16 @@ import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import MusiciansSearch from "@/components/musicos/MusiciansSearch";
-import DashboardLayoutWithSidebar from "@/components/dashboard/DashboardLayoutWithSidebar";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import Sidebar from "@/components/dashboard/Sidebar";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type SearchParams = {
   q?: string;
   instrument?: string;
   city?: string;
+  page?: string;
 };
 
 type PublicMusician = {
@@ -42,13 +46,15 @@ export default async function DashboardMusicosPage({
   const q = (searchParams.q || "").trim();
   const instrument = (searchParams.instrument || "").trim();
   const city = (searchParams.city || "").trim();
+  const page = parseInt(searchParams.page || "1", 10);
+  const itemsPerPage = 12;
 
+  // Buscar todos os perfis que correspondem aos filtros básicos
   let query = supabase
     .from("profiles")
     .select("user_id, display_name, photo_url, city, state, user_type")
     .eq("user_type", "musician")
-    .order("display_name", { ascending: true })
-    .limit(80);
+    .order("display_name", { ascending: true });
 
   if (q) {
     query = query.ilike("display_name", `%${q}%`);
@@ -62,6 +68,7 @@ export default async function DashboardMusicosPage({
   const profileList = profiles || [];
   const ids = profileList.map((profile) => profile.user_id);
 
+  // Buscar perfis de músicos
   const { data: musicianProfiles } = ids.length
     ? await supabase
         .from("musician_profiles")
@@ -73,7 +80,8 @@ export default async function DashboardMusicosPage({
     (musicianProfiles || []).map((profile) => [profile.user_id, profile])
   );
 
-  let results: PublicMusician[] = profileList.map((profile) => {
+  // Montar lista completa de resultados
+  let allResults: PublicMusician[] = profileList.map((profile) => {
     const musician = profileMap.get(profile.user_id);
     return {
       user_id: profile.user_id,
@@ -91,16 +99,36 @@ export default async function DashboardMusicosPage({
     };
   });
 
+  // Aplicar filtro de instrumento se necessário
   if (instrument) {
-    results = results.filter((musician) =>
+    allResults = allResults.filter((musician) =>
       musician.instruments?.includes(instrument)
     );
   }
 
+  // Calcular paginação
+  const totalCount = allResults.length;
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+  const offset = (currentPage - 1) * itemsPerPage;
+  
+  // Aplicar paginação
+  const results = allResults.slice(offset, offset + itemsPerPage);
+
+  // Construir URL base para paginação
+  const buildPageUrl = (newPage: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (instrument) params.set("instrument", instrument);
+    if (city) params.set("city", city);
+    if (newPage > 1) params.set("page", String(newPage));
+    return `/dashboard/musicos${params.toString() ? `?${params.toString()}` : ""}`;
+  };
+
   return (
-    <DashboardLayoutWithSidebar>
-      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6">
-        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
+    <DashboardLayout sidebar={<Sidebar />} fullWidth>
+      <div className="w-full">
+        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden mb-6">
           <div className="absolute -top-20 -right-16 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
           <div className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-teal-200/40 blur-3xl" />
           <div className="relative z-10">
@@ -112,6 +140,7 @@ export default async function DashboardMusicosPage({
               Perfis públicos com repertório, avaliações e disponibilidade. Salve seus favoritos e convide quando precisar.
             </p>
             <form className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]" method="get">
+              <input type="hidden" name="page" value="1" />
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                 <input
@@ -153,7 +182,91 @@ export default async function DashboardMusicosPage({
           filters={{ q, instrument, city }}
           basePath="/dashboard/musicos"
         />
-      </section>
-    </DashboardLayoutWithSidebar>
+
+        {/* Paginação */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-2">
+            {currentPage === 1 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="bg-white/50 border-white/50 text-foreground/40 cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="bg-white/80 border-white/70"
+              >
+                <Link href={buildPageUrl(currentPage - 1)}>
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Link>
+              </Button>
+            )}
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    asChild
+                    className={
+                      currentPage === pageNum
+                        ? "btn-gradient"
+                        : "bg-white/80 border-white/70"
+                    }
+                  >
+                    <Link href={buildPageUrl(pageNum)}>{pageNum}</Link>
+                  </Button>
+                );
+              })}
+            </div>
+
+            {currentPage === totalPages ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="bg-white/50 border-white/50 text-foreground/40 cursor-not-allowed"
+              >
+                Próxima
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="bg-white/80 border-white/70"
+              >
+                <Link href={buildPageUrl(currentPage + 1)}>
+                  Próxima
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }
