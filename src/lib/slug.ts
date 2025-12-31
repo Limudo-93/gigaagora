@@ -15,6 +15,14 @@ export function buildMusicianSlug(name: string, userId: string): string {
 
 export function extractUserIdFromSlug(slug?: string | null): string | null {
   if (!slug || typeof slug !== "string") return null;
-  const match = slug.match(/[0-9a-fA-F-]{36}$/);
-  return match ? match[0] : null;
+  const uuidMatch = slug.match(
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+  );
+  if (uuidMatch) return uuidMatch[0];
+
+  const compactMatch = slug.match(/[0-9a-fA-F]{32}/);
+  if (!compactMatch) return null;
+
+  const value = compactMatch[0];
+  return `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20)}`;
 }
