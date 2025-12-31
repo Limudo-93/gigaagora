@@ -1226,8 +1226,8 @@ export default function NewGigPage() {
                               }}
                               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                                 isSelected
-                                  ? "bg-purple-500 text-white shadow-md"
-                                  : "bg-background text-foreground border-2 border-input hover:border-purple-500 hover:bg-purple-50"
+                                  ? "bg-[#ff6b4a] text-white shadow-md"
+                                  : "bg-background text-foreground border-2 border-input hover:border-[#ff6b4a] hover:bg-amber-50"
                               }`}
                             >
                               {habilidade}

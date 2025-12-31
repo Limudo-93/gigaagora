@@ -295,58 +295,64 @@ export default function MessagesPage() {
 
   return (
     <DashboardLayout fullWidth hideFooterOnMobile>
-      <div className="flex min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-160px)] flex-col lg:flex-row bg-gray-50 relative overflow-hidden">
+      <div className="flex min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-160px)] flex-col lg:flex-row bg-white/60 relative overflow-hidden rounded-3xl border border-white/70 shadow-sm">
         {/* Lista de Conversas - Mobile first */}
         <div className={`${
           showChat ? "hidden" : "flex"
-        } lg:flex w-full lg:w-[380px] flex-col bg-white border-b lg:border-b-0 lg:border-r border-gray-200 transition-all duration-300`}>
+        } lg:flex w-full lg:w-[380px] flex-col bg-white/90 border-b lg:border-b-0 lg:border-r border-white/70 transition-all duration-300`}>
           {/* Header da Lista */}
-          <div className="px-4 pt-5 pb-3 bg-white sticky top-0 z-10 border-b border-gray-100">
+          <div className="px-4 pt-5 pb-3 bg-white/95 sticky top-0 z-10 border-b border-white/70">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-semibold text-gray-900">Conversas</h1>
-              <div className="h-2 w-2 rounded-full bg-gradient-to-r from-orange-400 to-purple-500" />
+              <h1 className="text-xl font-display font-semibold text-foreground">Conversas</h1>
+              <div className="h-2 w-2 rounded-full gradient-music" />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Mensagens recentes e novas conexoes</p>
+            <p className="text-xs text-foreground/60 mt-1">Respostas rápidas sobem seu ranking</p>
+          </div>
+
+          <div className="px-4 pt-3">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-900">
+              Missão do dia: responda em até 2h para manter sua sequência.
+            </div>
           </div>
 
           {/* Busca */}
-          <div className="px-4 py-3 bg-white">
+          <div className="px-4 py-3 bg-white/95">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
               <input
                 type="text"
                 placeholder="Buscar conversa"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-gray-100 text-gray-900 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200 focus:bg-white transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white/70 text-foreground placeholder-foreground/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#ffb347]/40 focus:bg-white transition-all"
               />
             </div>
           </div>
 
           {/* Lista de Conversas */}
-          <div className="flex-1 overflow-y-auto bg-white">
+          <div className="flex-1 overflow-y-auto bg-white/95">
             {loading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                <p className="text-sm text-gray-500">Carregando conversas...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff6b4a] mx-auto mb-4"></div>
+                <p className="text-sm text-foreground/60">Carregando conversas...</p>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-6 text-center">
                 <div className="max-w-sm mx-auto">
-                  <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-100 to-purple-100 flex items-center justify-center">
-                    <MessageSquare className="h-10 w-10 text-orange-500" />
+                  <div className="h-20 w-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#fff1e7] to-[#e9f7f5] flex items-center justify-center">
+                    <MessageSquare className="h-10 w-10 text-[#ff6b4a]" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  <h3 className="text-lg font-bold text-foreground mb-2">
                     {searchTerm ? "Nenhuma conversa encontrada" : "Ainda sem conversas"}
                   </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed mb-6">
+                  <p className="text-sm text-foreground/60 leading-relaxed mb-6">
                     {searchTerm 
                       ? "Tente ajustar os termos de busca."
                       : "Quando alguém entrar em contato sobre uma gig, a conversa aparecerá aqui."}
                   </p>
                   {!searchTerm && (
                     <Link href="/dashboard/gigs">
-                      <Button className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white">
+                      <Button className="btn-gradient">
                         Ver gigs disponíveis
                       </Button>
                     </Link>
@@ -354,13 +360,13 @@ export default function MessagesPage() {
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border/50">
                 {filteredConversations.map((conv) => (
                   <div
                     key={conv.id}
                     onClick={() => handleSelectConversation(conv)}
-                    className={`px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 active:bg-gray-100 ${
-                      selectedConversation?.id === conv.id ? "bg-orange-50" : ""
+                    className={`px-4 py-3 cursor-pointer transition-colors hover:bg-white/70 active:bg-white ${
+                      selectedConversation?.id === conv.id ? "bg-amber-50/80" : ""
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -372,32 +378,32 @@ export default function MessagesPage() {
                           </AvatarFallback>
                         </Avatar>
                         {conv.unread_count && conv.unread_count > 0 && (
-                          <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-orange-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                          <div className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#ff6b4a] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
                             {conv.unread_count > 9 ? "9+" : conv.unread_count}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1 gap-2">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
+                          <p className="text-sm font-semibold text-foreground truncate">
                             {conv.other_user.display_name}
                           </p>
                           {conv.last_message && (
-                            <span className="text-xs text-gray-500 whitespace-nowrap shrink-0">
+                            <span className="text-xs text-foreground/40 whitespace-nowrap shrink-0">
                               {formatTimeAgo(conv.last_message.created_at)}
                             </span>
                           )}
                         </div>
                         {conv.last_message && (
                           <div className="flex items-center gap-2">
-                            <p className="text-xs text-gray-600 truncate flex-1">
+                            <p className="text-xs text-foreground/60 truncate flex-1">
                               {conv.last_message.sender_id === userId ? (
-                                <span className="text-gray-400 mr-1">Você: </span>
+                                <span className="text-foreground/40 mr-1">Você: </span>
                               ) : null}
                               <span className="truncate">{conv.last_message.content}</span>
                             </p>
                             {conv.unread_count && conv.unread_count > 0 && (
-                              <div className="h-2 w-2 rounded-full bg-orange-500 shrink-0"></div>
+                              <div className="h-2 w-2 rounded-full bg-[#ff6b4a] shrink-0"></div>
                             )}
                           </div>
                         )}
@@ -413,15 +419,15 @@ export default function MessagesPage() {
         {/* Área de Chat - Estilo WhatsApp */}
         <div className={`${
           !showChat && selectedConversation ? "hidden lg:flex" : "flex"
-        } flex-1 flex-col bg-gray-50 min-w-0 relative`}>
+        } flex-1 flex-col bg-white/80 min-w-0 relative`}>
           {selectedConversation ? (
             <>
               {/* Header do Chat */}
-              <div className="bg-white px-4 py-3 flex items-center gap-3 shadow-sm sticky top-0 z-10 border-b border-gray-100">
+              <div className="bg-white/90 px-4 py-3 flex items-center gap-3 shadow-sm sticky top-0 z-10 border-b border-white/70 backdrop-blur">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden text-gray-700 hover:bg-gray-100 h-9 w-9"
+                  className="lg:hidden text-foreground hover:bg-amber-50/70 h-9 w-9"
                   onClick={() => {
                     setShowChat(false);
                     setSelectedConversation(null);
@@ -429,18 +435,19 @@ export default function MessagesPage() {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <Avatar className="h-10 w-10 ring-2 ring-white/20 shrink-0">
+                <Avatar className="h-10 w-10 ring-2 ring-white/70 shrink-0">
                   <AvatarImage src={selectedConversation.other_user.photo_url || ""} />
-                  <AvatarFallback className="bg-white/20 text-white font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white font-semibold">
                     {selectedConversation.other_user.display_name?.charAt(0).toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">
+                  <p className="font-semibold text-foreground truncate">
                     {selectedConversation.other_user.display_name}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {selectedConversation.gig?.title || "Online"}
+                  <p className="text-xs text-foreground/60 truncate">
+                    {selectedConversation.gig?.title ? `Gig: ${selectedConversation.gig.title}` : "Conversa direta"} •
+                    <span className="text-foreground/70"> responda em até 2h para manter a sequência</span>
                   </p>
                 </div>
               </div>
@@ -448,13 +455,13 @@ export default function MessagesPage() {
               {/* Mensagens */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto px-3 py-4 space-y-1 bg-gradient-to-b from-[#f8fafc] via-[#f7f7fb] to-[#f3f4f6]"
+                className="flex-1 overflow-y-auto px-3 py-4 space-y-1 bg-gradient-to-b from-[#fff8f1] via-white to-[#eef8f7] scrollbar-theme"
               >
                 {messages.length === 0 ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center max-w-sm">
-                      <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-sm text-gray-600">
+                      <MessageSquare className="h-12 w-12 text-foreground/40 mx-auto mb-4" />
+                      <p className="text-sm text-foreground/60">
                         Comece a conversar! Envie uma mensagem para iniciar o diálogo.
                       </p>
                     </div>
@@ -470,7 +477,7 @@ export default function MessagesPage() {
                       <div key={msg.id}>
                         {showTime && (
                           <div className="flex justify-center my-2">
-                            <span className="text-xs text-gray-600 bg-white/60 px-2 py-1 rounded-full">
+                            <span className="text-xs text-foreground/60 bg-white/60 px-2 py-1 rounded-full">
                               {formatMessageTime(msg.created_at)}
                             </span>
                           </div>
@@ -479,18 +486,18 @@ export default function MessagesPage() {
                           <div
                             className={`max-w-[80%] sm:max-w-[65%] rounded-2xl px-3 py-2 shadow-sm ${
                               isOwn
-                                ? "bg-gradient-to-r from-orange-400 to-purple-400 text-white rounded-tr-sm"
-                                : "bg-white rounded-tl-sm"
+                                ? "gradient-music text-white rounded-tr-sm shadow-md"
+                                : "bg-white/90 border border-white/70 rounded-tl-sm"
                             }`}
                           >
                             <p className={`text-sm whitespace-pre-wrap break-words leading-relaxed ${
-                              isOwn ? "text-white" : "text-gray-900"
+                              isOwn ? "text-white" : "text-foreground"
                             }`}>
                               {msg.content}
                             </p>
                             <div className="flex items-center justify-end gap-1 mt-1">
                               <span className={`text-[10px] ${
-                                isOwn ? "text-white/70" : "text-gray-500"
+                                isOwn ? "text-white/70" : "text-foreground/50"
                               }`}>
                                 {formatMessageTime(msg.created_at)}
                               </span>
@@ -514,7 +521,7 @@ export default function MessagesPage() {
               </div>
 
               {/* Input de Mensagem - Estilo WhatsApp */}
-              <div className="bg-white px-3 py-3 border-t border-gray-200">
+              <div className="bg-white/90 px-3 py-3 border-t border-white/70 backdrop-blur">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -522,14 +529,14 @@ export default function MessagesPage() {
                   }}
                   className="flex items-end gap-2"
                 >
-                  <div className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 flex items-center min-h-[44px]">
+                  <div className="flex-1 bg-white/70 border border-amber-100 rounded-full px-4 py-2.5 flex items-center min-h-[44px] shadow-sm">
                     <input
                       ref={inputRef}
                       type="text"
                       placeholder="Digite uma mensagem"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      className="flex-1 bg-transparent text-gray-900 text-sm focus:outline-none placeholder:text-gray-500"
+                      className="flex-1 bg-transparent text-foreground text-sm focus:outline-none placeholder:text-foreground/40"
                       disabled={sending}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
@@ -543,7 +550,7 @@ export default function MessagesPage() {
                     type="submit"
                     disabled={!newMessage.trim() || sending}
                     size="icon"
-                    className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-11 w-11 shrink-0 rounded-full btn-gradient disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sending ? (
                       <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -555,19 +562,19 @@ export default function MessagesPage() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center bg-gray-50">
+            <div className="flex-1 flex items-center justify-center bg-white/80">
               <div className="text-center p-6 max-w-sm mx-auto">
-                <div className="h-24 w-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-orange-100 to-purple-100 flex items-center justify-center">
-                  <MessageSquare className="h-12 w-12 text-orange-500" />
+                <div className="h-24 w-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#fff1e7] to-[#e9f7f5] flex items-center justify-center">
+                  <MessageSquare className="h-12 w-12 text-[#ff6b4a]" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                <h3 className="text-xl font-semibold text-foreground mb-2">
                   Selecione uma conversa
                 </h3>
-                <p className="text-sm text-gray-600 mb-6">
+                <p className="text-sm text-foreground/60 mb-6">
                   Escolha uma conversa na lista para começar a trocar mensagens
                 </p>
                 <Link href="/dashboard/gigs">
-                  <Button className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white">
+                  <Button className="btn-gradient">
                     Ver gigs disponíveis
                   </Button>
                 </Link>

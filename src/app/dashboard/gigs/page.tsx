@@ -22,7 +22,14 @@ import {
   Loader2,
   UserCheck,
   DollarSign,
-  Navigation
+  Navigation,
+  Sparkles,
+  Flame,
+  CheckCircle2,
+  Megaphone,
+  FileText,
+  Users,
+  Ban
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -780,54 +787,178 @@ export default function GigsPage() {
     }
   };
 
+  const totalInvites = gigs.filter((gig) => gig.invite_id).length;
+  const invitesAccepted = gigs.filter((gig) => gig.invite_status === "accepted").length;
+  const invitesDeclined = gigs.filter((gig) => gig.invite_status === "declined").length;
+  const invitesPending = gigs.filter((gig) => gig.invite_id && !gig.invite_status).length;
+  const respondedInvites = invitesAccepted + invitesDeclined;
+  const responseRate = totalInvites > 0 ? Math.round((respondedInvites / totalInvites) * 100) : 0;
+
+  const publishedCount = gigs.filter((gig) => gig.status === "published").length;
+  const draftCount = gigs.filter((gig) => gig.status === "draft").length;
+  const cancelledCount = gigs.filter((gig) => gig.status === "cancelled").length;
+  const confirmedTotal = gigs.reduce((sum, gig) => sum + (gig.confirmed_musicians?.length ?? 0), 0);
+
+  const stats = userType === "musician"
+    ? [
+        {
+          label: "Oportunidades no raio",
+          value: gigs.length,
+          hint: maxRadiusKm ? `Raio de ${maxRadiusKm} km` : "Raio padrão ativo",
+          icon: Sparkles,
+          tone: "bg-amber-100 text-amber-700",
+        },
+        {
+          label: "Respostas concluídas",
+          value: totalInvites ? `${respondedInvites}/${totalInvites}` : "0",
+          hint: totalInvites ? `${responseRate}% de resposta` : "Sem convites ainda",
+          icon: Flame,
+          tone: "bg-teal-100 text-teal-700",
+          progress: totalInvites ? responseRate : 0,
+        },
+        {
+          label: "Convites aceitos",
+          value: invitesAccepted,
+          hint: "Seu histórico de confirmações",
+          icon: CheckCircle2,
+          tone: "bg-emerald-100 text-emerald-700",
+        },
+        {
+          label: "Pendentes",
+          value: invitesPending,
+          hint: "Responda para ganhar pontos",
+          icon: Clock,
+          tone: "bg-rose-100 text-rose-700",
+        },
+      ]
+    : userType === "contractor"
+    ? [
+        {
+          label: "Gigs publicadas",
+          value: publishedCount,
+          hint: "Visíveis para músicos",
+          icon: Megaphone,
+          tone: "bg-amber-100 text-amber-700",
+        },
+        {
+          label: "Rascunhos",
+          value: draftCount,
+          hint: "Prontas para publicar",
+          icon: FileText,
+          tone: "bg-slate-100 text-slate-700",
+        },
+        {
+          label: "Músicos confirmados",
+          value: confirmedTotal,
+          hint: "Escala em construção",
+          icon: Users,
+          tone: "bg-emerald-100 text-emerald-700",
+        },
+        {
+          label: "Canceladas",
+          value: cancelledCount,
+          hint: "Evite cancelamentos",
+          icon: Ban,
+          tone: "bg-rose-100 text-rose-700",
+        },
+      ]
+    : [];
+
   return (
     <DashboardLayout fullWidth>
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              {userType === "contractor" ? "Minhas Gigs" : "Gigs Disponíveis"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1 md:mt-2">
-              {userType === "contractor" 
-                ? "Gerencie suas gigs criadas" 
-                : "Explore e encontre oportunidades de trabalho"}
-            </p>
+        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
+          <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
+          <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Central de gigs</p>
+              <h1 className="text-2xl md:text-3xl font-display font-semibold text-foreground">
+                {userType === "contractor" ? "Minhas Gigs" : "Gigs Disponíveis"}
+              </h1>
+              <p className="text-sm text-foreground/60 mt-2 max-w-xl">
+                {userType === "contractor"
+                  ? "Crie, publique e acompanhe a escala da sua equipe em um só lugar."
+                  : "Encontre oportunidades alinhadas ao seu perfil e responda rápido para ganhar destaque."}
+              </p>
+            </div>
+            {userType === "contractor" && (
+              <Button asChild className="btn-gradient shadow-lg">
+                <Link href={"/dashboard/gigs/new" as any}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Criar Nova Gig</span>
+                  <span className="sm:hidden">Nova</span>
+                </Link>
+              </Button>
+            )}
           </div>
-          {userType === "contractor" && (
-            <Button asChild>
-              <Link href={"/dashboard/gigs/new" as any}>
-                <Plus className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Criar Nova Gig</span>
-                <span className="sm:hidden">Nova</span>
-              </Link>
-            </Button>
+          {stats.length > 0 && (
+            <div className="relative z-10 mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.15em] text-foreground/40">
+                          {stat.label}
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground mt-1">
+                          {stat.value}
+                        </p>
+                        <p className="text-xs text-foreground/60 mt-1">{stat.hint}</p>
+                      </div>
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.tone}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                    </div>
+                    {typeof stat.progress === "number" && (
+                      <div className="mt-3 h-1.5 w-full rounded-full bg-amber-100/70">
+                        <div
+                          className="h-full rounded-full gradient-music transition-all"
+                          style={{ width: `${Math.min(100, Math.max(0, stat.progress))}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
         {/* Filtros e Busca */}
-        <Card className="border-border/50 backdrop-blur-xl bg-card/80">
+        <Card className="card-glass">
           <CardContent className="p-4 md:p-6">
             <div className="space-y-4">
               {/* Barra de busca */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-foreground/40" />
                 <input
                   type="text"
                   placeholder="Buscar por título, localização, cidade..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 md:py-3 rounded-md bg-background border border-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  className="w-full pl-10 pr-4 py-2 md:py-3 rounded-full bg-white/80 border border-amber-100 text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-[#ffb347]/40 focus:border-[#ffb347]"
                 />
               </div>
 
               {/* Filtros por status */}
               <Tabs value={filterStatus} onValueChange={(v) => setFilterStatus(v as typeof filterStatus)}>
-                <TabsList className="w-full sm:w-auto bg-muted">
-                  <TabsTrigger value="all" className="flex-1 sm:flex-none">Todas</TabsTrigger>
-                  <TabsTrigger value="upcoming" className="flex-1 sm:flex-none">Futuras</TabsTrigger>
-                  <TabsTrigger value="past" className="flex-1 sm:flex-none">Passadas</TabsTrigger>
+                <TabsList className="w-full sm:w-auto bg-white/70 border border-white/80 rounded-full p-1">
+                  <TabsTrigger value="all" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                    Todas
+                  </TabsTrigger>
+                  <TabsTrigger value="upcoming" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                    Futuras
+                  </TabsTrigger>
+                  <TabsTrigger value="past" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                    Passadas
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -855,14 +986,14 @@ export default function GigsPage() {
 
         {/* Lista de Gigs */}
         {loading ? (
-          <Card>
+          <Card className="card-glass">
             <CardContent className="px-4 py-12 text-center">
               <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Carregando gigs...</p>
             </CardContent>
           </Card>
         ) : filteredGigs.length === 0 ? (
-          <Card>
+          <Card className="card-glass">
             <CardContent className="px-4 py-12 text-center">
               <p className="text-sm font-medium text-foreground">
                 {searchTerm ? "Nenhuma gig encontrada" : "Nenhuma gig disponível"}
@@ -887,7 +1018,7 @@ export default function GigsPage() {
               return (
                 <Card
                   key={gig.id}
-                  className={`border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${
+                  className={`border border-white/80 bg-white/90 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-3xl overflow-hidden ${
                     userType === "musician" && gig.invite_status === "declined" 
                       ? "opacity-75" 
                       : ""
@@ -895,7 +1026,7 @@ export default function GigsPage() {
                 >
                   <CardContent className="p-0">
                     {/* Flyer do evento ou logo padrão */}
-                    <div className="w-full h-48 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
+                    <div className="w-full h-48 overflow-hidden rounded-t-3xl bg-gradient-to-br from-[#fff1e7] via-white to-[#e9f7f5] flex items-center justify-center relative">
                       {gig.flyer_url ? (
                         <img
                           src={gig.flyer_url}
@@ -959,7 +1090,7 @@ export default function GigsPage() {
                       </div>
 
                       {/* Informações principais - Reorganizadas para escaneabilidade */}
-                      <div className="space-y-3 bg-muted/30 rounded-lg p-3 border border-border/50">
+                      <div className="space-y-3 bg-white/80 rounded-2xl p-3 border border-white/60">
                         {/* Região - Destacada */}
                         <div className="flex items-start gap-2.5">
                           <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
@@ -993,7 +1124,7 @@ export default function GigsPage() {
                                   : gig.distance_km <= 15
                                   ? "border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30"
                                   : "border-orange-500 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30"
-                                : "border-primary/50 bg-gradient-to-br from-primary/10 to-purple-50 dark:from-primary/20 dark:to-purple-900/20"
+                                : "border-amber-200 bg-gradient-to-br from-amber-50 to-teal-50"
                             }`}>
                               <div className="grid grid-cols-2 gap-4">
                                 {/* Distância - Grande e Destacada */}
@@ -1066,16 +1197,16 @@ export default function GigsPage() {
                             
                             {/* Aviso se está fora do raio configurado */}
                             {maxRadiusKm != null && gig.distance_km != null && gig.distance_km > maxRadiusKm && (
-                              <div className="rounded-lg border-2 border-orange-500/50 bg-orange-50 dark:bg-orange-900/20 p-3">
-                                <p className="text-xs font-medium text-orange-800 dark:text-orange-200">
+                              <div className="rounded-lg border border-amber-300/70 bg-amber-50/80 p-3">
+                                <p className="text-xs font-medium text-amber-900">
                                   ⚠️ Este convite está fora do seu raio de busca configurado ({maxRadiusKm} km)
                                 </p>
                               </div>
                             )}
                           </div>
                         ) : userType === "musician" && musicianLocation && (
-                          <div className="rounded-lg border-2 border-border bg-muted/30 p-3">
-                            <p className="text-xs text-muted-foreground">
+                          <div className="rounded-lg border border-white/60 bg-white/70 p-3">
+                            <p className="text-xs text-foreground/60">
                               Distância não disponível (gig sem coordenadas)
                             </p>
                           </div>
@@ -1192,7 +1323,7 @@ export default function GigsPage() {
                         {/* Botão Ver Detalhes - sempre visível */}
                         <Button
                           variant="outline"
-                          className="w-full border-2 hover:bg-accent/50"
+                          className="w-full border border-white/80 bg-white/80 hover:bg-amber-50/70"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpenGig(gig.id);
@@ -1273,12 +1404,12 @@ export default function GigsPage() {
                               gigId={gig.id} 
                               gigTitle={gig.title}
                               variant="outline"
-                              className="w-full border-2"
+                              className="w-full border border-white/80 bg-white/80"
                             />
                             <Button
                               variant="outline"
                               size="icon"
-                              className="w-full border-2 border-destructive text-destructive hover:bg-destructive/10"
+                              className="w-full border border-destructive text-destructive hover:bg-destructive/10"
                               onClick={(e) => handleDeleteGig(gig.id, e)}
                               disabled={deletingGigId === gig.id}
                             >

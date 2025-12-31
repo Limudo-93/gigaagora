@@ -52,17 +52,17 @@ const DIFFICULTY_CONFIG: Record<ChallengeDifficulty, { label: string; color: str
   },
   medium: { 
     label: 'Médio', 
-    color: 'bg-blue-500/10 text-blue-700 border-blue-500/20',
+    color: 'bg-amber-500/10 text-amber-800 border-amber-500/20',
     icon: <Star className="h-4 w-4" />
   },
   hard: { 
     label: 'Difícil', 
-    color: 'bg-orange-500/10 text-orange-700 border-orange-500/20',
+    color: 'bg-[#ff6b4a]/10 text-[#ff6b4a] border-[#ff6b4a]/30',
     icon: <Medal className="h-4 w-4" />
   },
   expert: { 
     label: 'Expert', 
-    color: 'bg-purple-500/10 text-purple-700 border-purple-500/20',
+    color: 'bg-teal-500/10 text-teal-700 border-teal-500/20',
     icon: <Crown className="h-4 w-4" />
   },
 };
@@ -94,8 +94,8 @@ const TIER_CONFIG: Record<RankingTier, { label: string; color: string; gradient:
   },
   platinum: {
     label: 'Platina',
-    color: 'text-purple-500',
-    gradient: 'from-purple-400 via-pink-400 to-purple-600',
+    color: 'text-teal-500',
+    gradient: 'from-teal-400 via-cyan-400 to-emerald-500',
     icon: <Gem className="h-6 w-6" />,
     minPoints: 10000,
     maxPoints: 999999
@@ -195,11 +195,16 @@ export default function DesafiosPage() {
     <DashboardLayout fullWidth>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Desafios</h1>
-          <p className="text-sm sm:text-base text-muted-foreground mt-1">
-            Complete desafios, ganhe pontos e suba de ranking! Músicos com mais conquistas recebem mais convites.
-          </p>
+        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
+          <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Central de desafios</p>
+            <h1 className="text-2xl sm:text-3xl font-display font-semibold text-foreground">Desafios</h1>
+            <p className="text-sm sm:text-base text-foreground/60 mt-2 max-w-2xl">
+              Complete desafios, ganhe pontos e suba de ranking. Quem mantém sequência recebe mais convites.
+            </p>
+          </div>
         </div>
 
         {/* Card de Próximo Desafio Recomendado */}
@@ -242,7 +247,7 @@ export default function DesafiosPage() {
           const difficulty = DIFFICULTY_CONFIG[challenge.difficulty];
 
           return (
-            <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg">
+            <Card className="card-glass border border-white/70 bg-gradient-to-br from-amber-50/80 to-teal-50/80 shadow-lg">
               <CardContent className="p-5 md:p-6">
                 <div className="flex items-start gap-4">
                   <div className="relative shrink-0">
@@ -306,7 +311,7 @@ export default function DesafiosPage() {
 
         {/* Card de Ranking */}
         {ranking && (
-          <Card className="border-border bg-card overflow-hidden">
+          <Card className="card-glass overflow-hidden">
             <div className={`bg-gradient-to-r ${tierInfo.gradient} p-6 text-white`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -350,13 +355,13 @@ export default function DesafiosPage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
-            <TabsTrigger value="all" className="text-xs sm:text-sm">Todos</TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs sm:text-sm">Completos</TabsTrigger>
-            <TabsTrigger value="in_progress" className="text-xs sm:text-sm">Em Progresso</TabsTrigger>
-            <TabsTrigger value="not_started" className="text-xs sm:text-sm">Novos</TabsTrigger>
-            <TabsTrigger value="easy" className="text-xs sm:text-sm">Fácil</TabsTrigger>
-            <TabsTrigger value="hard" className="text-xs sm:text-sm">Difícil</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 bg-white/80 border border-white/70 rounded-2xl p-1">
+            <TabsTrigger value="all" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Todos</TabsTrigger>
+            <TabsTrigger value="completed" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Completos</TabsTrigger>
+            <TabsTrigger value="in_progress" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Em Progresso</TabsTrigger>
+            <TabsTrigger value="not_started" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Novos</TabsTrigger>
+            <TabsTrigger value="easy" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Fácil</TabsTrigger>
+            <TabsTrigger value="hard" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">Difícil</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -443,7 +448,7 @@ export default function DesafiosPage() {
             </div>
 
             {filteredChallenges.length === 0 && (
-              <Card className="border-border bg-card">
+              <Card className="card-glass">
                 <CardContent className="p-12 text-center">
                   <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-sm font-medium text-foreground mb-1">

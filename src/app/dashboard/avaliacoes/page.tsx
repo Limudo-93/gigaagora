@@ -196,8 +196,16 @@ export default function AvaliacoesPage() {
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 w-full">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Avaliações</h1>
+        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
+          <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Sua reputação</p>
+            <h1 className="text-xl sm:text-2xl font-display font-semibold text-foreground">Avaliações</h1>
+            <p className="text-sm text-foreground/60 mt-2">
+              Avaliações públicas fortalecem sua confiança e aumentam sua visibilidade.
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -209,7 +217,7 @@ export default function AvaliacoesPage() {
 
         {/* Card de Resumo */}
         {!loading && stats && stats.total > 0 && (
-          <Card className="border-border bg-card">
+          <Card className="card-glass">
             <CardHeader className="pb-3 sm:pb-6">
               <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Resumo das Avaliações</CardTitle>
             </CardHeader>
@@ -231,7 +239,7 @@ export default function AvaliacoesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-[#ffb347] to-[#2aa6a1] flex items-center justify-center flex-shrink-0">
                     <User className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -252,7 +260,7 @@ export default function AvaliacoesPage() {
                       <Badge
                         key={comment}
                         variant="secondary"
-                        className="bg-background text-foreground border-border px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
+                        className="bg-white/70 text-foreground border-white/70 px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm"
                       >
                         <span className="font-medium">
                           {translatePredefinedComment(comment)}
@@ -275,7 +283,7 @@ export default function AvaliacoesPage() {
             <span className="ml-2 text-xs sm:text-sm text-muted-foreground">Carregando avaliações...</span>
           </div>
         ) : ratings.length === 0 ? (
-          <Card className="border-border bg-card">
+          <Card className="card-glass">
             <CardContent className="p-6 sm:p-12 text-center">
               <Star className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
               <p className="text-xs sm:text-sm font-medium text-foreground mb-1">
@@ -289,7 +297,7 @@ export default function AvaliacoesPage() {
         ) : (
           <div className="space-y-3 sm:space-y-4">
             {ratings.map((rating) => (
-              <Card key={rating.id} className="border-border bg-card">
+              <Card key={rating.id} className="card-glass">
                 <CardContent className="p-4 sm:p-5">
                   <div className="space-y-3 sm:space-y-4">
                     {/* Estrelas */}
@@ -301,7 +309,7 @@ export default function AvaliacoesPage() {
                             className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${
                               star <= (rating.rating || 0)
                                 ? "fill-yellow-400 text-yellow-400"
-                                : "text-gray-300"
+                                : "text-foreground/30"
                             }`}
                           />
                         ))}

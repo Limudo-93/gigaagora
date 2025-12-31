@@ -777,8 +777,8 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
-          <span className="ml-2 text-gray-700">Carregando músicos...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-foreground/60" />
+          <span className="ml-2 text-foreground">Carregando músicos...</span>
         </div>
       </DashboardLayout>
     );
@@ -793,22 +793,22 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
             variant="ghost"
             size="icon"
             onClick={() => router.back()}
-            className="text-gray-700 hover:bg-gray-100"
+            className="text-foreground hover:bg-amber-50/70"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-display font-semibold gradient-text">
               Músicos que Aceitaram
             </h1>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-foreground/60 mt-2">
               {gigTitle ? `Gig: ${gigTitle}` : "Selecione um músico para confirmar"}
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="rounded-lg border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-800">
             <p className="font-semibold">Erro:</p>
             <p className="mt-1">{error}</p>
           </div>
@@ -818,9 +818,9 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
         {confirmedMusicians.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-900">Músicos Confirmados</h2>
-              <Badge className="bg-green-100 text-green-800 border-green-300">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <h2 className="text-xl font-bold text-foreground">Músicos Confirmados</h2>
+              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
                 {confirmedMusicians.length}
               </Badge>
             </div>
@@ -828,35 +828,35 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
               {confirmedMusicians.map((musician) => (
                 <Card
                   key={musician.invite_id}
-                  className="border-green-200 bg-green-50/50 backdrop-blur-xl hover:shadow-xl transition-all duration-300 flex flex-col"
+                  className="border-emerald-200 bg-emerald-50/60 backdrop-blur-xl hover:shadow-xl transition-all duration-300 flex flex-col"
                 >
                   <CardContent className="p-6 flex flex-col flex-1">
                     <div className="flex items-start gap-4 mb-4">
-                      <Avatar className="h-16 w-16 ring-2 ring-green-500 shadow-lg flex-shrink-0">
+                      <Avatar className="h-16 w-16 ring-2 ring-emerald-400 shadow-lg flex-shrink-0">
                         <AvatarImage src={musician.musician_photo_url || ""} />
-                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-700 text-white font-semibold text-lg">
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-emerald-600 text-white font-semibold text-lg">
                           {getInitials(musician.musician_name)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          <h3 className="text-lg font-semibold text-foreground truncate">
                             {musician.musician_name || "Músico"}
                           </h3>
-                          <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-900 border border-gray-300">
+                          <Badge variant="secondary" className="text-xs bg-white/70 text-foreground border border-white/60">
                             {musician.instrument}
                           </Badge>
                           {musician.avg_rating && (
                             <div className="flex items-center gap-1">
                               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-xs font-medium text-gray-700">
+                              <span className="text-xs font-medium text-foreground/70">
                                 {Number(musician.avg_rating).toFixed(1)}
                               </span>
                               {musician.rating_count && musician.rating_count > 0 && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-foreground/50">
                                   ({musician.rating_count})
                                 </span>
                               )}
@@ -876,7 +876,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                         municipality={null}
                         showDistance={false}
                       />
-                      <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
+                      <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
                         <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
                         <span>Confirmado em {formatDateBR(musician.accepted_at)}</span>
                       </div>
@@ -884,7 +884,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                     <div className="flex gap-2 mt-auto">
                       <Button
                         variant="outline"
-                        className="flex-1 bg-white border-gray-300 text-gray-900 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 font-medium"
+                        className="flex-1 bg-white/80 border-white/70 text-foreground hover:bg-amber-50 hover:text-foreground hover:border-amber-200 font-medium"
                         onClick={async () => {
                           setLoadingProfile(true);
                           try {
@@ -948,21 +948,21 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
         {(musicians.length > 0 || confirmedMusicians.length === 0) && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-gray-600" />
-              <h2 className="text-xl font-bold text-gray-900">Músicos que Aceitaram</h2>
-              <Badge className="bg-gray-100 text-gray-800 border-gray-300">
+              <User className="h-5 w-5 text-foreground/60" />
+              <h2 className="text-xl font-bold text-foreground">Músicos que Aceitaram</h2>
+              <Badge className="bg-white/70 text-foreground border-white/70">
                 {musicians.length}
               </Badge>
             </div>
 
             {musicians.length === 0 ? (
-              <Card className="border-white/20 backdrop-blur-xl bg-white/80">
+              <Card className="border-white/70 backdrop-blur-xl bg-white/80">
                 <CardContent className="p-12 text-center">
-                  <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-gray-900 mb-2">
+                  <User className="h-12 w-12 text-foreground/40 mx-auto mb-4" />
+                  <p className="text-lg font-semibold text-foreground mb-2">
                     Nenhum músico aceitou ainda
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-foreground/60">
                     Os convites foram enviados automaticamente para músicos compatíveis.
                     Quando alguém aceitar, aparecerá aqui.
                   </p>
@@ -973,7 +973,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
             {musicians.map((musician) => (
               <Card
                 key={musician.invite_id}
-                className="border-white/20 backdrop-blur-xl bg-white/80 hover:shadow-xl transition-all duration-300 flex flex-col"
+                className="border-white/70 backdrop-blur-xl bg-white/80 hover:shadow-xl transition-all duration-300 flex flex-col"
               >
                 <CardContent className="p-6 flex flex-col flex-1">
                   <div className="flex items-start gap-4 mb-4">
@@ -984,21 +984,21 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
+                      <h3 className="text-lg font-semibold text-foreground truncate">
                         {musician.musician_name || "Músico"}
                       </h3>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-900 border border-gray-300">
+                        <Badge variant="secondary" className="text-xs bg-white/70 text-foreground border border-white/70">
                           {musician.instrument}
                         </Badge>
                         {musician.avg_rating && (
                           <div className="flex items-center gap-1">
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs font-medium text-gray-700">
+                            <span className="text-xs font-medium text-foreground/70">
                               {Number(musician.avg_rating).toFixed(1)}
                             </span>
                             {musician.rating_count && musician.rating_count > 0 && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-foreground/50">
                                 ({musician.rating_count})
                               </span>
                             )}
@@ -1019,7 +1019,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                       municipality={null}
                       showDistance={false}
                     />
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-xs text-foreground/50">
                       <Clock className="h-3 w-3 flex-shrink-0" />
                       <span>Aceitou em {formatDateBR(musician.accepted_at)}</span>
                     </div>
@@ -1030,7 +1030,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={favorites.has(musician.musician_id) ? "text-red-500 hover:text-red-600" : "text-gray-400 hover:text-red-500"}
+                      className={favorites.has(musician.musician_id) ? "text-red-500 hover:text-red-600" : "text-foreground/40 hover:text-red-500"}
                       onClick={async (e) => {
                         e.stopPropagation();
                         const { data: { user } } = await supabase.auth.getUser();
@@ -1069,7 +1069,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1 bg-white border-gray-300 text-gray-900 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300 font-medium"
+                      className="flex-1 bg-white/80 border-white/70 text-foreground hover:bg-amber-50 hover:border-amber-200 font-medium"
                       onClick={async () => {
                         setLoadingProfile(true);
                         try {
@@ -1126,7 +1126,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                       Ver Perfil
                     </Button>
                     <Button
-                      className="flex-1 bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="flex-1 btn-gradient border-0 shadow-lg hover:shadow-xl transition-all duration-200"
                       onClick={() => handleConfirmMusician(musician.invite_id, musician.musician_id)}
                       disabled={confirmingId === musician.invite_id}
                     >
@@ -1153,44 +1153,44 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
 
         {/* Dialog de Perfil Completo */}
         <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white/95 border border-white/70">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+              <DialogTitle className="text-2xl font-bold gradient-text">
                 Perfil do Músico
               </DialogTitle>
             </DialogHeader>
 
             {loadingProfile ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
-                <span className="ml-2 text-gray-700">Carregando perfil...</span>
+                <Loader2 className="h-8 w-8 animate-spin text-foreground/60" />
+                <span className="ml-2 text-foreground">Carregando perfil...</span>
               </div>
             ) : selectedMusician ? (
               <div className="space-y-6">
                 {/* Header do Perfil */}
-                <div className="flex items-start gap-4 pb-4 border-b border-gray-200">
-                  <Avatar className="h-20 w-20 ring-2 ring-orange-500 shadow-lg">
+                <div className="flex items-start gap-4 pb-4 border-b border-white/70">
+                  <Avatar className="h-20 w-20 ring-2 ring-amber-300 shadow-lg">
                     <AvatarImage src={selectedMusician.musician_photo_url || ""} />
                     <AvatarFallback className="gradient-music text-white font-semibold text-xl">
                       {getInitials(selectedMusician.musician_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900">
+                    <h3 className="text-2xl font-bold text-foreground">
                       {selectedMusician.musician_name || "Músico"}
                     </h3>
                     <div className="flex items-center gap-3 mt-2">
-                      <Badge variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300">
+                      <Badge variant="secondary" className="bg-white/70 text-foreground border border-white/70">
                         {selectedMusician.instrument}
                       </Badge>
                       {selectedMusician.avg_rating && (
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium text-gray-700">
+                          <span className="text-sm font-medium text-foreground/70">
                             {Number(selectedMusician.avg_rating).toFixed(1)}
                           </span>
                           {selectedMusician.rating_count && selectedMusician.rating_count > 0 && (
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-foreground/50">
                               ({selectedMusician.rating_count} avaliações)
                             </span>
                           )}
@@ -1209,63 +1209,63 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Informações de Contato */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {(selectedMusician.city || selectedMusician.state) && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <MapPin className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                       <span>{[selectedMusician.city, selectedMusician.state].filter(Boolean).join(", ")}</span>
                     </div>
                   )}
                   {selectedMusician.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                      <a href={`tel:${selectedMusician.phone}`} className="hover:text-orange-600">
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <Phone className="h-4 w-4 text-foreground/50 flex-shrink-0" />
+                      <a href={`tel:${selectedMusician.phone}`} className="hover:text-[#ff6b4a]">
                         {selectedMusician.phone}
                       </a>
                     </div>
                   )}
                   {selectedMusician.attendance_rate && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
                       <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
                       <span>Taxa de presença: {(Number(selectedMusician.attendance_rate) * 100).toFixed(0)}%</span>
                     </div>
                   )}
                   {selectedMusician.response_time_seconds_avg && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Clock className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <Clock className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                       <span>Tempo médio de resposta: {Math.floor(Number(selectedMusician.response_time_seconds_avg) / 3600)}h</span>
                     </div>
                   )}
                   {selectedMusician.yearsExperience && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <Calendar className="h-4 w-4 text-foreground/50 flex-shrink-0" />
                       <span>{selectedMusician.yearsExperience} {selectedMusician.yearsExperience === 1 ? "ano" : "anos"} de experiência</span>
                     </div>
                   )}
                   {selectedMusician.basePrice && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <DollarSign className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                      <span>Preço base: R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(selectedMusician.basePrice)}</span>
-                    </div>
-                  )}
-                </div>
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <DollarSign className="h-4 w-4 text-foreground/40 flex-shrink-0" />
+                    <span>Preço base: R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(selectedMusician.basePrice)}</span>
+                  </div>
+                )}
+              </div>
 
                 {/* Biografia */}
                 {selectedMusician.bio && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Biografia</h4>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedMusician.bio}</p>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Biografia</h4>
+                    <p className="text-sm text-foreground/70 whitespace-pre-wrap">{selectedMusician.bio}</p>
                   </div>
                 )}
 
                 {/* Instrumentos */}
                 {selectedMusician.instruments && selectedMusician.instruments.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <Music className="h-4 w-4" />
                       Instrumentos
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedMusician.instruments.map((instrument, idx) => (
-                        <Badge key={idx} variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
+                        <Badge key={idx} variant="outline" className="border-white/70 text-foreground bg-white/70">
                           {instrument}
                         </Badge>
                       ))}
@@ -1276,10 +1276,10 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Gêneros */}
                 {selectedMusician.genres && selectedMusician.genres.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Gêneros Musicais</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Gêneros Musicais</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedMusician.genres.map((genre, idx) => (
-                        <Badge key={idx} variant="outline" className="border-purple-300 text-purple-900 bg-purple-50">
+                        <Badge key={idx} variant="outline" className="border-amber-200 text-amber-800 bg-amber-50">
                           {genre}
                         </Badge>
                       ))}
@@ -1290,10 +1290,10 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Skills */}
                 {selectedMusician.skills && selectedMusician.skills.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Habilidades</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Habilidades</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedMusician.skills.map((skill, idx) => (
-                        <Badge key={idx} variant="outline" className="border-blue-300 text-blue-700">
+                        <Badge key={idx} variant="outline" className="border-teal-200 text-teal-800 bg-teal-50">
                           {skill}
                         </Badge>
                       ))}
@@ -1304,10 +1304,10 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Setup */}
                 {selectedMusician.setup && selectedMusician.setup.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Setup</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Setup</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedMusician.setup.map((item, idx) => (
-                        <Badge key={idx} variant="outline" className="border-orange-300 text-orange-700">
+                        <Badge key={idx} variant="outline" className="border-amber-200 text-amber-800 bg-amber-50">
                           {item}
                         </Badge>
                       ))}
@@ -1318,7 +1318,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Leitura de Partitura */}
                 {selectedMusician.sheetMusicReading && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />
                       Leitura de Partitura
                     </h4>
@@ -1335,8 +1335,8 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Repertório */}
                 {selectedMusician.repertoire && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Repertório</h4>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded-md border border-gray-200">
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Repertório</h4>
+                    <p className="text-sm text-foreground/70 whitespace-pre-wrap bg-white/70 p-3 rounded-md border border-white/70">
                       {selectedMusician.repertoire}
                     </p>
                   </div>
@@ -1345,11 +1345,11 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Educação Musical */}
                 {selectedMusician.musicalEducation && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       Educação Musical
                     </h4>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded-md border border-gray-200">
+                    <p className="text-sm text-foreground/70 whitespace-pre-wrap bg-white/70 p-3 rounded-md border border-white/70">
                       {selectedMusician.musicalEducation}
                     </p>
                   </div>
@@ -1358,7 +1358,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Redes Sociais */}
                 {selectedMusician.socialMedia && Object.values(selectedMusician.socialMedia).some(v => v) && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Redes Sociais</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Redes Sociais</h4>
                     <div className="flex flex-wrap gap-3">
                       {selectedMusician.socialMedia.instagram && (
                         <a
@@ -1401,7 +1401,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                           href={selectedMusician.socialMedia.tiktok.startsWith("http") ? selectedMusician.socialMedia.tiktok : `https://tiktok.com/@${selectedMusician.socialMedia.tiktok.replace(/^@/, "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-gray-900 hover:text-gray-700"
+                          className="flex items-center gap-2 text-sm text-foreground hover:text-foreground/70"
                         >
                           <span className="text-xs font-bold">TikTok</span>
                           <ExternalLink className="h-3 w-3" />
@@ -1447,7 +1447,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                           href={selectedMusician.socialMedia.soundcloud.startsWith("http") ? selectedMusician.socialMedia.soundcloud : `https://soundcloud.com/${selectedMusician.socialMedia.soundcloud}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sm text-orange-600 hover:text-orange-800"
+                          className="flex items-center gap-2 text-sm text-[#ff6b4a] hover:text-[#e65c3e]"
                         >
                           <span className="text-xs font-bold">SoundCloud</span>
                           <ExternalLink className="h-3 w-3" />
@@ -1460,7 +1460,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 {/* Portfolio Links */}
                 {selectedMusician.portfolio_links && selectedMusician.portfolio_links.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Portfólio</h4>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">Portfólio</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedMusician.portfolio_links.map((link, idx) => (
                         <a
@@ -1479,7 +1479,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 )}
 
                 {/* Botões de Ação */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <div className="flex gap-3 pt-4 border-t border-white/70">
                   <Button
                     variant="outline"
                     className="flex-1"
@@ -1499,7 +1499,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                     Denunciar
                   </Button>
                   <Button
-                    className="flex-1 bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white"
+                    className="flex-1 btn-gradient"
                     onClick={() => {
                       setProfileDialogOpen(false);
                       handleConfirmMusician(selectedMusician.invite_id, selectedMusician.musician_id);
@@ -1527,4 +1527,5 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
     </DashboardLayout>
   );
 }
+
 

@@ -567,8 +567,8 @@ export default function EditGigPage() {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-700" />
-          <span className="ml-2 text-sm text-gray-700">Carregando gig...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-foreground/70" />
+          <span className="ml-2 text-sm text-foreground/70">Carregando gig...</span>
         </div>
       </DashboardLayout>
     );
@@ -587,8 +587,8 @@ export default function EditGigPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Editar Gig</h1>
-            <p className="text-sm text-gray-700">
+            <h1 className="text-2xl font-semibold text-foreground">Editar Gig</h1>
+            <p className="text-sm text-foreground/70">
               Edite os dados da gig e as vagas necessárias
             </p>
           </div>
@@ -602,19 +602,19 @@ export default function EditGigPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Informações Básicas */}
-          <Card className="bg-white border-gray-200">
+          <Card className="bg-white border-white/70">
             <CardHeader>
-              <CardTitle className="text-gray-900">Informações Básicas</CardTitle>
+              <CardTitle className="text-foreground">Informações Básicas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="title">
+                <label className="text-sm font-medium text-foreground" htmlFor="title">
                   Título <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="title"
                   type="text"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -623,12 +623,12 @@ export default function EditGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="description">
+                <label className="text-sm font-medium text-foreground" htmlFor="description">
                   Descrição
                 </label>
                 <textarea
                   id="description"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -638,7 +638,7 @@ export default function EditGigPage() {
 
               {/* Campo de Flyer */}
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="flyer">
+                <label className="text-sm font-medium text-foreground" htmlFor="flyer">
                   Flyer do Evento
                 </label>
                 <div className="mt-1 space-y-2">
@@ -656,16 +656,16 @@ export default function EditGigPage() {
                       type="button"
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full bg-white border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                      className="w-full bg-white border-white/70 text-foreground/70 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       Selecionar Flyer
                     </Button>
                   ) : (
                     <div className="relative">
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="rounded-lg border border-white/70 bg-white/70 p-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-20 w-20 rounded-md overflow-hidden border border-gray-200 bg-white flex items-center justify-center">
+                          <div className="h-20 w-20 rounded-md overflow-hidden border border-white/70 bg-white flex items-center justify-center">
                             {flyerPreview ? (
                               <img
                                 src={flyerPreview}
@@ -673,14 +673,14 @@ export default function EditGigPage() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <ImageIcon className="h-8 w-8 text-gray-400" />
+                              <ImageIcon className="h-8 w-8 text-foreground/40" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {flyerFile?.name || "Flyer atual"}
                             </p>
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-foreground/70">
                               {flyerFile ? `${(flyerFile.size / 1024).toFixed(0)} KB` : "Flyer existente"}
                             </p>
                           </div>
@@ -699,14 +699,14 @@ export default function EditGigPage() {
                         type="button"
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
-                        className="mt-2 w-full border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                        className="mt-2 w-full border-white/70 text-foreground/70 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
                       >
                         <Upload className="mr-2 h-4 w-4" />
                         Trocar Flyer
                       </Button>
                     </div>
                   )}
-                  <p className="text-xs text-gray-700">
+                  <p className="text-xs text-foreground/70">
                     Formatos aceitos: JPG, PNG, GIF (máximo 5MB)
                   </p>
                 </div>
@@ -715,19 +715,19 @@ export default function EditGigPage() {
           </Card>
 
           {/* Localização */}
-          <Card className="bg-white border-gray-200">
+          <Card className="bg-white border-white/70">
             <CardHeader>
-              <CardTitle className="text-gray-900">Localização</CardTitle>
+              <CardTitle className="text-foreground">Localização</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="locationName">
+                <label className="text-sm font-medium text-foreground" htmlFor="locationName">
                   Nome do Local
                 </label>
                 <input
                   id="locationName"
                   type="text"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   value={locationName}
                   onChange={(e) => setLocationName(e.target.value)}
                   placeholder="Ex: Bar do João"
@@ -735,13 +735,13 @@ export default function EditGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-900" htmlFor="addressText">
+                <label className="text-sm font-medium text-foreground" htmlFor="addressText">
                   Endereço Completo
                 </label>
                 <input
                   id="addressText"
                   type="text"
-                  className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   value={addressText}
                   onChange={(e) => setAddressText(e.target.value)}
                   placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
@@ -750,13 +750,13 @@ export default function EditGigPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="city">
+                  <label className="text-sm font-medium text-foreground" htmlFor="city">
                     Cidade
                   </label>
                   <input
                     id="city"
                     type="text"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="São Paulo"
@@ -764,13 +764,13 @@ export default function EditGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="state">
+                  <label className="text-sm font-medium text-foreground" htmlFor="state">
                     Estado
                   </label>
                   <input
                     id="state"
                     type="text"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     placeholder="SP"
@@ -783,20 +783,20 @@ export default function EditGigPage() {
           </Card>
 
           {/* Data e Horário */}
-          <Card className="bg-white border-gray-200">
+          <Card className="bg-white border-white/70">
             <CardHeader>
-              <CardTitle className="text-gray-900">Data e Horário</CardTitle>
+              <CardTitle className="text-foreground">Data e Horário</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="startDate">
+                  <label className="text-sm font-medium text-foreground" htmlFor="startDate">
                     Data de Início <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="startDate"
                     type="date"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
@@ -804,13 +804,13 @@ export default function EditGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="startTime">
+                  <label className="text-sm font-medium text-foreground" htmlFor="startTime">
                     Horário de Início <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="startTime"
                     type="time"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
@@ -820,14 +820,14 @@ export default function EditGigPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="numEntradas">
+                  <label className="text-sm font-medium text-foreground" htmlFor="numEntradas">
                     Número de Entradas <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="numEntradas"
                     type="number"
                     min="1"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={numEntradas}
                     onChange={(e) =>
                       setNumEntradas(e.target.value ? Number(e.target.value) : "")
@@ -835,20 +835,20 @@ export default function EditGigPage() {
                     placeholder="1"
                     required
                   />
-                  <p className="mt-1 text-xs text-gray-700">
+                  <p className="mt-1 text-xs text-foreground/70">
                     Ex: 2 entradas
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="duracaoEntrada">
+                  <label className="text-sm font-medium text-foreground" htmlFor="duracaoEntrada">
                     Duração de Cada Entrada <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="duracaoEntrada"
                     type="text"
                     pattern="^\d{1,2}:\d{2}$"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={duracaoEntrada}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -859,27 +859,27 @@ export default function EditGigPage() {
                     placeholder="1:15"
                     required
                   />
-                  <p className="mt-1 text-xs text-gray-700">
+                  <p className="mt-1 text-xs text-foreground/70">
                     Formato: HH:MM (ex: 1:15 = 1h15min)
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-900" htmlFor="intervaloMinutos">
+                  <label className="text-sm font-medium text-foreground" htmlFor="intervaloMinutos">
                     Intervalo entre Entradas (minutos)
                   </label>
                   <input
                     id="intervaloMinutos"
                     type="number"
                     min="0"
-                    className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={intervaloMinutos}
                     onChange={(e) =>
                       setIntervaloMinutos(e.target.value ? Number(e.target.value) : "")
                     }
                     placeholder="0"
                   />
-                  <p className="mt-1 text-xs text-gray-700">
+                  <p className="mt-1 text-xs text-foreground/70">
                     Tempo entre cada entrada
                   </p>
                 </div>
@@ -887,9 +887,9 @@ export default function EditGigPage() {
 
               {/* Mostra o horário de término calculado */}
               {startDate && startTime && numEntradas && duracaoEntrada && (
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                  <p className="text-sm font-medium text-gray-900">Horário de Término Calculado:</p>
-                  <p className="mt-1 text-sm text-gray-700">
+                <div className="rounded-lg border border-white/70 bg-white/70 p-3">
+                  <p className="text-sm font-medium text-foreground">Horário de Término Calculado:</p>
+                  <p className="mt-1 text-sm text-foreground/70">
                     {calcularHorarioTermino()?.toLocaleString("pt-BR", {
                       day: "2-digit",
                       month: "2-digit",
@@ -898,7 +898,7 @@ export default function EditGigPage() {
                       minute: "2-digit",
                     }) || "—"}
                   </p>
-                  <p className="mt-2 text-xs text-gray-700">
+                  <p className="mt-2 text-xs text-foreground/70">
                     Duração total: {calcularMinutosParaBanco().showMinutes} minutos
                     {calcularMinutosParaBanco().breakMinutes > 0 &&
                       ` + ${calcularMinutosParaBanco().breakMinutes} minutos de intervalo`}
@@ -909,15 +909,15 @@ export default function EditGigPage() {
           </Card>
 
           {/* Vagas (Roles) */}
-          <Card className="bg-white border-gray-200">
+          <Card className="bg-white border-white/70">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-gray-900">Vagas Necessárias</CardTitle>
+              <CardTitle className="text-foreground">Vagas Necessárias</CardTitle>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addRole}
-                className="bg-white border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+                className="bg-white border-white/70 text-foreground/70 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Adicionar Vaga
@@ -925,17 +925,17 @@ export default function EditGigPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {roles.length === 0 ? (
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-foreground/70">
                   Nenhuma vaga adicionada. Clique em "Adicionar Vaga" para começar.
                 </p>
               ) : (
                 roles.map((role) => (
                   <div
                     key={role.id}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
+                    className="rounded-lg border border-white/70 bg-white/70 p-4 space-y-3"
                   >
                     <div className="flex items-start justify-between">
-                      <h4 className="font-medium text-gray-900">Vaga {roles.indexOf(role) + 1}</h4>
+                      <h4 className="font-medium text-foreground">Vaga {roles.indexOf(role) + 1}</h4>
                       <Button
                         type="button"
                         variant="ghost"
@@ -949,7 +949,7 @@ export default function EditGigPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-900">
+                        <label className="text-sm font-medium text-foreground">
                           Instrumento <span className="text-red-500">*</span>
                         </label>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -967,8 +967,8 @@ export default function EditGigPage() {
                                 }}
                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                                   isSelected
-                                    ? "bg-orange-500 text-white shadow-sm"
-                                    : "bg-white text-gray-900 border border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                                    ? "bg-[#ff6b4a] text-white shadow-sm"
+                                    : "bg-white text-foreground border border-white/70 hover:border-[#ff6b4a] hover:bg-amber-50"
                                 }`}
                               >
                                 {inst}
@@ -979,13 +979,13 @@ export default function EditGigPage() {
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-gray-900">
+                        <label className="text-sm font-medium text-foreground">
                           Quantidade <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
                           min="1"
-                          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                           value={role.quantity}
                           onChange={(e) =>
                             updateRole(role.id, "quantity", Number(e.target.value) || 1)
@@ -996,13 +996,13 @@ export default function EditGigPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-900">
+                      <label className="text-sm font-medium text-foreground">
                         Cachê (R$)
                       </label>
                       <input
                         type="text"
                         inputMode="decimal"
-                        className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={
                           cacheInputs[role.id] ??
                           (role.cache === ""
@@ -1028,15 +1028,15 @@ export default function EditGigPage() {
                         }}
                         placeholder="0,00"
                       />
-                      <p className="mt-1 text-xs text-gray-600">
+                      <p className="mt-1 text-xs text-foreground/60">
                         Valor do cachê para este instrumento (ex: 1.500,00)
                       </p>
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-gray-900">Observações</label>
+                      <label className="text-sm font-medium text-foreground">Observações</label>
                       <textarea
-                        className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         rows={2}
                         value={role.notes}
                         onChange={(e) => updateRole(role.id, "notes", e.target.value)}
@@ -1056,7 +1056,7 @@ export default function EditGigPage() {
               variant="outline"
               onClick={() => router.back()}
               disabled={saving}
-              className="bg-white border-gray-300 text-gray-700 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
+              className="bg-white border-white/70 text-foreground/70 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300"
             >
               Cancelar
             </Button>
@@ -1065,14 +1065,14 @@ export default function EditGigPage() {
               variant="secondary"
               onClick={() => saveGig("draft")}
               disabled={saving || uploadingFlyer}
-              className="bg-gray-100 text-gray-900 hover:bg-gray-200"
+              className="bg-white/70 text-foreground hover:bg-white/70"
             >
               {saving || uploadingFlyer ? (uploadingFlyer ? "Enviando flyer..." : "Salvando...") : "Salvar como Rascunho"}
             </Button>
             <Button
               type="submit"
               disabled={saving}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="btn-gradient"
             >
               {saving ? "Publicando..." : "Publicar Gig"}
             </Button>
@@ -1082,4 +1082,5 @@ export default function EditGigPage() {
     </DashboardLayout>
   );
 }
+
 

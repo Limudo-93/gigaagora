@@ -305,8 +305,8 @@ export default function FinanceiroPage() {
       <DashboardLayout fullWidth>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando seus ganhos...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#ff6b4a] mx-auto"></div>
+            <p className="mt-4 text-foreground/60">Carregando seus ganhos...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -328,38 +328,43 @@ export default function FinanceiroPage() {
     <DashboardLayout fullWidth>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 flex items-center gap-2">
-              💰 Seus ganhos com música
-            </h1>
-            <p className="text-base text-gray-600 mt-2">
-              Acompanhe quanto você já ganhou, quanto vai receber e como evoluir
-            </p>
-          </div>
-          
-          {/* Toggle Básico/Avançado */}
-          <div className="flex items-center gap-3 bg-white rounded-lg border-2 border-gray-200 p-1 shadow-sm">
-            <button
-              onClick={() => setViewMode("basic")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === "basic"
-                  ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Básico
-            </button>
-            <button
-              onClick={() => setViewMode("advanced")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                viewMode === "advanced"
-                  ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Avançado
-            </button>
+        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
+          <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Painel financeiro</p>
+              <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground flex items-center gap-2">
+                💰 Seus ganhos com música
+              </h1>
+              <p className="text-base text-foreground/60 mt-2">
+                Acompanhe quanto você já ganhou, quanto vai receber e como evoluir
+              </p>
+            </div>
+            
+            {/* Toggle Básico/Avançado */}
+            <div className="flex items-center gap-2 bg-white/80 rounded-full border border-white/70 p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode("basic")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  viewMode === "basic"
+                    ? "btn-gradient shadow-sm"
+                    : "text-foreground/60 hover:text-foreground"
+                }`}
+              >
+                Básico
+              </button>
+              <button
+                onClick={() => setViewMode("advanced")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  viewMode === "advanced"
+                    ? "btn-gradient shadow-sm"
+                    : "text-foreground/60 hover:text-foreground"
+                }`}
+              >
+                Avançado
+              </button>
+            </div>
           </div>
         </div>
 
@@ -389,57 +394,57 @@ export default function FinanceiroPage() {
 
             {/* BLOCO 2 — AGORA & FUTURO */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-2 border-blue-200 shadow-md">
+              <Card className="border border-amber-200/70 shadow-md bg-white/80">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="text-3xl">📅</div>
-                    <h3 className="text-lg font-semibold text-gray-900">Este mês</h3>
+                    <h3 className="text-lg font-semibold text-foreground">Este mês</h3>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900 mb-2">{formatCurrency(thisMonthEarnings)}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-3xl font-bold text-foreground mb-2">{formatCurrency(thisMonthEarnings)}</p>
+                  <p className="text-sm text-foreground/60">
                     {thisMonthGigs.length} {thisMonthGigs.length === 1 ? "show confirmado" : "shows confirmados"}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-purple-200 shadow-md">
+              <Card className="border border-teal-200/70 shadow-md bg-white/80">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="text-3xl">🔮</div>
-                    <h3 className="text-lg font-semibold text-gray-900">Você vai receber</h3>
+                    <h3 className="text-lg font-semibold text-foreground">Você vai receber</h3>
                   </div>
-                  <p className="text-3xl font-bold text-gray-900 mb-2">{formatCurrency(futureEarnings)}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-3xl font-bold text-foreground mb-2">{formatCurrency(futureEarnings)}</p>
+                  <p className="text-sm text-foreground/60">
                     Próximas semanas
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            <p className="text-sm text-gray-500 text-center -mt-4">
+            <p className="text-sm text-foreground/50 text-center -mt-4">
               Previsão baseada em shows já confirmados
             </p>
 
             {/* BLOCO 3 — PRÓXIMOS SHOWS */}
             {futureGigs.length > 0 && (
-              <Card className="border-2 border-gray-200 shadow-md">
+              <Card className="card-glass">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Próximos shows</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Próximos shows</h3>
                   <div className="space-y-3">
                     {futureGigs.slice(0, 10).map((gig) => (
                       <div
                         key={gig.id}
-                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                        className="flex items-center justify-between py-3 border-b border-white/70 last:border-0"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{getInstrumentEmoji(gig.instrument || "Outro")}</span>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-foreground">
                               {formatDate(gig.start_time)} · {gig.location_name || gig.city || "Local"}
                             </p>
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-gray-900">{formatCurrency(gig.cache || 0)}</p>
+                        <p className="text-lg font-bold text-foreground">{formatCurrency(gig.cache || 0)}</p>
                       </div>
                     ))}
                   </div>
@@ -448,14 +453,14 @@ export default function FinanceiroPage() {
             )}
 
             {/* BLOCO 4 — CTA EDUCATIVO */}
-            <Card className="border-2 border-gray-200 bg-gray-50">
+            <Card className="card-glass">
               <CardContent className="p-6 text-center">
-                <p className="text-base text-gray-700 mb-3">
+                <p className="text-base text-foreground/70 mb-3">
                   Quer entender quais shows rendem mais pra você?
                 </p>
                 <Button
                   onClick={() => setViewMode("advanced")}
-                  className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white"
+                  className="btn-gradient"
                 >
                   👉 Ative o modo avançado
                 </Button>
@@ -469,68 +474,68 @@ export default function FinanceiroPage() {
           <div className="space-y-8">
             {/* BLOCO 1 — RESUMO PROFISSIONAL */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-2 border-green-200 shadow-md">
+              <Card className="border border-emerald-200/70 shadow-md bg-white/80">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <DollarSign className="h-5 w-5 text-green-600" />
-                    <h3 className="text-sm font-semibold text-gray-700">💰 Total já ganho</h3>
+                    <h3 className="text-sm font-semibold text-foreground/70">💰 Total já ganho</h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalEarnings)}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(totalEarnings)}</p>
+                  <p className="text-xs text-foreground/50 mt-1">
                     {pastGigs.length} {pastGigs.length === 1 ? "show" : "shows"}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-blue-200 shadow-md">
+              <Card className="border border-amber-200/70 shadow-md bg-white/80">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <h3 className="text-sm font-semibold text-gray-700">📅 Este mês</h3>
+                    <Calendar className="h-5 w-5 text-amber-600" />
+                    <h3 className="text-sm font-semibold text-foreground/70">📅 Este mês</h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(thisMonthEarnings)}</p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(thisMonthEarnings)}</p>
+                  <p className="text-xs text-foreground/50 mt-1">
                     {thisMonthGigs.length} {thisMonthGigs.length === 1 ? "show" : "shows"}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-purple-200 shadow-md">
+              <Card className="border border-teal-200/70 shadow-md bg-white/80">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <Clock className="h-5 w-5 text-purple-600" />
-                    <h3 className="text-sm font-semibold text-gray-700">⏱ Horas tocadas</h3>
+                    <Clock className="h-5 w-5 text-teal-600" />
+                    <h3 className="text-sm font-semibold text-foreground/70">⏱ Horas tocadas</h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{totalHours}</p>
-                  <p className="text-xs text-gray-500 mt-1">Total acumulado</p>
+                  <p className="text-2xl font-bold text-foreground">{totalHours}</p>
+                  <p className="text-xs text-foreground/50 mt-1">Total acumulado</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-orange-200 shadow-md">
+              <Card className="border border-amber-200/70 shadow-md bg-white/80">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="h-5 w-5 text-orange-600" />
-                    <h3 className="text-sm font-semibold text-gray-700">💸 Quanto você ganha por hora</h3>
+                    <TrendingUp className="h-5 w-5 text-[#ff6b4a]" />
+                    <h3 className="text-sm font-semibold text-foreground/70">💸 Quanto você ganha por hora</h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(earningsPerHour)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Média geral</p>
+                  <p className="text-2xl font-bold text-foreground">{formatCurrency(earningsPerHour)}</p>
+                  <p className="text-xs text-foreground/50 mt-1">Média geral</p>
                 </CardContent>
               </Card>
             </div>
 
             {/* BLOCO 2 — INSIGHTS AUTOMÁTICOS */}
             {insights.length > 0 && (
-              <Card className="border-2 border-purple-200 shadow-md bg-gradient-to-br from-purple-50 to-pink-50">
+              <Card className="border border-amber-200/70 shadow-md bg-gradient-to-br from-amber-50 to-teal-50">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-purple-600" />
-                    <h3 className="text-lg font-semibold text-gray-900">Insights automáticos</h3>
+                    <Sparkles className="h-5 w-5 text-amber-600" />
+                    <h3 className="text-lg font-semibold text-foreground">Insights automáticos</h3>
                   </div>
                   <div className="space-y-3">
                     {insights.map((insight, idx) => (
-                      <div key={idx} className="flex items-center gap-3 bg-white/60 rounded-lg p-3 border border-purple-100">
+                      <div key={idx} className="flex items-center gap-3 bg-white/60 rounded-lg p-3 border border-amber-100">
                         <span className="text-2xl">{insight.emoji}</span>
-                        <p className="text-base text-gray-800 font-medium">{insight.message}</p>
+                        <p className="text-base text-foreground font-medium">{insight.message}</p>
                       </div>
                     ))}
                   </div>
@@ -539,22 +544,22 @@ export default function FinanceiroPage() {
             )}
 
             {/* BLOCO 3 — EVOLUÇÃO DE GANHOS */}
-            <Card className="border-2 border-gray-200 shadow-md">
+            <Card className="card-glass">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Evolução de ganhos</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-6">Evolução de ganhos</h3>
                 <div className="space-y-4">
                   {last6Months.map((month, idx) => (
                     <div key={idx} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700 font-medium capitalize">{month.month}</span>
+                        <span className="text-foreground/70 font-medium capitalize">{month.month}</span>
                         <div className="flex items-center gap-4">
-                          <span className="text-gray-900 font-semibold">{formatCurrency(month.earnings)}</span>
-                          <span className="text-gray-500 text-xs">
+                          <span className="text-foreground font-semibold">{formatCurrency(month.earnings)}</span>
+                          <span className="text-foreground/50 text-xs">
                             {month.gigs} {month.gigs === 1 ? "show" : "shows"}
                           </span>
                         </div>
                       </div>
-                      <div className="relative h-8 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="relative h-8 bg-white/70 rounded-full overflow-hidden">
                         <div
                           className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500"
                           style={{ width: `${(month.earnings / maxEarnings) * 100}%` }}
@@ -568,27 +573,27 @@ export default function FinanceiroPage() {
 
             {/* BLOCO 4 — INSTRUMENTOS MAIS RENTÁVEIS */}
             {topInstruments.length > 0 && (
-              <Card className="border-2 border-gray-200 shadow-md">
+              <Card className="card-glass">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Instrumentos mais rentáveis</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-6">Instrumentos mais rentáveis</h3>
                   <div className="space-y-4">
                     {topInstruments.slice(0, 5).map((item, idx) => (
                       <div key={idx} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2">
                             <span className="text-2xl">{getInstrumentEmoji(item.instrument)}</span>
-                            <span className="text-gray-900 font-medium">{item.instrument}</span>
+                            <span className="text-foreground font-medium">{item.instrument}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-gray-600 text-xs">
+                            <span className="text-foreground/60 text-xs">
                               {item.count} {item.count === 1 ? "show" : "shows"}
                             </span>
-                            <span className="text-gray-900 font-bold">{formatCurrency(item.earnings)}</span>
+                            <span className="text-foreground font-bold">{formatCurrency(item.earnings)}</span>
                           </div>
                         </div>
-                        <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="relative h-6 bg-white/70 rounded-full overflow-hidden">
                           <div
-                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#ff6b4a] to-[#ffb347] rounded-full transition-all duration-500"
                             style={{ width: `${(item.earnings / maxInstrumentEarnings) * 100}%` }}
                           />
                         </div>
@@ -601,20 +606,20 @@ export default function FinanceiroPage() {
 
             {/* BLOCO 5 — PRÓXIMOS GANHOS DETALHADOS */}
             {futureGigs.length > 0 && (
-              <Card className="border-2 border-gray-200 shadow-md">
+              <Card className="card-glass">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Próximos ganhos detalhados</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Próximos ganhos detalhados</h3>
                   <div className="space-y-3">
                     {futureGigs.map((gig) => (
                       <div
                         key={gig.id}
-                        className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg border border-gray-200"
+                        className="flex items-center justify-between py-3 px-4 bg-white/70 rounded-lg border border-white/70"
                       >
                         <div className="flex items-center gap-4 flex-1">
                           <div className="text-2xl">{getInstrumentEmoji(gig.instrument || "Outro")}</div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{gig.title}</p>
-                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-600">
+                            <p className="text-sm font-medium text-foreground">{gig.title}</p>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-foreground/60">
                               <span>{formatDate(gig.start_time)}</span>
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
@@ -626,7 +631,7 @@ export default function FinanceiroPage() {
                             </div>
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-gray-900 ml-4">{formatCurrency(gig.cache || 0)}</p>
+                        <p className="text-lg font-bold text-foreground ml-4">{formatCurrency(gig.cache || 0)}</p>
                       </div>
                     ))}
                   </div>
@@ -639,4 +644,5 @@ export default function FinanceiroPage() {
     </DashboardLayout>
   );
 }
+
 

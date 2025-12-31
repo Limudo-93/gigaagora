@@ -64,15 +64,18 @@ export default async function PerfilPage() {
     <DashboardLayoutWithSidebar>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Meu Perfil</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
+          <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
+          <div className="relative z-10">
+            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Seu perfil</p>
+            <h1 className="text-2xl font-display font-semibold text-foreground">Meu Perfil</h1>
+            <p className="text-sm text-foreground/60 mt-2">
               Gerencie suas informações pessoais e profissionais
             </p>
           </div>
-          <Link href={"/dashboard/perfil/edit" as any}>
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">
+          <Link href={"/dashboard/perfil/edit" as any} className="relative z-10">
+            <Button className="btn-gradient">
               <Edit className="mr-2 h-4 w-4" />
               Editar Perfil
             </Button>
@@ -80,9 +83,9 @@ export default async function PerfilPage() {
         </div>
 
         {/* Preview Público e Badges de Confiança */}
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <Card className="card-glass border-white/70 bg-gradient-to-br from-amber-50/80 to-teal-50/80">
           <CardHeader>
-            <CardTitle className="text-gray-900 flex items-center gap-2">
+            <CardTitle className="text-foreground flex items-center gap-2">
               <Eye className="h-5 w-5" />
               Preview Público
             </CardTitle>
@@ -106,12 +109,12 @@ export default async function PerfilPage() {
                   </Badge>
                 )}
                 {musicianProfile?.attendance_rate && Number(musicianProfile.attendance_rate) >= 0.95 && (
-                  <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-0">
+                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-0">
                     📅 Alta Presença
                   </Badge>
                 )}
                 {musicianProfile?.response_time_seconds_avg && Number(musicianProfile.response_time_seconds_avg) < 3600 && (
-                  <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-0">
+                  <Badge className="bg-teal-500 hover:bg-teal-600 text-white border-0">
                     ⚡ Resposta Rápida
                   </Badge>
                 )}
@@ -119,7 +122,7 @@ export default async function PerfilPage() {
                   (!musicianProfile?.avg_rating || Number(musicianProfile.avg_rating) < 4.5) &&
                   (!musicianProfile?.attendance_rate || Number(musicianProfile.attendance_rate) < 0.95) &&
                   (!musicianProfile?.response_time_seconds_avg || Number(musicianProfile.response_time_seconds_avg) >= 3600)) && (
-                  <Badge variant="outline" className="border-gray-300">
+                  <Badge variant="outline" className="border-white/70">
                     Complete mais gigs para ganhar badges
                   </Badge>
                 )}
@@ -133,7 +136,7 @@ export default async function PerfilPage() {
                     <AvatarFallback className="text-lg">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 mb-1">{displayName}</h3>
+                    <h3 className="font-semibold text-foreground mb-1">{displayName}</h3>
                     {profile?.city && profile?.state && (
                       <p className="text-sm text-muted-foreground mb-2">
                         {profile.city}, {profile.state}
@@ -155,7 +158,7 @@ export default async function PerfilPage() {
                     )}
                     {musicianProfile?.avg_rating && (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-900">
+                        <span className="text-sm font-semibold text-foreground">
                           {Number(musicianProfile.avg_rating).toFixed(1)}
                         </span>
                         <span className="text-yellow-500">⭐</span>
@@ -172,9 +175,9 @@ export default async function PerfilPage() {
         </Card>
 
         {/* Informações Básicas */}
-        <Card className="bg-white border-gray-200">
+        <Card className="card-glass">
           <CardHeader>
-            <CardTitle className="text-gray-900">Informações Básicas</CardTitle>
+            <CardTitle className="text-foreground">Informações Básicas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-start gap-6">
@@ -184,7 +187,7 @@ export default async function PerfilPage() {
               </Avatar>
               <div className="flex-1 space-y-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{displayName}</h2>
+                  <h2 className="text-xl font-semibold text-foreground">{displayName}</h2>
                   <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                     {profile?.city && profile?.state && (
                       <div className="flex items-center gap-1.5">
@@ -216,9 +219,9 @@ export default async function PerfilPage() {
         {/* Perfil de Músico */}
         {musicianProfile && (
           <>
-            <Card className="bg-white border-gray-200">
+            <Card className="card-glass">
               <CardHeader>
-                <CardTitle className="text-gray-900 flex items-center gap-2">
+                <CardTitle className="text-foreground flex items-center gap-2">
                   <Music className="h-5 w-5" />
                   Informações Profissionais
                 </CardTitle>
@@ -226,17 +229,17 @@ export default async function PerfilPage() {
               <CardContent className="space-y-4">
                 {musicianProfile.bio && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Biografia</h3>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{musicianProfile.bio}</p>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Biografia</h3>
+                    <p className="text-sm text-foreground/70 whitespace-pre-wrap">{musicianProfile.bio}</p>
                   </div>
                 )}
 
                 {musicianProfile.instruments && musicianProfile.instruments.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Instrumentos</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Instrumentos</h3>
                     <div className="flex flex-wrap gap-2">
                       {musicianProfile.instruments.map((instrument: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
+                        <Badge key={idx} variant="outline" className="border-white/70 text-foreground bg-white/70">
                           {instrument}
                         </Badge>
                       ))}
@@ -246,10 +249,10 @@ export default async function PerfilPage() {
 
                 {musicianProfile.genres && musicianProfile.genres.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Gêneros Musicais</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Gêneros Musicais</h3>
                     <div className="flex flex-wrap gap-2">
                       {musicianProfile.genres.map((genre: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
+                        <Badge key={idx} variant="outline" className="border-white/70 text-foreground bg-white/70">
                           {genre}
                         </Badge>
                       ))}
@@ -259,10 +262,10 @@ export default async function PerfilPage() {
 
                 {musicianProfile.skills && musicianProfile.skills.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Habilidades</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Habilidades</h3>
                     <div className="flex flex-wrap gap-2">
                       {musicianProfile.skills.map((skill: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
+                        <Badge key={idx} variant="outline" className="border-white/70 text-foreground bg-white/70">
                           {skill}
                         </Badge>
                       ))}
@@ -272,10 +275,10 @@ export default async function PerfilPage() {
 
                 {musicianProfile.setup && musicianProfile.setup.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Equipamentos</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Equipamentos</h3>
                     <div className="flex flex-wrap gap-2">
                       {musicianProfile.setup.map((item: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
+                        <Badge key={idx} variant="outline" className="border-white/70 text-foreground bg-white/70">
                           {item}
                         </Badge>
                       ))}
@@ -285,7 +288,7 @@ export default async function PerfilPage() {
 
                 {musicianProfile.portfolio_links && musicianProfile.portfolio_links.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Portfólio</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Portfólio</h3>
                     <div className="space-y-2">
                       {musicianProfile.portfolio_links.map((link: string, idx: number) => (
                         <a
@@ -293,7 +296,7 @@ export default async function PerfilPage() {
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-orange-600 hover:text-orange-700 hover:underline flex items-center gap-1"
+                          className="text-sm text-[#ff6b4a] hover:text-[#e65c3e] hover:underline flex items-center gap-1"
                         >
                           <Globe className="h-4 w-4" />
                           {link}
@@ -305,11 +308,11 @@ export default async function PerfilPage() {
 
                 {(musicianProfile.avg_rating || musicianProfile.rating_count) && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Avaliações</h3>
+                    <h3 className="text-sm font-medium text-foreground mb-2">Avaliações</h3>
                     <div className="flex items-center gap-4">
                       {musicianProfile.avg_rating && (
                         <div>
-                          <span className="text-lg font-semibold text-gray-900">
+                          <span className="text-lg font-semibold text-foreground">
                             {Number(musicianProfile.avg_rating).toFixed(1)}
                           </span>
                           <span className="text-sm text-muted-foreground ml-1">/ 5.0</span>
@@ -342,26 +345,26 @@ export default async function PerfilPage() {
             {/* Estatísticas */}
             {(musicianProfile.attendance_rate !== null ||
               musicianProfile.response_time_seconds_avg !== null) && (
-              <Card className="bg-white border-gray-200">
+              <Card className="card-glass">
                 <CardHeader>
-                  <CardTitle className="text-gray-900">Estatísticas</CardTitle>
+                  <CardTitle className="text-foreground">Estatísticas</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {musicianProfile.attendance_rate !== null && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">Taxa de Presença</h3>
-                        <p className="text-2xl font-semibold text-gray-900 mt-1">
+                        <h3 className="text-sm font-medium text-foreground">Taxa de Presença</h3>
+                        <p className="text-2xl font-semibold text-foreground mt-1">
                           {(Number(musicianProfile.attendance_rate) * 100).toFixed(1)}%
                         </p>
                       </div>
                     )}
                     {musicianProfile.response_time_seconds_avg !== null && (
                       <div>
-                        <h3 className="text-sm font-medium text-gray-900">
+                        <h3 className="text-sm font-medium text-foreground">
                           Tempo Médio de Resposta
                         </h3>
-                        <p className="text-2xl font-semibold text-gray-900 mt-1">
+                        <p className="text-2xl font-semibold text-foreground mt-1">
                           {Math.round(Number(musicianProfile.response_time_seconds_avg) / 3600)}h
                         </p>
                       </div>
@@ -375,9 +378,9 @@ export default async function PerfilPage() {
 
         {/* Mensagem se não houver perfil de músico */}
         {!musicianProfile && (
-          <Card className="bg-orange-50 border-orange-200">
+          <Card className="bg-amber-50/80 border-amber-200/70">
             <CardContent className="pt-6">
-              <p className="text-sm text-orange-900">
+              <p className="text-sm text-amber-900">
                 Complete seu perfil para aparecer no diretório e receber mais convites.
               </p>
             </CardContent>
@@ -387,4 +390,5 @@ export default async function PerfilPage() {
     </DashboardLayoutWithSidebar>
   );
 }
+
 
