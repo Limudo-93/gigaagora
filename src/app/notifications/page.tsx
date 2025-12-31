@@ -317,6 +317,13 @@ export default function NotificationsTestPage() {
     setSelectedUserIds([]);
   };
 
+  const forceRegisterSubscription = (targetUserId: string, userName: string) => {
+    // Abre uma nova aba com a página de forçar registro
+    // O usuário precisa estar logado como targetUserId para funcionar
+    const url = `/dashboard/force-push-register?userId=${targetUserId}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-6xl mx-auto">
@@ -434,6 +441,19 @@ export default function NotificationsTestPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        {!user.hasSubscriptions && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              forceRegisterSubscription(user.id, user.display_name || "Usuário");
+                            }}
+                            className="text-xs h-7 px-2 border-orange-300 text-orange-600 hover:bg-orange-50"
+                          >
+                            🔔 Forçar
+                          </Button>
+                        )}
                         {user.hasSubscriptions && (
                           <Badge variant="outline" className="text-xs border-green-500 text-green-700 bg-green-50">
                             ✓ Ativo
