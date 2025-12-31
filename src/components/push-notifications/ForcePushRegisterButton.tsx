@@ -61,7 +61,15 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
         return;
       }
 
-      // 3. Obter ou criar subscription
+      // 3. Verificar se VAPID key está configurado
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        setStatus("error");
+        setMessage("Erro: NEXT_PUBLIC_VAPID_PUBLIC_KEY não está configurado. Por favor, configure a chave VAPID pública nas variáveis de ambiente.");
+        return;
+      }
+
+      // 4. Obter ou criar subscription
       setMessage("Criando subscription...");
       let subscription = await getExistingSubscription(registration);
 
@@ -71,11 +79,11 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
 
       if (!subscription) {
         setStatus("error");
-        setMessage("Erro ao criar subscription. Verifique se NEXT_PUBLIC_VAPID_PUBLIC_KEY está configurado.");
+        setMessage("Erro ao criar subscription. Verifique se NEXT_PUBLIC_VAPID_PUBLIC_KEY está configurado corretamente e se o Service Worker está registrado.");
         return;
       }
 
-      // 4. Salvar no banco
+      // 5. Salvar no banco
       setMessage("Salvando subscription no banco de dados...");
       const subscriptionData = subscriptionToJson(subscription);
 
