@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, ArrowLeft, Search, MessageSquare, MoreVertical, Check, CheckCheck } from "lucide-react";
+import { Send, ArrowLeft, Search, MessageSquare, Check, CheckCheck } from "lucide-react";
 import Link from "next/link";
 
 function formatTimeAgo(dateString: string): string {
@@ -302,22 +302,9 @@ export default function MessagesPage() {
         } lg:flex w-full lg:w-[400px] flex-col bg-white border-r border-gray-200 transition-all duration-300`}>
           {/* Header da Lista */}
           <div className="bg-gradient-to-r from-orange-500 via-purple-500 to-purple-600 px-4 py-3 flex items-center gap-3 shadow-md">
-            <Avatar className="h-10 w-10 ring-2 ring-white/20">
-              <AvatarImage src={undefined} />
-              <AvatarFallback className="bg-white/20 text-white font-semibold">
-                {userId?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
             <div className="flex-1">
               <h1 className="text-lg font-semibold text-white">Conversas</h1>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10 h-9 w-9"
-            >
-              <MoreVertical className="h-5 w-5" />
-            </Button>
           </div>
 
           {/* Busca */}
@@ -454,13 +441,6 @@ export default function MessagesPage() {
                     {selectedConversation.gig?.title || "Online"}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-white/10 h-9 w-9"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
               </div>
 
               {/* Mensagens */}
