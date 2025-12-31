@@ -132,6 +132,19 @@ export default function AgendaPage() {
   const [filterType, setFilterType] = useState<"all" | "confirmed" | "pending">("all");
   const [showConfirmed, setShowConfirmed] = useState(true);
   const [showPending, setShowPending] = useState(true);
+  const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
+  
+  // Cores diferentes para cada card
+  const cardColors = [
+    { header: "from-amber-500 to-amber-600", badge: "bg-amber-700/50 border-amber-300/30" },
+    { header: "from-blue-500 to-blue-600", badge: "bg-blue-700/50 border-blue-300/30" },
+    { header: "from-purple-500 to-purple-600", badge: "bg-purple-700/50 border-purple-300/30" },
+    { header: "from-pink-500 to-pink-600", badge: "bg-pink-700/50 border-pink-300/30" },
+    { header: "from-indigo-500 to-indigo-600", badge: "bg-indigo-700/50 border-indigo-300/30" },
+    { header: "from-teal-500 to-teal-600", badge: "bg-teal-700/50 border-teal-300/30" },
+    { header: "from-rose-500 to-rose-600", badge: "bg-rose-700/50 border-rose-300/30" },
+    { header: "from-cyan-500 to-cyan-600", badge: "bg-cyan-700/50 border-cyan-300/30" },
+  ];
 
   // Busca o usuário atual
   useEffect(() => {
@@ -379,6 +392,84 @@ export default function AgendaPage() {
     setDialogOpen(true);
   };
 
+  const handleAcceptInvite = async () => {
+    if (!selectedEvent || selectedEvent.resource.type !== "pending") return;
+    
+    const inviteId = (selectedEvent.resource.gig as PendingInviteRow).invite_id;
+    if (!inviteId) return;
+
+    setProcessingInviteId(inviteId);
+    setErrorMsg(null);
+
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_accept_invite", {
+        p_invite_id: inviteId,
+      });
+
+      if (rpcError) {
+        console.error("RPC acceptInvite error:", rpcError);
+        setErrorMsg(`Erro ao aceitar convite: ${rpcError.message}`);
+        setProcessingInviteId(null);
+        return;
+      }
+
+      if (rpcData && typeof rpcData === 'object' && 'ok' in rpcData && !rpcData.ok) {
+        const message = (rpcData as any)?.message || "Erro ao aceitar convite";
+        setErrorMsg(message);
+        setProcessingInviteId(null);
+        return;
+      }
+
+      // Recarregar dados
+      window.location.reload();
+    } catch (err: any) {
+      console.error("acceptInvite exception:", err);
+      setErrorMsg(err?.message ?? "Erro inesperado ao aceitar convite.");
+      setProcessingInviteId(null);
+    }
+  };
+
+  const handleDeclineInvite = async () => {
+    if (!selectedEvent || selectedEvent.resource.type !== "pending") return;
+    
+    const inviteId = (selectedEvent.resource.gig as PendingInviteRow).invite_id;
+    if (!inviteId) return;
+
+    if (!confirm("Tem certeza que deseja recusar este convite?")) {
+      return;
+    }
+
+    setProcessingInviteId(inviteId);
+    setErrorMsg(null);
+
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_decline_invite", {
+        p_invite_id: inviteId,
+      });
+
+      if (rpcError) {
+        console.error("RPC declineInvite error:", rpcError);
+        setErrorMsg(`Erro ao recusar convite: ${rpcError.message}`);
+        setProcessingInviteId(null);
+        return;
+      }
+
+      if (rpcData && typeof rpcData === 'object' && 'ok' in rpcData && !rpcData.ok) {
+        const message = (rpcData as any)?.message || "Erro ao recusar convite";
+        setErrorMsg(message);
+        setProcessingInviteId(null);
+        return;
+      }
+
+      // Recarregar dados
+      window.location.reload();
+    } catch (err: any) {
+      console.error("declineInvite exception:", err);
+      setErrorMsg(err?.message ?? "Erro inesperado ao recusar convite.");
+      setProcessingInviteId(null);
+    }
+  };
+
   const handleNavigate = (date: Date) => {
     setCurrentDate(date);
   };
@@ -570,97 +661,6 @@ export default function AgendaPage() {
           </Card>
         </div>
 
-        {/* Filtros e controles */}
-        <Card className="border border-white/70 bg-white/80">
-          <CardContent className="p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              {/* Busca */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
-                <Input
-                  placeholder="Buscar por título, local ou instrumento..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-white/70 bg-white/80"
-                />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Filtro por tipo */}
-                <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-                  <SelectTrigger className="w-[140px] border-white/70 bg-white/80">
-                    <Filter className="mr-2 h-4 w-4" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="confirmed">Confirmados</SelectItem>
-                    <SelectItem value="pending">Pendentes</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Toggle visibilidade */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowConfirmed(!showConfirmed)}
-                    className={`border-white/70 ${showConfirmed ? "bg-emerald-50" : "bg-white/80"}`}
-                  >
-                    {showConfirmed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    <span className="ml-2 hidden sm:inline">Confirmados</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPending(!showPending)}
-                    className={`border-white/70 ${showPending ? "bg-amber-50" : "bg-white/80"}`}
-                  >
-                    {showPending ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    <span className="ml-2 hidden sm:inline">Pendentes</span>
-                  </Button>
-                </div>
-
-                {/* Visualizações */}
-                <div className="flex items-center gap-1 border border-white/70 rounded-lg p-1 bg-white/80">
-                  <Button
-                    variant={view === "month" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setView("month")}
-                    className="h-8"
-                  >
-                    <Grid3x3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={view === "week" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setView("week")}
-                    className="h-8"
-                  >
-                    <CalendarDays className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={view === "day" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setView("day")}
-                    className="h-8"
-                  >
-                    <Calendar className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={view === "agenda" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setView("agenda")}
-                    className="h-8"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Próximos Eventos - Cards Redesenhados */}
         {allEventsForCards.length > 0 && (
           <div className="space-y-4">
@@ -786,6 +786,97 @@ export default function AgendaPage() {
           </div>
         )}
 
+        {/* Filtros e controles */}
+        <Card className="border border-white/70 bg-white/80">
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              {/* Busca */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                <Input
+                  placeholder="Buscar por título, local ou instrumento..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-white/70 bg-white/80"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Filtro por tipo */}
+                <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+                  <SelectTrigger className="w-[140px] border-white/70 bg-white/80">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="confirmed">Confirmados</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Toggle visibilidade */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowConfirmed(!showConfirmed)}
+                    className={`border-white/70 ${showConfirmed ? "bg-emerald-50" : "bg-white/80"}`}
+                  >
+                    {showConfirmed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    <span className="ml-2 hidden sm:inline">Confirmados</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPending(!showPending)}
+                    className={`border-white/70 ${showPending ? "bg-amber-50" : "bg-white/80"}`}
+                  >
+                    {showPending ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    <span className="ml-2 hidden sm:inline">Pendentes</span>
+                  </Button>
+                </div>
+
+                {/* Visualizações */}
+                <div className="flex items-center gap-1 border border-white/70 rounded-lg p-1 bg-white/80">
+                  <Button
+                    variant={view === "month" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("month")}
+                    className="h-8"
+                  >
+                    <Grid3x3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={view === "week" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("week")}
+                    className="h-8"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={view === "day" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("day")}
+                    className="h-8"
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={view === "agenda" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("agenda")}
+                    className="h-8"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Calendário */}
         <Card className="border border-white/70 bg-white/80">
           <CardContent className="p-4">
@@ -890,10 +981,52 @@ export default function AgendaPage() {
                   )}
 
                   {selectedEvent.resource.type === "pending" && (
-                    <div className="pt-3 border-t">
-                      <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
-                        Este convite está aguardando sua resposta. Responda o mais rápido possível!
-                      </p>
+                    <div className="pt-4 border-t space-y-4">
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p className="text-sm font-semibold text-amber-900 mb-1">
+                          Convite Pendente
+                        </p>
+                        <p className="text-sm text-amber-700">
+                          Este convite está aguardando sua resposta. Responda o mais rápido possível!
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={handleAcceptInvite}
+                          disabled={processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id}
+                          className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
+                        >
+                          <Check className="mr-2 h-4 w-4" />
+                          {processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id
+                            ? "Processando..."
+                            : "Aceitar Convite"}
+                        </Button>
+                        <Button
+                          onClick={handleDeclineInvite}
+                          disabled={processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id}
+                          variant="destructive"
+                          className="flex-1"
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          {processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id
+                            ? "Processando..."
+                            : "Recusar"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedEvent.resource.type === "confirmed" && (
+                    <div className="pt-4 border-t">
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                        <p className="text-sm font-semibold text-emerald-900 mb-1">
+                          Show Confirmado
+                        </p>
+                        <p className="text-sm text-emerald-700">
+                          Este show está confirmado. Prepare-se para o evento!
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
