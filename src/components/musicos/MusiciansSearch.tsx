@@ -6,8 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Sparkles, Star } from "lucide-react";
+import { MapPin, Sparkles, Star, ShieldCheck } from "lucide-react";
 import { buildMusicianSlug } from "@/lib/slug";
+import BadgeDisplay from "@/components/dashboard/BadgeDisplay";
 
 type PublicMusician = {
   user_id: string;
@@ -23,6 +24,8 @@ type PublicMusician = {
   rating_count?: number | null;
   is_trusted?: boolean | null;
   distance_km?: number | null;
+  is_verified?: boolean;
+  badges?: Array<{ badge_type: string; earned_at: string; expires_at?: string | null }>;
 };
 
 type Filters = {
@@ -125,12 +128,25 @@ export default function MusiciansSearch({
                       <h2 className="text-lg font-semibold text-foreground truncate">
                         {musician.display_name || "Músico"}
                       </h2>
-                      {musician.is_trusted && (
-                        <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                          confiável
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {musician.is_verified && (
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                            <ShieldCheck className="h-3 w-3 mr-1" />
+                            Verificado
+                          </Badge>
+                        )}
+                        {musician.is_trusted && (
+                          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                            confiável
+                          </Badge>
+                        )}
+                      </div>
                     </div>
+                    {musician.badges && musician.badges.length > 0 && (
+                      <div className="mt-1.5">
+                        <BadgeDisplay badges={musician.badges as any} size="sm" />
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-xs text-foreground/60 mt-1">
                       <MapPin className="h-3 w-3" />
                       <span>

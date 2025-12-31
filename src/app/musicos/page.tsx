@@ -25,6 +25,8 @@ type PublicMusician = {
   avg_rating?: number | null;
   rating_count?: number | null;
   is_trusted?: boolean | null;
+  is_verified?: boolean;
+  badges?: Array<{ badge_type: string; earned_at: string; expires_at?: string | null }>;
 };
 
 export default async function MusicosPage({
@@ -67,8 +69,51 @@ export default async function MusicosPage({
     (musicianProfiles || []).map((profile) => [profile.user_id, profile])
   );
 
+  // Buscar badges para todos os músicos
+  const { data: badgesData } = ids.length
+    ? await supabase
+        .from("user_badges")
+        .select("user_id, badge_type, earned_at, expires_at")
+        .in("user_id", ids)
+        .or("expires_at.is.null,expires_at.gt.now()")
+    : { data: [] };
+
+  // Criar mapa de badges por usuário
+  const badgesMap = new Map<string, Array<{ badge_type: string; earned_at: string; expires_at?: string | null }>>();
+  if (badgesData) {
+    badgesData.forEach((badge: any) => {
+      if (!badgesMap.has(badge.user_id)) {
+        badgesMap.set(badge.user_id, []);
+      }
+      badgesMap.get(badge.user_id)!.push(badge);
+    });
+  }
+
+  // Buscar informações de verificação (CPF) para filtrar badge "verified"
+  const { data: profilesWithCpf } = ids.length
+    ? await supabase
+        .from("profiles")
+        .select("user_id, cpf")
+        .in("user_id", ids)
+    : { data: [] };
+
+  const verifiedUsers = new Set(
+    (profilesWithCpf || []).filter((p: any) => p.cpf).map((p: any) => p.user_id)
+  );
+
   let results: PublicMusician[] = profileList.map((profile) => {
     const musician = profileMap.get(profile.user_id);
+    const userBadges = badgesMap.get(profile.user_id) || [];
+    // Filtrar badge "verified" se o usuário tem CPF (isVerified)
+    const isVerified = verifiedUsers.has(profile.user_id);
+    const filteredBadges = userBadges.filter((b) => {
+      // Se já está mostrando badge "Verificado" baseado em CPF, não mostrar badge "verified" do sistema
+      if (isVerified && b.badge_type === 'verified') {
+        return false;
+      }
+      return true;
+    });
+    
     return {
       user_id: profile.user_id,
       display_name: profile.display_name,
@@ -82,6 +127,8 @@ export default async function MusicosPage({
       avg_rating: musician?.avg_rating ?? null,
       rating_count: musician?.rating_count ?? null,
       is_trusted: musician?.is_trusted ?? null,
+      is_verified: isVerified,
+      badges: filteredBadges,
     };
   });
 
