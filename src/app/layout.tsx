@@ -41,12 +41,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookieTheme = cookieStore.get("theme")?.value as ThemeName | undefined;
   const theme = getTheme(cookieTheme);
   const themeStyle = {
