@@ -38,9 +38,13 @@ import {
   Check,
   X,
   Music,
+  DollarSign,
+  Navigation,
+  User,
 } from "lucide-react";
 import { downloadICS, CalendarEvent } from "@/lib/ics-utils";
 import { useRouter } from "next/navigation";
+import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
 import { Calendar as BigCalendar, View, CalendarProps, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -59,6 +63,14 @@ type ConfirmedGigRow = {
   city: string | null;
   state: string | null;
   instrument: string | null;
+  cache?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  region_label?: string | null;
+  distance_km?: number | null;
+  estimated_travel_time_minutes?: number | null;
+  contractor_name?: string | null;
+  flyer_url?: string | null;
 };
 
 type PendingInviteRow = {
@@ -67,6 +79,19 @@ type PendingInviteRow = {
   gig_title: string | null;
   start_time: string | null;
   end_time: string | null;
+  location_name?: string | null;
+  address_text?: string | null;
+  city?: string | null;
+  state?: string | null;
+  instrument?: string | null;
+  cache?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  region_label?: string | null;
+  distance_km?: number | null;
+  estimated_travel_time_minutes?: number | null;
+  contractor_name?: string | null;
+  flyer_url?: string | null;
 };
 
 type CalendarEventType = {
@@ -107,7 +132,7 @@ function formatDateTimeBR(iso: string | null) {
   }
 }
 
-function buildLocationText(r: ConfirmedGigRow) {
+function buildLocationText(r: ConfirmedGigRow | PendingInviteRow) {
   const parts = [
     r.location_name,
     r.address_text,
@@ -133,6 +158,7 @@ export default function AgendaPage() {
   const [showConfirmed, setShowConfirmed] = useState(true);
   const [showPending, setShowPending] = useState(true);
   const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
+  const [musicianLocation, setMusicianLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   // Cores diferentes para cada card
   const cardColors = [
@@ -161,6 +187,32 @@ export default function AgendaPage() {
     fetchUser();
   }, [router]);
 
+  // Busca localização do músico
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchMusicianLocation = async () => {
+      try {
+        const { data: musicianProfile } = await supabase
+          .from("musician_profiles")
+          .select("latitude, longitude")
+          .eq("user_id", userId)
+          .single();
+
+        if (musicianProfile?.latitude && musicianProfile?.longitude) {
+          setMusicianLocation({
+            lat: musicianProfile.latitude as number,
+            lng: musicianProfile.longitude as number,
+          });
+        }
+      } catch (e) {
+        console.error("Error fetching musician location:", e);
+      }
+    };
+
+    fetchMusicianLocation();
+  }, [userId]);
+
   // Busca shows confirmados
   useEffect(() => {
     if (!userId) return;
@@ -169,8 +221,10 @@ export default function AgendaPage() {
       try {
         const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_list_upcoming_confirmed_gigs");
 
+        let transformed: ConfirmedGigRow[] = [];
+
         if (rpcError) {
-          // Fallback: busca direta
+          // Fallback: busca direta com mais informações
           const { data: directData, error: directError } = await supabase
             .from("confirmations")
             .select(`
@@ -180,6 +234,7 @@ export default function AgendaPage() {
               invites!inner(
                 id,
                 gig_id,
+                gig_role_id,
                 gigs!inner(
                   id,
                   title,
@@ -189,8 +244,14 @@ export default function AgendaPage() {
                   address_text,
                   city,
                   state,
+                  latitude,
+                  longitude,
+                  region_label,
+                  flyer_url,
+                  contractor_id,
                   gig_roles!inner(
-                    instrument
+                    instrument,
+                    cache
                   )
                 )
               )
@@ -206,30 +267,111 @@ export default function AgendaPage() {
             return;
           }
 
-          const transformed = (directData ?? []).map((conf: any) => ({
-            confirmation_id: conf.id,
-            invite_id: conf.invite_id,
-            created_at: conf.created_at,
-            gig_id: conf.invites?.gig_id ?? null,
-            gig_title: conf.invites?.gigs?.title ?? null,
-            start_time: conf.invites?.gigs?.start_time ?? null,
-            end_time: conf.invites?.gigs?.end_time ?? null,
-            location_name: conf.invites?.gigs?.location_name ?? null,
-            address_text: conf.invites?.gigs?.address_text ?? null,
-            city: conf.invites?.gigs?.city ?? null,
-            state: conf.invites?.gigs?.state ?? null,
-            instrument: conf.invites?.gigs?.gig_roles?.[0]?.instrument ?? null,
-          }));
+          transformed = (directData ?? []).map((conf: any) => {
+            const gig = conf.invites?.gigs;
+            const role = gig?.gig_roles?.[0];
+            const gigLat = gig?.latitude as number | null | undefined;
+            const gigLng = gig?.longitude as number | null | undefined;
+            
+            let distanceKm: number | null = null;
+            let estimatedTravelTimeMinutes: number | null = null;
+            
+            if (musicianLocation && gigLat != null && gigLng != null) {
+              distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+              estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
+            }
 
-          setConfirmedGigs(transformed);
-        } else {
-          const sorted = (rpcData ?? []).sort((a: ConfirmedGigRow, b: ConfirmedGigRow) => {
-            if (!a.start_time) return 1;
-            if (!b.start_time) return -1;
-            return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+            return {
+              confirmation_id: conf.id,
+              invite_id: conf.invite_id,
+              created_at: conf.created_at,
+              gig_id: gig?.id ?? null,
+              gig_title: gig?.title ?? null,
+              start_time: gig?.start_time ?? null,
+              end_time: gig?.end_time ?? null,
+              location_name: gig?.location_name ?? null,
+              address_text: gig?.address_text ?? null,
+              city: gig?.city ?? null,
+              state: gig?.state ?? null,
+              instrument: role?.instrument ?? null,
+              cache: role?.cache ?? null,
+              latitude: gigLat ?? null,
+              longitude: gigLng ?? null,
+              region_label: gig?.region_label ?? null,
+              flyer_url: gig?.flyer_url ?? null,
+              distance_km: distanceKm,
+              estimated_travel_time_minutes: estimatedTravelTimeMinutes,
+            };
           });
-          setConfirmedGigs(sorted as ConfirmedGigRow[]);
+        } else {
+          // Buscar informações adicionais para os dados do RPC
+          const enriched = await Promise.all(
+            (rpcData ?? []).map(async (gig: any) => {
+              // Buscar cache e coordenadas
+              const { data: inviteData } = await supabase
+                .from("invites")
+                .select(`
+                  gig_role_id,
+                  gig_roles!inner(
+                    cache
+                  ),
+                  gigs!inner(
+                    latitude,
+                    longitude,
+                    region_label,
+                    flyer_url,
+                    contractor_id
+                  )
+                `)
+                .eq("id", gig.invite_id)
+                .single();
+
+              const gigLat = inviteData?.gigs?.latitude as number | null | undefined;
+              const gigLng = inviteData?.gigs?.longitude as number | null | undefined;
+              
+              let distanceKm: number | null = null;
+              let estimatedTravelTimeMinutes: number | null = null;
+              
+              if (musicianLocation && gigLat != null && gigLng != null) {
+                distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+                estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
+              }
+
+              // Buscar nome do contratante
+              let contractorName: string | null = null;
+              if (inviteData?.gigs?.contractor_id) {
+                const { data: contractor } = await supabase
+                  .from("profiles")
+                  .select("display_name")
+                  .eq("user_id", inviteData.gigs.contractor_id)
+                  .single();
+                contractorName = contractor?.display_name ?? null;
+              }
+
+              return {
+                ...gig,
+                cache: inviteData?.gig_roles?.cache ?? null,
+                latitude: gigLat ?? null,
+                longitude: gigLng ?? null,
+                region_label: inviteData?.gigs?.region_label ?? null,
+                flyer_url: inviteData?.gigs?.flyer_url ?? null,
+                contractor_name: contractorName,
+                distance_km: distanceKm,
+                estimated_travel_time_minutes: estimatedTravelTimeMinutes,
+              };
+            })
+          );
+
+          transformed = enriched;
         }
+
+        const sorted = transformed.sort((a: ConfirmedGigRow, b: ConfirmedGigRow) => {
+          if (!a.start_time) return 1;
+          if (!b.start_time) return -1;
+          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+        });
+
+        setConfirmedGigs(sorted);
       } catch (e: any) {
         console.error("fetchConfirmed exception:", e);
         setErrorMsg(e?.message ?? "Erro inesperado ao carregar shows confirmados.");
@@ -237,7 +379,7 @@ export default function AgendaPage() {
     };
 
     fetchConfirmed();
-  }, [userId]);
+  }, [userId, musicianLocation]);
 
   // Busca convites pendentes
   useEffect(() => {
@@ -247,18 +389,34 @@ export default function AgendaPage() {
       try {
         const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_list_pending_invites");
 
+        let transformed: PendingInviteRow[] = [];
+
         if (rpcError) {
-          // Fallback: busca direta
+          // Fallback: busca direta com mais informações
           const { data: directData, error: directError } = await supabase
             .from("invites")
             .select(`
               id,
               gig_id,
+              gig_role_id,
               gigs(
                 id,
                 title,
                 start_time,
-                end_time
+                end_time,
+                location_name,
+                address_text,
+                city,
+                state,
+                latitude,
+                longitude,
+                region_label,
+                flyer_url,
+                contractor_id,
+                gig_roles!inner(
+                  instrument,
+                  cache
+                )
               )
             `)
             .eq("musician_id", userId)
@@ -270,28 +428,94 @@ export default function AgendaPage() {
             return;
           }
 
-          const transformed = (directData ?? []).map((invite: any) => {
+          transformed = (directData ?? []).map((invite: any) => {
             const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
+            const role = gig?.gig_roles?.[0];
+            const gigLat = gig?.latitude as number | null | undefined;
+            const gigLng = gig?.longitude as number | null | undefined;
+            
+            let distanceKm: number | null = null;
+            let estimatedTravelTimeMinutes: number | null = null;
+            
+            if (musicianLocation && gigLat != null && gigLng != null) {
+              distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+              estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
+            }
+
             return {
               invite_id: invite.id,
               gig_id: invite.gig_id,
               gig_title: gig?.title ?? null,
               start_time: gig?.start_time ?? null,
               end_time: gig?.end_time ?? null,
+              location_name: gig?.location_name ?? null,
+              address_text: gig?.address_text ?? null,
+              city: gig?.city ?? null,
+              state: gig?.state ?? null,
+              instrument: role?.instrument ?? null,
+              cache: role?.cache ?? null,
+              latitude: gigLat ?? null,
+              longitude: gigLng ?? null,
+              region_label: gig?.region_label ?? null,
+              flyer_url: gig?.flyer_url ?? null,
+              distance_km: distanceKm,
+              estimated_travel_time_minutes: estimatedTravelTimeMinutes,
             };
           });
-
-          setPendingInvites(transformed);
         } else {
-          const transformed = (rpcData ?? []).map((invite: any) => ({
-            invite_id: invite.invite_id,
-            gig_id: invite.gig_id,
-            gig_title: invite.gig_title,
-            start_time: invite.start_time,
-            end_time: invite.end_time,
-          }));
-          setPendingInvites(transformed);
+          // Enriquecer dados do RPC com informações adicionais
+          transformed = await Promise.all(
+            (rpcData ?? []).map(async (invite: any) => {
+              // Buscar coordenadas e outras informações
+              const { data: gigData } = await supabase
+                .from("gigs")
+                .select(`
+                  latitude,
+                  longitude,
+                  region_label,
+                  flyer_url,
+                  contractor_id
+                `)
+                .eq("id", invite.gig_id)
+                .single();
+
+              const gigLat = gigData?.latitude as number | null | undefined;
+              const gigLng = gigData?.longitude as number | null | undefined;
+              
+              let distanceKm: number | null = null;
+              let estimatedTravelTimeMinutes: number | null = null;
+              
+              if (musicianLocation && gigLat != null && gigLng != null) {
+                distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+                estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
+              }
+
+              // Buscar nome do contratante
+              let contractorName: string | null = null;
+              if (gigData?.contractor_id) {
+                const { data: contractor } = await supabase
+                  .from("profiles")
+                  .select("display_name")
+                  .eq("user_id", gigData.contractor_id)
+                  .single();
+                contractorName = contractor?.display_name ?? null;
+              }
+
+              return {
+                ...invite,
+                latitude: gigLat ?? null,
+                longitude: gigLng ?? null,
+                region_label: gigData?.region_label ?? null,
+                flyer_url: gigData?.flyer_url ?? null,
+                contractor_name: contractorName,
+                distance_km: distanceKm,
+                estimated_travel_time_minutes: estimatedTravelTimeMinutes,
+              };
+            })
+          );
         }
+
+        setPendingInvites(transformed);
       } catch (e: any) {
         console.error("fetchPending exception:", e);
       } finally {
@@ -300,7 +524,7 @@ export default function AgendaPage() {
     };
 
     fetchPending();
-  }, [userId]);
+  }, [userId, musicianLocation]);
 
   // Converte gigs para eventos do calendário
   const calendarEvents = useMemo(() => {
@@ -550,6 +774,8 @@ export default function AgendaPage() {
           start_time: invite.start_time,
           end_time: invite.end_time,
           title: invite.gig_title,
+          location: buildLocationText(invite),
+          instrument: invite.instrument || undefined,
         });
       }
     });
@@ -733,6 +959,21 @@ export default function AgendaPage() {
 
                       {/* Conteúdo */}
                       <div className="p-5 space-y-3">
+                        {/* Cachê em Destaque */}
+                        {event.gig.cache && (
+                          <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-3 text-white shadow-md">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-medium opacity-90 mb-0.5">Cachê</p>
+                                <p className="text-xl font-bold">
+                                  R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(event.gig.cache)}
+                                </p>
+                              </div>
+                              <DollarSign className="h-6 w-6 opacity-80" />
+                            </div>
+                          </div>
+                        )}
+
                         <div>
                           <h3 className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-[#ff6b4a] transition-colors">
                             {event.title || "Show"}
@@ -740,7 +981,8 @@ export default function AgendaPage() {
                           <p className="text-xs text-foreground/60 mt-1 capitalize">{weekday}</p>
                         </div>
 
-                        <div className="space-y-2">
+                        {/* Informações principais */}
+                        <div className="space-y-2 bg-white/80 rounded-lg p-3 border border-white/60">
                           <div className="flex items-center gap-2 text-sm text-foreground/70">
                             <Clock className="h-4 w-4 text-[#ff6b4a]" />
                             <span className="font-medium">{time}</span>
@@ -749,7 +991,58 @@ export default function AgendaPage() {
                           {event.location && (
                             <div className="flex items-start gap-2 text-sm text-foreground/70">
                               <MapPin className="h-4 w-4 text-[#2aa6a1] mt-0.5 shrink-0" />
-                              <span className="line-clamp-2">{event.location}</span>
+                              <div className="flex-1 min-w-0">
+                                {event.gig.region_label ? (
+                                  <div>
+                                    <p className="font-semibold text-foreground">{event.gig.region_label}</p>
+                                    <p className="text-xs text-muted-foreground line-clamp-1">{event.location}</p>
+                                  </div>
+                                ) : (
+                                  <span className="line-clamp-2">{event.location}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Distância e Tempo de Viagem */}
+                          {(event.gig.distance_km != null || event.gig.estimated_travel_time_minutes != null) && (
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/30">
+                              {event.gig.distance_km != null && (
+                                <div className="flex items-center gap-2">
+                                  <Navigation className={`h-4 w-4 ${
+                                    event.gig.distance_km <= 7
+                                      ? "text-green-600"
+                                      : event.gig.distance_km <= 15
+                                      ? "text-blue-600"
+                                      : "text-orange-600"
+                                  }`} />
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Distância</p>
+                                    <p className="text-sm font-bold text-foreground">
+                                      {event.gig.distance_km.toFixed(1)} km
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              {event.gig.estimated_travel_time_minutes != null && (
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-blue-600" />
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Tempo</p>
+                                    <p className="text-sm font-bold text-foreground">
+                                      ~{event.gig.estimated_travel_time_minutes} min
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Contratante */}
+                          {event.gig.contractor_name && (
+                            <div className="flex items-center gap-2 text-xs text-foreground/60 pt-2 border-t border-border/30">
+                              <User className="h-3 w-3" />
+                              <span>Por {event.gig.contractor_name}</span>
                             </div>
                           )}
 
