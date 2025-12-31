@@ -168,7 +168,11 @@ export default function MusiciansSearch({
 
                 <div className="flex items-center gap-2">
                   <Button asChild className="btn-gradient flex-1">
-                    <Link href={`${basePath}/${buildMusicianSlug(musician.display_name || "musico", musician.user_id)}`}>
+                    <Link
+                      href={
+                        `${basePath}/${buildMusicianSlug(musician.display_name || "musico", musician.user_id)}` as any
+                      }
+                    >
                       Ver perfil
                     </Link>
                   </Button>
