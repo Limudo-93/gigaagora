@@ -39,15 +39,17 @@ npx supabase functions deploy send-push-notification --no-verify-jwt
 
 O flag `--no-verify-jwt` é útil para testar, mas remova em produção.
 
-### Passo 3: Verificar logs via CLI (mais confiável que o dashboard)
+### Passo 3: Verificar logs
 
-```bash
-# Logs em tempo real
-npx supabase functions logs send-push-notification --tail
+**No Dashboard do Supabase:**
+1. Acesse: https://supabase.com/dashboard/project/[SEU_PROJECT_REF]/functions/send-push-notification
+2. Verifique a seção de métricas e logs
+3. Se "Worker Logs: 0", a função não está gerando logs (falha na inicialização)
 
-# Últimas 100 linhas
-npx supabase functions logs send-push-notification --limit 100
-```
+**No Console do Servidor Next.js:**
+- O código tem logs detalhados
+- Verifique o terminal onde você executa `npm run dev`
+- Procure por: `[Send Notification] Error...` ou `[Send Notification] Response data:`
 
 ### Passo 4: Verificar variáveis de ambiente (Secrets)
 

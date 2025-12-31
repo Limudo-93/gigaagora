@@ -136,11 +136,15 @@ Se você receber um erro como `Module not found "https://deno.land/x/webpush@0.0
 ## 📝 Verificar Logs
 
 Para ver os logs da Edge Function:
-```bash
-supabase functions logs send-push-notification
-```
 
-Ou no Dashboard do Supabase: **Edge Functions** > **send-push-notification** > **Logs**
+**No Dashboard do Supabase (Recomendado):**
+1. Acesse: https://supabase.com/dashboard/project/[SEU_PROJECT_REF]/functions/send-push-notification
+2. Na página da função, você verá métricas e logs
+3. Se "Worker Logs: 0", verifique as Secrets (VAPID keys)
+
+**No Console do Servidor Next.js:**
+- O código em `src/app/api/notifications/send/route.ts` tem logs detalhados
+- Verifique o terminal onde você executa `npm run dev`
 
 ## ✅ Checklist
 

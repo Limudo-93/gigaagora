@@ -13,10 +13,11 @@ Se você está recebendo esse erro, siga estes passos para identificar o problem
 4. Clique na aba **Logs**
 5. Procure por erros recentes (últimos minutos/horas)
 
-### Via CLI:
-```bash
-npx supabase functions logs send-push-notification --tail
-```
+### Via Dashboard:
+1. Acesse: https://supabase.com/dashboard/project/[SEU_PROJECT_REF]/functions/send-push-notification
+2. Verifique métricas e logs na página da função
+
+**Importante:** Se "Worker Logs: 0", a função não está executando código (falha na inicialização)
 
 ## 2. Verificar Variáveis de Ambiente (Secrets)
 

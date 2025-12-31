@@ -42,9 +42,22 @@ npx supabase link --project-ref seu-project-ref
 
 ### Passo 4: Deploy da Function
 
+**IMPORTANTE**: Para notificações push que vêm do servidor (não diretamente do cliente), você pode fazer deploy sem verificação JWT:
+
+```bash
+npx supabase functions deploy send-push-notification --no-verify-jwt
+```
+
+⚠️ **Por que `--no-verify-jwt`?**
+- A chamada já vem do servidor Next.js (que já autenticou o usuário)
+- A função não precisa verificar o token JWT novamente
+- Isso evita erros 401 (Unauthorized)
+
+**Alternativa (se quiser manter autenticação):**
 ```bash
 npx supabase functions deploy send-push-notification
 ```
+Mas você precisará garantir que o token está sendo passado corretamente.
 
 ### Passo 5: Verificar
 

@@ -72,11 +72,14 @@ export async function POST(request: NextRequest) {
             vibrate: notification.vibrate || [200, 100, 200],
           };
 
+          // Invocar Edge Function com autenticação
+          // O supabase client já tem o token de autenticação do usuário logado
           const { data, error } = await supabase.functions.invoke("send-push-notification", {
             body: {
               subscription: subscriptionData,
               payload: payload,
             },
+            // Não precisamos passar headers manualmente, o cliente já faz isso
           });
 
           if (error) {
@@ -136,10 +139,13 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // Usar apenas a primeira mensagem de erro (sem duplicação)
+      const mainError = errorMessages[0] || "Erro desconhecido. Verifique os logs do servidor.";
+      
       return NextResponse.json({
         success: false,
-        error: `Todas as tentativas de envio falharam. ${errorMessages[0] || "Verifique os logs do servidor"}`,
-        details: errorMessages,
+        error: mainError,
+        details: errorMessages.length > 1 ? errorMessages.slice(1) : undefined, // Só incluir details se houver mais de uma mensagem
       });
     }
 
