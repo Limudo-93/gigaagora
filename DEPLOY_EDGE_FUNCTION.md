@@ -94,7 +94,7 @@ supabase/
 **Se você instalou o CLI:**
 ```bash
 supabase functions deploy send-push-notification
-```
+```nn
 
 **Se você está usando npx (sem instalar):**
 ```bash
@@ -108,6 +108,12 @@ Após o deploy, você pode verificar:
 2. Testar diretamente pelo dashboard ou via código
 
 ## 🔍 Troubleshooting
+
+### Erro: "Module not found" para webpush
+
+Se você receber um erro como `Module not found "https://deno.land/x/webpush@0.0.0/mod.ts"`:
+- ✅ **Já corrigido**: O arquivo `index.ts` agora usa `npm:web-push@^3.6.6` que é o pacote npm oficial
+- Se você ainda tiver problemas, certifique-se de que a versão do arquivo está atualizada
 
 ### Erro: "Function not found"
 - A função não foi deployada

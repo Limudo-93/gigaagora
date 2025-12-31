@@ -3,7 +3,8 @@
 // Instruções: https://supabase.com/docs/guides/functions
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import * as webPush from "https://deno.land/x/webpush@0.0.0-rc.1/mod.ts";
+// Usar npm:web-push que é mais estável e mantido
+import * as webPush from "npm:web-push@^3.6.6";
 
 const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") || "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") || "";
