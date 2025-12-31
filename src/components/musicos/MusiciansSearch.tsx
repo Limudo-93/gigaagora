@@ -103,7 +103,13 @@ export default function MusiciansSearch({
             </CardContent>
           </Card>
         ) : (
-          results.map((musician) => (
+          results.map((musician) => {
+            const profileHref = `${basePath}/${buildMusicianSlug(
+              musician.display_name || "musico",
+              musician.user_id
+            )}` as any;
+
+            return (
             <Card key={musician.user_id} className="card-glass hover:shadow-xl transition-shadow">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-start gap-4">
@@ -168,9 +174,7 @@ export default function MusiciansSearch({
 
                 <div className="flex items-center gap-2">
                   <Button asChild className="btn-gradient flex-1">
-                    <Link
-                      href={`${basePath}/${buildMusicianSlug(musician.display_name || "musico", musician.user_id)}`}
-                    >
+                    <Link href={profileHref}>
                       Ver perfil
                     </Link>
                   </Button>
@@ -180,7 +184,7 @@ export default function MusiciansSearch({
                 </div>
               </CardContent>
             </Card>
-          ))
+          )})
         )}
       </div>
     </div>
