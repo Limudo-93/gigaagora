@@ -19,6 +19,7 @@ export default function Header() {
     { href: "/dashboard/gigs" as any, label: "Gigs" },
     { href: "/dashboard/messages" as any, label: "Mensagens" },
     { href: "/notifications" as any, label: "Notificações" },
+    { href: "/dashboard/force-push-register" as any, label: "Forçar Push" },
     { href: "/dashboard/desafios" as any, label: "Desafios" },
     { href: "/dashboard/financeiro" as any, label: "Financeiro" },
     { href: "/dashboard/perfil" as any, label: "Perfil" },

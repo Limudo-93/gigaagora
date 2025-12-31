@@ -66,6 +66,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href={"/dashboard/force-push-register" as any}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
+                >
+                  Forçar Push
+                </Link>
+              </li>
+              <li>
+                <Link
                   href={"/dashboard/perfil" as any}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors inline-block hover:translate-x-1 transition-transform"
                 >
