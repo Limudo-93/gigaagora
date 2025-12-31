@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Navigation, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Loader2 } from "lucide-react";
 import { createGigWithRegion } from "@/app/actions/gigs";
 import { computeRegionLabel } from "@/lib/geo";
 import { reverseGeocode, geocodeAddress } from "@/app/actions/geocoding";
@@ -37,7 +37,6 @@ export default function NewGigPage() {
   const [state, setState] = useState("SP");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
-  const [gettingLocation, setGettingLocation] = useState(false);
   const [geocodingAddress, setGeocodingAddress] = useState(false);
   const [timezone] = useState("America/Sao_Paulo");
   const [startDate, setStartDate] = useState("");
@@ -141,6 +140,50 @@ export default function NewGigPage() {
     "Backline fornecido",
   ];
 
+  // Pegar localização automaticamente ao carregar a página
+  useEffect(() => {
+    if (!latitude || !longitude) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            setLatitude(lat);
+            setLongitude(lng);
+            
+            // Fazer reverse geocoding para obter cidade, estado e região
+            try {
+              const geocodeResult = await reverseGeocode(lat, lng);
+              
+              if (!geocodeResult.error || geocodeResult.error === "API key não configurada") {
+                if (geocodeResult.city && !city) {
+                  setCity(geocodeResult.city);
+                }
+                if (geocodeResult.state && !state) {
+                  setState(geocodeResult.state);
+                }
+                if (geocodeResult.region_label) {
+                  setPreviewRegion(geocodeResult.region_label);
+                }
+              }
+            } catch (err) {
+              console.error("Error getting location details:", err);
+            }
+          },
+          (err) => {
+            console.error("Error getting location:", err);
+            // Silenciosamente falha, usuário pode preencher manualmente
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          }
+        );
+      }
+    }
+  }, []); // Executa apenas uma vez ao montar
+
   // Atualizar preview da região quando location mudar
   useEffect(() => {
     if (city || state || (latitude && longitude)) {
@@ -154,7 +197,6 @@ export default function NewGigPage() {
   // Função para obter coordenadas do endereço digitado
   const handleGeocodeAddress = async () => {
     if (!addressText || addressText.trim().length === 0) {
-      setError("Por favor, digite o endereço completo do evento.");
       return;
     }
 
@@ -165,7 +207,8 @@ export default function NewGigPage() {
       const result = await geocodeAddress(addressText.trim());
       
       if (result.error) {
-        setError(`Erro ao buscar coordenadas: ${result.error}`);
+        // Não mostrar erro, apenas log
+        console.warn("Erro ao buscar coordenadas:", result.error);
         setGeocodingAddress(false);
         return;
       }
@@ -181,81 +224,13 @@ export default function NewGigPage() {
         if (result.state && !state) {
           setState(result.state);
         }
-      } else {
-        setError("Não foi possível encontrar as coordenadas do endereço.");
       }
     } catch (err: any) {
       console.error("Erro ao fazer geocoding:", err);
-      setError(`Erro ao buscar coordenadas: ${err.message}`);
+      // Não mostrar erro para o usuário
     } finally {
       setGeocodingAddress(false);
     }
-  };
-
-  // Função para obter geolocalização do navegador
-  const handleGetLocation = async () => {
-    setGettingLocation(true);
-    setError(null);
-
-    if (!navigator.geolocation) {
-      setError("Geolocalização não é suportada pelo seu navegador.");
-      setGettingLocation(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setLatitude(lat);
-        setLongitude(lng);
-        
-        // Fazer reverse geocoding para obter cidade, estado e região
-        try {
-          const geocodeResult = await reverseGeocode(lat, lng);
-          
-          if (geocodeResult.error && geocodeResult.error !== "API key não configurada") {
-            console.warn("Erro no reverse geocoding:", geocodeResult.error);
-            // Continua mesmo com erro, usando apenas coordenadas
-          } else {
-            // Atualizar cidade e estado se obtidos do geocoding
-            if (geocodeResult.city && !city) {
-              setCity(geocodeResult.city);
-            }
-            if (geocodeResult.state && !state) {
-              setState(geocodeResult.state);
-            }
-            
-            // Atualizar preview da região se obtido
-            if (geocodeResult.region_label) {
-              setPreviewRegion(geocodeResult.region_label);
-            }
-            
-            // Se tiver endereço formatado, pode atualizar addressText como sugestão
-            if (geocodeResult.formatted_address && !addressText) {
-              // Opcional: pode atualizar addressText se quiser
-              // setAddressText(geocodeResult.formatted_address);
-            }
-          }
-          
-          setGettingLocation(false);
-        } catch (err) {
-          console.error("Error getting location details:", err);
-          setError("Não foi possível obter detalhes da localização, mas as coordenadas foram salvas.");
-          setGettingLocation(false);
-        }
-      },
-      (err) => {
-        console.error("Error getting location:", err);
-        setError("Não foi possível obter sua localização. Você pode preencher manualmente.");
-        setGettingLocation(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
   };
 
   // Função para calcular valor mínimo de cachê baseado no instrumento
@@ -782,37 +757,27 @@ export default function NewGigPage() {
                 <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="addressText">
                   Endereço Completo
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    id="addressText"
-                    type="text"
-                    className="flex-1 rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                    value={addressText}
-                    onChange={(e) => setAddressText(e.target.value)}
-                    placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleGeocodeAddress}
-                    disabled={geocodingAddress || !addressText.trim()}
-                    className="shrink-0"
-                  >
-                    {geocodingAddress ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Buscando...
-                      </>
-                    ) : (
-                      <>
-                        <MapPin className="mr-2 h-4 w-4" />
-                        Buscar Coordenadas
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <input
+                  id="addressText"
+                  type="text"
+                  className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  value={addressText}
+                  onChange={(e) => setAddressText(e.target.value)}
+                  onBlur={() => {
+                    if (addressText.trim().length > 5) {
+                      handleGeocodeAddress();
+                    }
+                  }}
+                  placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
+                />
+                {geocodingAddress && (
+                  <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Buscando localização...
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Digite o endereço completo e clique em "Buscar Coordenadas" para obter a localização exata do evento
+                  Digite o endereço completo do evento para obter a localização automaticamente
                 </p>
               </div>
 
@@ -847,59 +812,13 @@ export default function NewGigPage() {
                 </div>
               </div>
 
-              {/* Geolocalização */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-semibold text-foreground block">Coordenadas (opcional)</label>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      As coordenadas ajudam a calcular a região aproximada (ex: "São Paulo — Zona Sul")
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleGetLocation}
-                    disabled={gettingLocation}
-                    className="border-2"
-                  >
-                    {gettingLocation ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Navigation className="mr-2 h-4 w-4" />
-                    )}
-                    {gettingLocation ? "Obtendo..." : "Usar Minha Localização"}
-                  </Button>
+              {/* Preview da Região */}
+              {previewRegion && (
+                <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
+                  <p className="text-xs text-muted-foreground mb-1">Região calculada:</p>
+                  <p className="text-sm font-semibold text-foreground">{previewRegion}</p>
                 </div>
-
-                {(latitude || longitude) && (
-                  <div className="rounded-lg border-2 border-border bg-muted/30 p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Coordenadas definidas:</p>
-                    <p className="text-sm font-mono text-foreground">
-                      {latitude?.toFixed(6)}, {longitude?.toFixed(6)}
-                    </p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setLatitude(null);
-                        setLongitude(null);
-                      }}
-                      className="mt-2 text-xs text-red-600 hover:text-red-700"
-                    >
-                      Remover coordenadas
-                    </Button>
-                  </div>
-                )}
-
-                {previewRegion && (
-                  <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Região calculada:</p>
-                    <p className="text-sm font-semibold text-foreground">{previewRegion}</p>
-                  </div>
-                )}
-              </div>
+              )}
             </CardContent>
           </Card>
 

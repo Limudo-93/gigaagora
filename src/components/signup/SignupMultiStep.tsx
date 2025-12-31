@@ -724,49 +724,50 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
 
               {/* Instrumento principal */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
                   <Music className="inline h-4 w-4 mr-1" />
                   Instrumento principal
                 </label>
-                <select
-                  value={data.instrument}
-                  onChange={(e) => handleChange("instrument", e.target.value)}
-                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                >
-                  <option value="">Violão, Guitarra, Teclado, Voz...</option>
-                  <option value="Acordeon">Acordeon</option>
-                  <option value="Agogô">Agogô</option>
-                  <option value="Aparelhagem de som">Aparelhagem de som</option>
-                  <option value="Baixo">Baixo</option>
-                  <option value="Bandolim">Bandolim</option>
-                  <option value="Banjo">Banjo</option>
-                  <option value="Bateria">Bateria</option>
-                  <option value="Cavaquinho">Cavaquinho</option>
-                  <option value="Contrabaixo">Contrabaixo</option>
-                  <option value="Cuíca">Cuíca</option>
-                  <option value="Flauta">Flauta</option>
-                  <option value="Guitarra">Guitarra</option>
-                  <option value="Pandeiro">Pandeiro</option>
-                  <option value="Percussão">Percussão</option>
-                  <option value="Piano">Piano</option>
-                  <option value="Reco-reco">Reco-reco</option>
-                  <option value="Repique de mão">Repique de mão</option>
-                  <option value="Sanfona">Sanfona</option>
-                  <option value="Saxofone">Saxofone</option>
-                  <option value="Surdo">Surdo</option>
-                  <option value="Tamborim">Tamborim</option>
-                  <option value="Tantã">Tantã</option>
-                  <option value="Teclado">Teclado</option>
-                  <option value="Trombone">Trombone</option>
-                  <option value="Trompete">Trompete</option>
-                  <option value="Viola">Viola</option>
-                  <option value="Viola Caipira">Viola Caipira</option>
-                  <option value="Violino">Violino</option>
-                  <option value="Violoncelo">Violoncelo</option>
-                  <option value="Violão">Violão</option>
-                  <option value="Vocal">Vocal</option>
-                  <option value="Outro">Outro</option>
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Violão",
+                    "Guitarra",
+                    "Baixo",
+                    "Bateria",
+                    "Teclado",
+                    "Piano",
+                    "Vocal",
+                    "Saxofone",
+                    "Trompete",
+                    "Trombone",
+                    "Flauta",
+                    "Violino",
+                    "Acordeon",
+                    "Sanfona",
+                    "Cavaquinho",
+                    "Contrabaixo",
+                    "Percussão",
+                    "Pandeiro",
+                    "Outro",
+                  ].map((instrument) => (
+                    <button
+                      key={instrument}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleChange("instrument", data.instrument === instrument ? "" : instrument);
+                      }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        data.instrument === instrument
+                          ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-md"
+                          : "bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50"
+                      }`}
+                    >
+                      {instrument}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Cidade e Estado */}
