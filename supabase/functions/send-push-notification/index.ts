@@ -34,6 +34,33 @@ serve(async (req) => {
       );
     }
 
+    // Validar chaves VAPID
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      console.error("[Push Notification] VAPID keys não configuradas");
+      return new Response(
+        JSON.stringify({ error: "VAPID keys não configuradas na Edge Function" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Formato da subscription pode vir com keys nested ou direto
+    const subscriptionKeys = subscription.keys || subscription;
+    const p256dh = subscriptionKeys.p256dh || subscription.p256dh;
+    const auth = subscriptionKeys.auth || subscription.auth;
+
+    if (!subscription.endpoint || !p256dh || !auth) {
+      return new Response(
+        JSON.stringify({ error: "Subscription incompleta. Endpoint, p256dh e auth são obrigatórios" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Enviar notificação
     const notificationPayload = JSON.stringify(payload);
 
@@ -41,8 +68,8 @@ serve(async (req) => {
       {
         endpoint: subscription.endpoint,
         keys: {
-          p256dh: subscription.p256dh,
-          auth: subscription.auth,
+          p256dh: p256dh,
+          auth: auth,
         },
       },
       notificationPayload,

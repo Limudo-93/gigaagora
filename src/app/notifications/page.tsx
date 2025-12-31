@@ -267,16 +267,18 @@ export default function NotificationsTestPage() {
           const result = await response.json();
 
           if (!response.ok || !result.success) {
+            const errorMsg = result.error || "Erro desconhecido";
+            const details = result.details ? ` (${result.details.join(", ")})` : "";
             newResults.push({
               type: template.key,
               success: false,
-              message: `Erro para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId}: ${result.error || "Erro desconhecido"}`,
+              message: `Erro para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId}: ${errorMsg}${details}`,
             });
           } else {
             newResults.push({
               type: template.key,
               success: true,
-              message: `Enviado para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId} (${result.sent || 1} subscription${(result.sent || 1) > 1 ? 's' : ''})`,
+              message: `Enviado para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId} (${result.sent || 1} subscription${(result.sent || 1) > 1 ? 's' : ''} enviada${(result.sent || 1) > 1 ? 's' : ''})`,
             });
           }
         } catch (err: any) {

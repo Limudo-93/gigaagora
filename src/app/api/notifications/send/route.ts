@@ -46,47 +46,97 @@ export async function POST(request: NextRequest) {
     // Enviar notificação via Edge Function
     const sendResults = await Promise.allSettled(
       subscriptions.map(async (sub: any) => {
-        const { data, error } = await supabase.functions.invoke("send-push-notification", {
-          body: {
-            subscription: {
-              endpoint: sub.endpoint,
-              p256dh: sub.keys?.p256dh || sub.p256dh,
-              auth: sub.keys?.auth || sub.auth,
+        try {
+          // O formato da subscription retornado pela função get_user_push_subscriptions
+          // já vem no formato correto: { endpoint, p256dh, auth }
+          const subscriptionData = {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth,
             },
-            payload: {
-              title: notification.title,
-              body: notification.body,
-              icon: notification.icon || "/logo.png",
-              badge: notification.badge || "/logo.png",
-              tag: notification.tag || "default",
-              requireInteraction: notification.requireInteraction || false,
-              data: {
-                ...notification.data,
-                url: notification.data?.url || "/dashboard",
-              },
-              actions: notification.actions || [],
-              vibrate: notification.vibrate || [200, 100, 200],
-            },
-          },
-        });
+          };
 
-        if (error) throw error;
-        return data;
+          const payload = {
+            title: notification.title,
+            body: notification.body,
+            icon: notification.icon || "/logo.png",
+            badge: notification.badge || "/logo.png",
+            tag: notification.tag || "default",
+            requireInteraction: notification.requireInteraction || false,
+            data: {
+              ...notification.data,
+              url: notification.data?.url || "/dashboard",
+            },
+            actions: notification.actions || [],
+            vibrate: notification.vibrate || [200, 100, 200],
+          };
+
+          const { data, error } = await supabase.functions.invoke("send-push-notification", {
+            body: {
+              subscription: subscriptionData,
+              payload: payload,
+            },
+          });
+
+          if (error) {
+            console.error(`[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`, error);
+            throw error;
+          }
+          return data;
+        } catch (err: any) {
+          console.error(`[Send Notification] Failed for subscription:`, err);
+          throw err;
+        }
       })
     );
 
     const failed = sendResults.filter((r) => r.status === "rejected");
+    const successful = sendResults.filter((r) => r.status === "fulfilled");
+
+    // Log detalhado dos erros
+    if (failed.length > 0) {
+      console.error(`[Send Notification] ${failed.length} tentativas falharam:`, 
+        failed.map((r) => r.status === "rejected" ? r.reason : null)
+      );
+    }
+
     if (failed.length === sendResults.length) {
+      const errorMessages = failed
+        .map((r) => {
+          if (r.status === "rejected") {
+            const reason = r.reason;
+            if (reason?.message) return reason.message;
+            if (typeof reason === "string") return reason;
+            if (reason?.error) return reason.error;
+            return String(reason);
+          }
+          return null;
+        })
+        .filter(Boolean);
+      
+      // Verificar se é erro de função não encontrada
+      const firstError = errorMessages[0] || "";
+      if (firstError.includes("Function not found") || firstError.includes("404")) {
+        return NextResponse.json({
+          success: false,
+          error: "Edge Function 'send-push-notification' não está deployada. Veja DEPLOY_EDGE_FUNCTION.md para instruções.",
+          details: errorMessages,
+        });
+      }
+
       return NextResponse.json({
         success: false,
-        error: "Todas as tentativas de envio falharam",
+        error: `Todas as tentativas de envio falharam. ${errorMessages[0] || "Verifique os logs do servidor"}`,
+        details: errorMessages,
       });
     }
 
     return NextResponse.json({
       success: true,
-      sent: sendResults.length - failed.length,
+      sent: successful.length,
       total: sendResults.length,
+      failed: failed.length,
     });
   } catch (error: any) {
     console.error("Error in send notification API:", error);
