@@ -547,11 +547,14 @@ export default function GigsPage() {
     const now = new Date();
     if (filterStatus === "upcoming") {
       filtered = filtered.filter((g) => {
-        if (!g.start_time) return false;
+        // Se não tem start_time, inclui (gig publicada sem data)
+        if (!g.start_time) return true;
+        // Se tem start_time, só inclui se for futura ou hoje
         return new Date(g.start_time) >= now;
       });
     } else if (filterStatus === "past") {
       filtered = filtered.filter((g) => {
+        // Se não tem start_time, não inclui em "passadas"
         if (!g.start_time) return false;
         return new Date(g.start_time) < now;
       });

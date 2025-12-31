@@ -69,13 +69,13 @@ export default function GigsTabs({ userId }: { userId: string }) {
           // O enum no banco usa "cancelled" (com dois 'l')
           q = q.eq("status", "cancelled");
         } else if (tab === "upcoming") {
-          // Abertos: status publicado e data futura
-          // IMPORTANTE: Mostrar TODAS as gigs publicadas com data futura,
-          // independente de ter músicos confirmados ou não
+          // Abertos: status publicado
+          // IMPORTANTE: Mostrar TODAS as gigs publicadas, independente de:
+          // - Ter músicos confirmados ou não
+          // - Ter data futura ou não (se não tiver data, também deve aparecer)
           // Não filtrar por músicos confirmados - todas as gigs publicadas devem aparecer
-          q = q.eq("status", "published")
-            .not("start_time", "is", null) // Garantir que start_time não seja NULL
-            .gte("start_time", new Date().toISOString());
+          // Remover filtro de data para mostrar todas as gigs publicadas
+          q = q.eq("status", "published");
         } else if (tab === "past") {
           // Concluídos: data passada (ou status completed se existir)
           // IMPORTANTE: Mostrar todas as gigs com data passada, independente de status
@@ -83,7 +83,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
           q = q.lt("start_time", new Date().toISOString());
         }
 
-        const { data, error } = await q.order("start_time", { ascending: true });
+        const { data, error } = await q.order("start_time", { ascending: true, nullsFirst: true });
 
         console.log("GigsTabs query result:", { 
           dataCount: data?.length || 0, 
@@ -108,38 +108,45 @@ export default function GigsTabs({ userId }: { userId: string }) {
           return;
         }
 
-        if (!data || data.length === 0) {
+        // Filtrar por data futura APENAS se start_time não for NULL (para aba upcoming)
+        // Isso garante que gigs publicadas sem data também apareçam
+        let filteredData = data ?? [];
+        if (tab === "upcoming") {
+          const now = new Date();
+          filteredData = filteredData.filter((gig: any) => {
+            // Se não tem start_time, inclui (gig publicada sem data)
+            if (!gig.start_time) return true;
+            // Se tem start_time, só inclui se for futura ou hoje
+            return new Date(gig.start_time) >= now;
+          });
+          console.log("GigsTabs: Gigs filtradas por data futura ou sem data:", filteredData.length, "de", data?.length || 0);
+        }
+
+        if (!filteredData || filteredData.length === 0) {
           console.log("GigsTabs: Nenhuma gig encontrada para:", { tab, userId });
           // Verificar se há gigs com outros status para debug
           const { data: allGigs } = await supabase
             .from("gigs")
             .select("id, title, status, start_time")
             .eq("contractor_id", userId)
-            .order("start_time", { ascending: true });
+            .order("start_time", { ascending: true, nullsFirst: true });
           console.log("GigsTabs: Todas as gigs do contratante (para debug):", allGigs);
           
-          // Verificar especificamente gigs publicadas com data futura
+          // Verificar especificamente gigs publicadas
           if (tab === "upcoming") {
             const { data: publishedGigs } = await supabase
               .from("gigs")
               .select("id, title, status, start_time")
               .eq("contractor_id", userId)
               .eq("status", "published")
-              .order("start_time", { ascending: true });
+              .order("start_time", { ascending: true, nullsFirst: true });
             console.log("GigsTabs: Gigs publicadas do contratante:", publishedGigs);
-            
-            const now = new Date();
-            const futureGigs = publishedGigs?.filter((g: any) => {
-              if (!g.start_time) return false;
-              return new Date(g.start_time) >= now;
-            });
-            console.log("GigsTabs: Gigs publicadas com data futura:", futureGigs);
           }
         }
 
         // Busca os valores de cache das roles e músicos confirmados para cada gig
         const gigsWithCache = await Promise.all(
-          (data ?? []).map(async (gig) => {
+          (filteredData ?? []).map(async (gig) => {
             const { data: rolesData } = await supabase
               .from("gig_roles")
               .select("cache")
