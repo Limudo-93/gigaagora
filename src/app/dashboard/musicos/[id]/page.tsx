@@ -80,7 +80,7 @@ export default async function DashboardMusicoProfilePage({
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (!profile || profile.user_type !== "musician") {
+  if (!profile) {
     return notFound();
   }
 
