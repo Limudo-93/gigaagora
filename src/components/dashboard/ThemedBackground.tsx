@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getTheme, type ThemeName } from "@/lib/theme";
+import { getTheme, type ThemeName } from "@/lib/theme-data";
 
 export default function ThemedBackground() {
   const [theme, setTheme] = useState<ThemeName>('default');

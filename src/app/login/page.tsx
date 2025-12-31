@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
 import Logo from "@/components/Logo";
 import { Chrome, Facebook } from "lucide-react";
-import { applyTheme, type ThemeName } from "@/lib/theme";
+import { applyTheme } from "@/lib/theme";
+import type { ThemeName } from "@/lib/theme-data";
 
 export default function LoginPage() {
   const router = useRouter();

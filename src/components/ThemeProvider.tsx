@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { applyTheme, type ThemeName } from "@/lib/theme";
+import { applyTheme } from "@/lib/theme";
+import type { ThemeName } from "@/lib/theme-data";
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     const loadUserTheme = async () => {
       try {
+        const cachedTheme = localStorage.getItem("theme") as ThemeName | null;
+        if (cachedTheme) {
+          applyTheme(cachedTheme);
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
@@ -26,17 +32,17 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
           console.warn("Error loading theme preference:", profileError);
         }
 
-        const theme = (profile?.theme_preference as ThemeName) || 'default';
+        const theme = (profile?.theme_preference as ThemeName) || "default";
         
         // Validar se o tema existe
-        const validTheme: ThemeName = ['default', 'ocean', 'sunset', 'forest', 'royal', 'dark'].includes(theme) 
-          ? theme 
-          : 'default';
+        const validTheme: ThemeName = ["default", "ocean", "sunset", "forest", "royal", "dark"].includes(theme)
+          ? theme
+          : "default";
         
         applyTheme(validTheme);
       } catch (error) {
         console.error("Error loading theme:", error);
-        applyTheme('default');
+        applyTheme("default");
       }
     };
 

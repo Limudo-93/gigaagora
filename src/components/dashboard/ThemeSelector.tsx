@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Palette } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { themes, type ThemeName, applyTheme, getTheme } from "@/lib/theme";
+import { applyTheme } from "@/lib/theme";
+import { themes, getTheme, type ThemeName } from "@/lib/theme-data";
 
 export default function ThemeSelector() {
   const [currentTheme, setCurrentTheme] = useState<ThemeName>('default');

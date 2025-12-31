@@ -13,7 +13,8 @@ export function buildMusicianSlug(name: string, userId: string): string {
   return `${safeName}-${userId}`;
 }
 
-export function extractUserIdFromSlug(slug: string): string | null {
+export function extractUserIdFromSlug(slug?: string | null): string | null {
+  if (!slug || typeof slug !== "string") return null;
   const match = slug.match(/[0-9a-fA-F-]{36}$/);
   return match ? match[0] : null;
 }
