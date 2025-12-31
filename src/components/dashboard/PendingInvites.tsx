@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar, Clock, DollarSign, Check, X, Eye, Download, User, AlertTriangle, MapPin, Loader2, Navigation } from "lucide-react";
 import InviteDetailsDialog from "./InviteDetailsDialog";
+import DeclineReasonDialog, { DeclineReason } from "./DeclineReasonDialog";
 import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
 
 type PendingInviteRow = {
@@ -907,7 +908,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
         }}
         onDecline={() => {
           if (selectedInvite?.id) {
-            declineInvite(selectedInvite.id);
+            handleDeclineClick(selectedInvite.id);
             setDialogOpen(false);
           }
         }}
@@ -1005,6 +1006,19 @@ export default function PendingInvites({ userId }: { userId: string }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Motivo de Recusa */}
+      {pendingDeclineInviteId && (
+        <DeclineReasonDialog
+          open={showDeclineReasonDialog}
+          onOpenChange={setShowDeclineReasonDialog}
+          onConfirm={async (reason) => {
+            await declineInvite(pendingDeclineInviteId, reason);
+          }}
+          gigTitle={items.find((x) => x.invite_id === pendingDeclineInviteId)?.gig_title ?? null}
+          loading={busyId === pendingDeclineInviteId}
+        />
+      )}
     </section>
   );
 }

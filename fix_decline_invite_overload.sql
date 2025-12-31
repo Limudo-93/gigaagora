@@ -1,19 +1,14 @@
 -- ============================================
--- Sistema de Recusa Inteligente
--- Adiciona campo para armazenar motivo de recusa
+-- CORREÇÃO: Conflito de sobrecarga na função rpc_decline_invite
 -- ============================================
+-- Este script resolve o erro de ambiguidade ao chamar rpc_decline_invite
+-- removendo a versão antiga e garantindo que apenas a versão nova exista
 
--- 1. Adicionar coluna decline_reason na tabela invites
-ALTER TABLE invites 
-ADD COLUMN IF NOT EXISTS decline_reason TEXT;
-
--- 2. Adicionar comentário na coluna
-COMMENT ON COLUMN invites.decline_reason IS 'Motivo pelo qual o músico recusou o convite. Valores possíveis: low_value, distance, unavailable, schedule_conflict, not_interested, other';
-
--- 3. Remover a função antiga (se existir) para evitar conflito de sobrecarga
+-- 1. Remover todas as versões existentes da função
 DROP FUNCTION IF EXISTS rpc_decline_invite(UUID);
+DROP FUNCTION IF EXISTS rpc_decline_invite(UUID, TEXT);
 
--- 4. Criar função RPC atualizada para aceitar motivo de recusa
+-- 2. Criar a função única com parâmetro opcional
 CREATE OR REPLACE FUNCTION rpc_decline_invite(
   p_invite_id UUID,
   p_decline_reason TEXT DEFAULT NULL
@@ -96,5 +91,5 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION rpc_decline_invite(UUID, TEXT) TO authenticated;
 
 -- Comentário
-COMMENT ON FUNCTION rpc_decline_invite(UUID, TEXT) IS 'Recusa um convite pendente, atualizando o status para declined, armazenando o motivo de recusa (opcional) e definindo responded_at. Pode ser chamada com apenas o invite_id (motivo será NULL usando DEFAULT) ou com ambos os parâmetros.';
+COMMENT ON FUNCTION rpc_decline_invite(UUID, TEXT) IS 'Recusa um convite pendente, atualizando o status para declined, armazenando o motivo de recusa (opcional) e definindo responded_at. Pode ser chamada com apenas o invite_id (motivo será NULL) ou com ambos os parâmetros.';
 
