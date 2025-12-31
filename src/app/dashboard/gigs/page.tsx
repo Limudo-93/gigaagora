@@ -244,7 +244,7 @@ export default function GigsPage() {
             contractor_id,
             gig_roles(id, instrument, cache)
           `)
-          .eq("status", "published")
+          .in("status", ["published", "open", "active"])
           .neq("contractor_id", userId)
           .in("id", compatibleGigIds)
           .order("start_time", { ascending: true });
@@ -797,7 +797,9 @@ export default function GigsPage() {
   const respondedInvites = invitesAccepted + invitesDeclined;
   const responseRate = totalInvites > 0 ? Math.round((respondedInvites / totalInvites) * 100) : 0;
 
-  const publishedCount = gigs.filter((gig) => gig.status === "published").length;
+  const publishedCount = gigs.filter((gig) =>
+    ["published", "open", "active"].includes((gig.status || "").toLowerCase())
+  ).length;
   const draftCount = gigs.filter((gig) => gig.status === "draft").length;
   const cancelledCount = gigs.filter((gig) => gig.status === "cancelled").length;
   const confirmedTotal = gigs.reduce((sum, gig) => sum + (gig.confirmed_musicians?.length ?? 0), 0);
