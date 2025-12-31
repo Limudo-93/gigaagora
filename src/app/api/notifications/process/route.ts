@@ -23,6 +23,9 @@ async function processQueue() {
 
   await supabase.rpc("rpc_enqueue_profile_completion");
   await supabase.rpc("rpc_enqueue_daily_reminder");
+  await supabase.rpc("rpc_enqueue_invite_expiring");
+  await supabase.rpc("rpc_enqueue_gig_reminder");
+  await supabase.rpc("rpc_enqueue_rating_pending");
 
   const { data: queue, error } = await supabase
     .from("push_notification_queue")
