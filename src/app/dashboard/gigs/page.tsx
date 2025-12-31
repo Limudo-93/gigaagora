@@ -222,6 +222,7 @@ export default function GigsPage() {
         }
 
         // Busca as gigs (incluindo coordenadas e região)
+        const publishedStatuses = ["published"];
         const { data: gigsData, error: gigsError } = await supabase
           .from("gigs")
           .select(`
@@ -244,7 +245,7 @@ export default function GigsPage() {
             contractor_id,
             gig_roles(id, instrument, cache)
           `)
-          .eq("status", "published")
+          .in("status", publishedStatuses)
           .neq("contractor_id", userId)
           .in("id", compatibleGigIds)
           .order("start_time", { ascending: true });

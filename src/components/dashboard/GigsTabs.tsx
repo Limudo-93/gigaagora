@@ -63,6 +63,8 @@ export default function GigsTabs({ userId }: { userId: string }) {
           .eq("contractor_id", userId);
 
         // filtros por aba
+        const publishedStatuses = ["published"];
+
         if (tab === "draft") {
           q = q.eq("status", "draft");
         } else if (tab === "canceled") {
@@ -75,7 +77,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
           // - Ter data futura ou não (se não tiver data, também deve aparecer)
           // Não filtrar por músicos confirmados - todas as gigs publicadas devem aparecer
           // Remover filtro de data para mostrar todas as gigs publicadas
-          q = q.eq("status", "published");
+          q = q.in("status", publishedStatuses);
         } else if (tab === "past") {
           // Concluídos: data passada (ou status completed se existir)
           // IMPORTANTE: Mostrar todas as gigs com data passada, independente de status
@@ -138,7 +140,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
               .from("gigs")
               .select("id, title, status, start_time")
               .eq("contractor_id", userId)
-              .eq("status", "published")
+              .in("status", publishedStatuses)
               .order("start_time", { ascending: true, nullsFirst: true });
             console.log("GigsTabs: Gigs publicadas do contratante:", publishedGigs);
           }
