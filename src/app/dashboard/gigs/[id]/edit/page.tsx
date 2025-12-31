@@ -86,6 +86,28 @@ export default function EditGigPage() {
 
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);
+  const [cacheInputs, setCacheInputs] = useState<Record<string, string>>({});
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+
+  const normalizeCurrencyInput = (value: string) => {
+    let cleaned = value.replace(/[^\d,]/g, "");
+    const parts = cleaned.split(",");
+    if (parts.length > 2) {
+      cleaned = `${parts[0]},${parts.slice(1).join("")}`;
+    }
+    return cleaned;
+  };
+
+  const parseCurrencyInput = (value: string) => {
+    if (!value) return "";
+    const parsed = Number.parseFloat(value.replace(",", "."));
+    return Number.isNaN(parsed) ? "" : parsed;
+  };
 
   // Função para converter minutos em HH:MM
   const minutosParaHorasMinutos = (minutos: number): string => {
@@ -170,17 +192,26 @@ export default function EditGigPage() {
 
         if (rolesError) throw rolesError;
 
-        setRoles(
-          (rolesData || []).map((r: any) => ({
-            id: r.id,
-            instrument: r.instrument || "",
-            quantity: r.quantity || 1,
-            desired_genres: r.desired_genres || [],
-            desired_skills: r.desired_skills || [],
-            desired_setup: r.desired_setup || [],
-            notes: r.notes || "",
-            cache: r.cache && typeof r.cache === "number" ? r.cache : "",
-          }))
+        const rolesMapped = (rolesData || []).map((r: any) => ({
+          id: r.id,
+          instrument: r.instrument || "",
+          quantity: r.quantity || 1,
+          desired_genres: r.desired_genres || [],
+          desired_skills: r.desired_skills || [],
+          desired_setup: r.desired_setup || [],
+          notes: r.notes || "",
+          cache: r.cache && typeof r.cache === "number" ? r.cache : "",
+        }));
+
+        setRoles(rolesMapped);
+        setCacheInputs(
+          rolesMapped.reduce<Record<string, string>>((acc, role) => {
+            acc[role.id] =
+              role.cache === "" || typeof role.cache !== "number"
+                ? ""
+                : formatCurrency(role.cache);
+            return acc;
+          }, {})
         );
       } catch (e: any) {
         console.error("Error loading gig:", e);
@@ -292,10 +323,11 @@ export default function EditGigPage() {
   };
 
   const addRole = () => {
+    const newRoleId = crypto.randomUUID();
     setRoles([
       ...roles,
       {
-        id: crypto.randomUUID(),
+        id: newRoleId,
         instrument: "",
         quantity: 1,
         desired_genres: [],
@@ -305,14 +337,28 @@ export default function EditGigPage() {
         cache: "",
       },
     ]);
+    setCacheInputs((prev) => ({ ...prev, [newRoleId]: "" }));
   };
 
   const removeRole = (id: string) => {
     setRoles(roles.filter((r) => r.id !== id));
+    setCacheInputs((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const updateRole = (id: string, field: keyof GigRole, value: any) => {
     setRoles(roles.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  };
+
+  const setCacheForRole = (id: string, value: number | "") => {
+    updateRole(id, "cache", value);
+    setCacheInputs((prev) => ({
+      ...prev,
+      [id]: value === "" ? "" : formatCurrency(value),
+    }));
   };
 
   // Função para converter HH:MM em minutos
@@ -938,21 +984,30 @@ export default function EditGigPage() {
                         <label className="text-sm font-medium text-gray-900">
                           Instrumento <span className="text-red-500">*</span>
                         </label>
-                        <select
-                          className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          value={role.instrument}
-                          onChange={(e) =>
-                            updateRole(role.id, "instrument", e.target.value)
-                          }
-                          required
-                        >
-                          <option value="">Selecione um instrumento</option>
-                          {instrumentos.map((inst) => (
-                            <option key={inst} value={inst}>
-                              {inst}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {instrumentos.map((inst) => {
+                            const isSelected = role.instrument === inst;
+                            return (
+                              <button
+                                key={inst}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const nextInstrument = isSelected ? "" : inst;
+                                  updateRole(role.id, "instrument", nextInstrument);
+                                }}
+                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                                  isSelected
+                                    ? "bg-orange-500 text-white shadow-sm"
+                                    : "bg-white text-gray-900 border border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                                }`}
+                              >
+                                {inst}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <div>
@@ -978,19 +1033,30 @@ export default function EditGigPage() {
                       </label>
                       <input
                         type="text"
+                        inputMode="decimal"
                         className="mt-1 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        value={role.cache === "" ? "" : typeof role.cache === "number" ? new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache) : ""}
+                        value={
+                          cacheInputs[role.id] ??
+                          (role.cache === ""
+                            ? ""
+                            : typeof role.cache === "number"
+                              ? formatCurrency(role.cache)
+                              : "")
+                        }
                         onChange={(e) => {
-                          // Remove tudo exceto números e vírgula
-                          let value = e.target.value.replace(/[^\d,]/g, "");
-                          // Substitui vírgula por ponto para parseFloat
-                          const numValue = value === "" ? "" : parseFloat(value.replace(",", ".")) || 0;
-                          updateRole(role.id, "cache", numValue);
+                          const rawValue = normalizeCurrencyInput(e.target.value);
+                          setCacheInputs((prev) => ({ ...prev, [role.id]: rawValue }));
+                          const parsed = parseCurrencyInput(rawValue);
+                          updateRole(role.id, "cache", parsed === "" ? "" : parsed);
                         }}
                         onBlur={(e) => {
-                          if (role.cache !== "" && typeof role.cache === "number") {
-                            e.target.value = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(role.cache);
+                          const rawValue = cacheInputs[role.id] ?? "";
+                          const parsed = parseCurrencyInput(rawValue);
+                          if (parsed === "") {
+                            setCacheForRole(role.id, "");
+                            return;
                           }
+                          setCacheForRole(role.id, parsed);
                         }}
                         placeholder="0,00"
                       />

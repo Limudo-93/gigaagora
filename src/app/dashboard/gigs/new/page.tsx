@@ -91,6 +91,28 @@ export default function NewGigPage() {
 
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);
+  const [cacheInputs, setCacheInputs] = useState<Record<string, string>>({});
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+
+  const normalizeCurrencyInput = (value: string) => {
+    let cleaned = value.replace(/[^\d,]/g, "");
+    const parts = cleaned.split(",");
+    if (parts.length > 2) {
+      cleaned = `${parts[0]},${parts.slice(1).join("")}`;
+    }
+    return cleaned;
+  };
+
+  const parseCurrencyInput = (value: string) => {
+    if (!value) return "";
+    const parsed = Number.parseFloat(value.replace(",", "."));
+    return Number.isNaN(parsed) ? "" : parsed;
+  };
 
   // Gêneros musicais
   const generos = [
@@ -294,16 +316,46 @@ export default function NewGigPage() {
         cache: "",
       },
     ]);
+    setCacheInputs((prev) => ({ ...prev, [newRoleId]: "" }));
   };
 
   const removeRole = (id: string) => {
     setRoles(roles.filter((r) => r.id !== id));
+    setCacheInputs((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const updateRole = (id: string, field: keyof GigRole, value: any) => {
     setRoles(
       roles.map((r) => (r.id === id ? { ...r, [field]: value } : r))
     );
+  };
+
+  const setCacheForRole = (id: string, value: number | "") => {
+    updateRole(id, "cache", value);
+    setCacheInputs((prev) => ({
+      ...prev,
+      [id]: value === "" ? "" : formatCurrency(value),
+    }));
+  };
+
+  const handleInstrumentSelect = (role: GigRole, instrument: string) => {
+    const nextInstrument = role.instrument === instrument ? "" : instrument;
+    updateRole(role.id, "instrument", nextInstrument);
+
+    if (nextInstrument) {
+      const hasVocal = nextInstrument.toLowerCase().includes("vocal");
+      const minCache = getMinCacheForInstrument(nextInstrument, role.quantity, hasVocal);
+      if (
+        minCache > 0 &&
+        (!role.cache || (typeof role.cache === "number" && role.cache < minCache))
+      ) {
+        setCacheForRole(role.id, minCache);
+      }
+    }
   };
 
   // Função para lidar com seleção de arquivo de flyer
@@ -994,32 +1046,29 @@ export default function NewGigPage() {
                         <label className="text-sm font-semibold text-foreground mb-2 block">
                           Instrumento <span className="text-red-500">*</span>
                         </label>
-                        <select
-                          className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
-                          value={role.instrument}
-                          onChange={(e) => {
-                            const newInstrument = e.target.value;
-                            updateRole(role.id, "instrument", newInstrument);
-                            
-                            if (newInstrument) {
-                              const hasVocal = newInstrument.toLowerCase().includes("vocal");
-                              const minCache = getMinCacheForInstrument(newInstrument, role.quantity, hasVocal);
-                              if (minCache > 0) {
-                                if (!role.cache || (typeof role.cache === "number" && role.cache < minCache)) {
-                                  updateRole(role.id, "cache", minCache);
-                                }
-                              }
-                            }
-                          }}
-                          required
-                        >
-                          <option value="">Selecione um instrumento</option>
-                          {instrumentos.map((inst) => (
-                            <option key={inst} value={inst}>
-                              {inst}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="flex flex-wrap gap-2">
+                          {instrumentos.map((inst) => {
+                            const isSelected = role.instrument === inst;
+                            return (
+                              <button
+                                key={inst}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleInstrumentSelect(role, inst);
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground shadow-md"
+                                    : "bg-background text-foreground border-2 border-input hover:border-primary hover:bg-muted/50"
+                                }`}
+                              >
+                                {inst}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
 
                       <div>
@@ -1045,7 +1094,7 @@ export default function NewGigPage() {
                                 const hasVocal = hasVocalInRole(role);
                                 const minCache = getMinCacheForInstrument(role.instrument, newQuantity, hasVocal);
                                 if (minCache > 0 && (!role.cache || (typeof role.cache === "number" && role.cache < minCache))) {
-                                  updateRole(role.id, "cache", minCache);
+                                  setCacheForRole(role.id, minCache);
                                 }
                               }
                             }
@@ -1061,7 +1110,7 @@ export default function NewGigPage() {
                       </label>
                       <input
                         type="text"
-                        inputMode="numeric"
+                        inputMode="decimal"
                         className={`w-full rounded-lg border-2 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
                           role.instrument && (() => {
                             const hasVocal = hasVocalInRole(role);
@@ -1073,60 +1122,37 @@ export default function NewGigPage() {
                           })()
                         }`}
                         value={
-                          role.cache === "" 
-                            ? "" 
-                            : typeof role.cache === "number" 
-                              ? new Intl.NumberFormat("pt-BR", { 
-                                  minimumFractionDigits: 2, 
-                                  maximumFractionDigits: 2 
-                                }).format(role.cache)
-                              : ""
+                          cacheInputs[role.id] ??
+                          (role.cache === ""
+                            ? ""
+                            : typeof role.cache === "number"
+                              ? formatCurrency(role.cache)
+                              : "")
                         }
                         onChange={(e) => {
-                          // Remove tudo exceto números e vírgula
-                          let value = e.target.value.replace(/[^\d,]/g, "");
-                          
-                          // Substitui vírgula por ponto para parseFloat
-                          let numValue: number | "" = "";
-                          if (value !== "") {
-                            // Se tem vírgula, trata como decimal
-                            if (value.includes(",")) {
-                              numValue = parseFloat(value.replace(",", ".")) || 0;
-                            } else {
-                              // Se não tem vírgula, trata como número inteiro
-                              numValue = parseFloat(value) || 0;
-                            }
-                            
-                            // Valida valor mínimo se houver instrumento selecionado
-                            if (role.instrument && typeof numValue === "number" && numValue > 0) {
-                              const hasVocal = hasVocalInRole(role);
-                              const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
-                              
-                              if (minCache > 0 && numValue < minCache) {
-                                numValue = minCache;
-                              }
-                            }
-                            
-                            // Se o valor for 0, permite digitar (não força mínimo durante digitação)
-                            if (numValue === 0 && value !== "0") {
-                              numValue = "";
-                            }
-                          }
-                          
-                          updateRole(role.id, "cache", numValue);
+                          const rawValue = normalizeCurrencyInput(e.target.value);
+                          setCacheInputs((prev) => ({ ...prev, [role.id]: rawValue }));
+                          const parsed = parseCurrencyInput(rawValue);
+                          updateRole(role.id, "cache", parsed === "" ? "" : parsed);
                         }}
                         onBlur={(e) => {
-                          // Garante formatação correta e validação mínima ao sair do campo
-                          if (role.cache !== "" && typeof role.cache === "number") {
-                            if (role.instrument) {
-                              const hasVocal = hasVocalInRole(role);
-                              const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
-                              
-                              if (minCache > 0 && role.cache < minCache) {
-                                updateRole(role.id, "cache", minCache);
-                              }
+                          const rawValue = cacheInputs[role.id] ?? "";
+                          const parsed = parseCurrencyInput(rawValue);
+                          if (parsed === "") {
+                            setCacheForRole(role.id, "");
+                            return;
+                          }
+
+                          let finalValue = parsed;
+                          if (role.instrument) {
+                            const hasVocal = hasVocalInRole(role);
+                            const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
+                            if (minCache > 0 && finalValue < minCache) {
+                              finalValue = minCache;
                             }
                           }
+
+                          setCacheForRole(role.id, finalValue);
                         }}
                         placeholder="0,00"
                       />
@@ -1226,7 +1252,7 @@ export default function NewGigPage() {
                                   const hasVocal = !isSelected;
                                   const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
                                   if (minCache > 0 && (!role.cache || (typeof role.cache === "number" && role.cache < minCache))) {
-                                    updateRole(role.id, "cache", minCache);
+                                    setCacheForRole(role.id, minCache);
                                   }
                                 }
                               }}
