@@ -528,14 +528,13 @@ export default function MessagesPage() {
                           </div>
                         </div>
                         {selectedConversation.gig.id && (
-                          <Link href={"/dashboard/gigs/" + selectedConversation.gig.id}>
-                            <Button
-                              size="sm"
-                              className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white shrink-0"
-                            >
-                              Ver gig
-                            </Button>
-                          </Link>
+                          <Button
+                            size="sm"
+                            onClick={() => router.push(`/dashboard/gigs/${selectedConversation.gig.id}`)}
+                            className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white shrink-0"
+                          >
+                            Ver gig
+                          </Button>
                         )}
                       </div>
                     </CardContent>
