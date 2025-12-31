@@ -276,6 +276,34 @@ export default async function Page() {
             </div>
 
             <div className="relative space-y-4">
+              <Card className="border border-white/70 bg-gradient-to-br from-[#fff1e7] via-white to-[#e9f7f5] shadow-sm">
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
+                      Convite chegando
+                    </div>
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                      Novo
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-lg font-semibold text-foreground">Show no Bar do Centro</p>
+                    <p className="text-sm text-foreground/70">
+                      Sabado, 21h • R$ 450 • Pop/Rock
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/80 px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <MapPin className="h-4 w-4 text-[#2aa6a1]" />
+                      6 km de voce
+                    </div>
+                    <Button size="sm" className="btn-gradient text-white">
+                      Ver convite
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card className="border border-white/70 bg-white/80 shadow-sm">
                 <CardContent className="space-y-3 p-5">
                   <div className="flex items-center justify-between">
