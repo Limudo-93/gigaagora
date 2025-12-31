@@ -104,10 +104,11 @@ export default function MusiciansSearch({
           </Card>
         ) : (
           results.map((musician) => {
-            const profileHref = `${basePath}/${buildMusicianSlug(
+            const slug = buildMusicianSlug(
               musician.display_name || "musico",
               musician.user_id
-            )}` as any;
+            );
+            const profileHref = `${basePath}/${slug}`;
 
             return (
             <Card key={musician.user_id} className="card-glass hover:shadow-xl transition-shadow">

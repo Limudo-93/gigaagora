@@ -71,16 +71,22 @@ export default async function DashboardMusicoProfilePage({
   const userId = extractUserIdFromSlug(params.id);
 
   if (!userId) {
+    console.error("[DashboardMusicoProfile] Failed to extract userId from slug:", params.id);
     return notFound();
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("user_id, display_name, photo_url, city, state, user_type")
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (!profile) {
+  if (profileError) {
+    console.error("[DashboardMusicoProfile] Error fetching profile:", profileError);
+  }
+
+  if (!profile || profile.user_type !== "musician") {
+    console.error("[DashboardMusicoProfile] Profile not found or not a musician:", { userId, profile });
     return notFound();
   }
 
