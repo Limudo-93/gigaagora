@@ -38,8 +38,13 @@ serve(async (req) => {
     // Validar chaves VAPID
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       console.error("[Push Notification] VAPID keys não configuradas");
+      console.error("[Push Notification] VAPID_PUBLIC_KEY presente:", !!VAPID_PUBLIC_KEY);
+      console.error("[Push Notification] VAPID_PRIVATE_KEY presente:", !!VAPID_PRIVATE_KEY);
       return new Response(
-        JSON.stringify({ error: "VAPID keys não configuradas na Edge Function" }),
+        JSON.stringify({ 
+          error: "VAPID keys não configuradas na Edge Function",
+          details: "Certifique-se de configurar VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY e VAPID_SUBJECT nas Secrets do Supabase Dashboard"
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -65,23 +70,33 @@ serve(async (req) => {
     // Enviar notificação
     const notificationPayload = JSON.stringify(payload);
 
-    await webPush.sendNotification(
-      {
-        endpoint: subscription.endpoint,
-        keys: {
-          p256dh: p256dh,
-          auth: auth,
+    console.log("[Push Notification] Enviando notificação para:", subscription.endpoint.substring(0, 50) + "...");
+    console.log("[Push Notification] Payload:", JSON.stringify(payload).substring(0, 100) + "...");
+
+    try {
+      await webPush.sendNotification(
+        {
+          endpoint: subscription.endpoint,
+          keys: {
+            p256dh: p256dh,
+            auth: auth,
+          },
         },
-      },
-      notificationPayload,
-      {
-        vapidDetails: {
-          subject: VAPID_SUBJECT,
-          publicKey: VAPID_PUBLIC_KEY,
-          privateKey: VAPID_PRIVATE_KEY,
-        },
-      }
-    );
+        notificationPayload,
+        {
+          vapidDetails: {
+            subject: VAPID_SUBJECT,
+            publicKey: VAPID_PUBLIC_KEY,
+            privateKey: VAPID_PRIVATE_KEY,
+          },
+        }
+      );
+      console.log("[Push Notification] Notificação enviada com sucesso");
+    } catch (pushError: any) {
+      console.error("[Push Notification] Erro ao chamar webPush.sendNotification:", pushError);
+      console.error("[Push Notification] Erro details:", JSON.stringify(pushError, Object.getOwnPropertyNames(pushError)));
+      throw pushError;
+    }
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -91,9 +106,23 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("Error sending push notification:", error);
+    console.error("[Push Notification] Error sending push notification:", error);
+    console.error("[Push Notification] Error stack:", error.stack);
+    console.error("[Push Notification] Error details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
+    // Retornar erro mais detalhado
+    const errorMessage = error.message || "Erro desconhecido ao enviar notificação";
+    const errorDetails = {
+      error: errorMessage,
+      type: error.name || "Error",
+      ...(process.env.DENO_ENV === "development" && {
+        stack: error.stack,
+        details: error.toString(),
+      }),
+    };
+
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify(errorDetails),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
