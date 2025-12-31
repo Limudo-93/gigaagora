@@ -70,7 +70,11 @@ export default function GigsTabs({ userId }: { userId: string }) {
           q = q.eq("status", "cancelled");
         } else if (tab === "upcoming") {
           // Abertos: status publicado e data futura
+          // IMPORTANTE: Mostrar TODAS as gigs publicadas com data futura,
+          // independente de ter músicos confirmados ou não
+          // Não filtrar por músicos confirmados - todas as gigs publicadas devem aparecer
           q = q.eq("status", "published")
+            .not("start_time", "is", null) // Garantir que start_time não seja NULL
             .gte("start_time", new Date().toISOString());
         } else if (tab === "past") {
           // Concluídos: data passada (ou status completed se existir)
@@ -113,6 +117,24 @@ export default function GigsTabs({ userId }: { userId: string }) {
             .eq("contractor_id", userId)
             .order("start_time", { ascending: true });
           console.log("GigsTabs: Todas as gigs do contratante (para debug):", allGigs);
+          
+          // Verificar especificamente gigs publicadas com data futura
+          if (tab === "upcoming") {
+            const { data: publishedGigs } = await supabase
+              .from("gigs")
+              .select("id, title, status, start_time")
+              .eq("contractor_id", userId)
+              .eq("status", "published")
+              .order("start_time", { ascending: true });
+            console.log("GigsTabs: Gigs publicadas do contratante:", publishedGigs);
+            
+            const now = new Date();
+            const futureGigs = publishedGigs?.filter((g: any) => {
+              if (!g.start_time) return false;
+              return new Date(g.start_time) >= now;
+            });
+            console.log("GigsTabs: Gigs publicadas com data futura:", futureGigs);
+          }
         }
 
         // Busca os valores de cache das roles e músicos confirmados para cada gig
