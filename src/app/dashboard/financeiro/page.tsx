@@ -3,23 +3,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DollarSign,
-  Briefcase,
+  Calendar,
   Clock,
   TrendingUp,
-  Calendar,
-  Eye,
-  EyeOff,
-  BarChart3,
-  PieChart,
-  ArrowUp,
-  ArrowDown,
   Music,
   MapPin,
+  Sparkles,
 } from "lucide-react";
 
 type FinancialGig = {
@@ -37,11 +30,17 @@ type FinancialGig = {
   confirmed_at: string | null;
 };
 
+type Insight = {
+  type: "instrument" | "day" | "duration";
+  message: string;
+  emoji: string;
+};
+
 export default function FinanceiroPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gigs, setGigs] = useState<FinancialGig[]>([]);
-  const [showValues, setShowValues] = useState(false); // Por padrão escondido
+  const [viewMode, setViewMode] = useState<"basic" | "advanced">("basic");
 
   useEffect(() => {
     const fetchFinancialData = async () => {
@@ -56,7 +55,6 @@ export default function FinanceiroPage() {
           return;
         }
 
-        // Busca todas as confirmações do usuário
         const { data: confirmations, error: confError } = await supabase
           .from("confirmations")
           .select(`
@@ -89,13 +87,9 @@ export default function FinanceiroPage() {
 
         if (confError) throw confError;
 
-        // Transforma os dados
         const transformed: FinancialGig[] = (confirmations || []).map((conf: any) => {
-          // invites pode ser um array ou objeto único dependendo da query
           const invite = Array.isArray(conf.invites) ? conf.invites[0] : conf.invites;
-          // gigs pode ser um array ou objeto único
           const gig = Array.isArray(invite?.gigs) ? invite?.gigs[0] : invite?.gigs;
-          // gig_roles pode ser um array ou objeto único
           const role = Array.isArray(invite?.gig_roles) ? invite?.gig_roles[0] : invite?.gig_roles;
 
           return {
@@ -112,7 +106,7 @@ export default function FinanceiroPage() {
             instrument: role?.instrument || null,
             confirmed_at: conf.confirmed_at || null,
           };
-        }).filter(gig => gig.title !== null); // Remove gigs sem dados válidos
+        }).filter(gig => gig.title !== null);
 
         setGigs(transformed);
       } catch (err: any) {
@@ -126,36 +120,138 @@ export default function FinanceiroPage() {
     fetchFinancialData();
   }, []);
 
-  // Cálculos
-  const totalEarnings = gigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
-  
+  // Função para formatar moeda
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
+  // Função para formatar data
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+    });
+  };
+
+  // Cálculos básicos
+  const now = new Date();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const earningsLast30Days = gigs
-    .filter(gig => gig.confirmed_at && new Date(gig.confirmed_at) >= thirtyDaysAgo)
-    .reduce((sum, gig) => sum + (gig.cache || 0), 0);
-
-  const totalGigs = gigs.length;
   
-  const totalMinutes = gigs.reduce((sum, gig) => sum + (gig.show_minutes || 0), 0);
-  const totalHours = Math.round(totalMinutes / 60 * 10) / 10; // Arredonda para 1 casa decimal
-  
-  const averagePerGig = totalGigs > 0 ? totalEarnings / totalGigs : 0;
-  const averagePerHour = totalHours > 0 ? totalEarnings / totalHours : 0;
+  // Gigs passados (já ganhou)
+  const pastGigs = gigs.filter(gig => {
+    if (!gig.start_time) return false;
+    return new Date(gig.start_time) < now;
+  });
 
-  // Dados para gráficos
+  // Gigs futuros (vai receber)
+  const futureGigs = gigs.filter(gig => {
+    if (!gig.start_time) return false;
+    return new Date(gig.start_time) >= now;
+  });
+
+  // Total já ganho
+  const totalEarnings = pastGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
+
+  // Este mês
+  const thisMonthGigs = pastGigs.filter(gig => {
+    if (!gig.confirmed_at) return false;
+    return new Date(gig.confirmed_at) >= thirtyDaysAgo;
+  });
+  const thisMonthEarnings = thisMonthGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
+
+  // Você vai receber
+  const futureEarnings = futureGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
+
+  // Horas tocadas
+  const totalMinutes = pastGigs.reduce((sum, gig) => sum + (gig.show_minutes || 0), 0);
+  const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+  // Quanto ganha por hora
+  const earningsPerHour = totalHours > 0 ? totalEarnings / totalHours : 0;
+
+  // Insights (modo avançado)
+  const calculateInsights = (): Insight[] => {
+    const insights: Insight[] = [];
+
+    // Instrumento mais rentável
+    const instrumentEarnings: Record<string, number> = {};
+    pastGigs.forEach(gig => {
+      const instrument = gig.instrument || "Outro";
+      instrumentEarnings[instrument] = (instrumentEarnings[instrument] || 0) + (gig.cache || 0);
+    });
+    
+    const topInstrument = Object.entries(instrumentEarnings)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    if (topInstrument && topInstrument[1] > 0) {
+      insights.push({
+        type: "instrument",
+        message: `Seu instrumento mais rentável: ${topInstrument[0]}`,
+        emoji: "💡",
+      });
+    }
+
+    // Dia da semana mais rentável
+    const dayEarnings: Record<string, number> = {};
+    pastGigs.forEach(gig => {
+      if (gig.start_time) {
+        const day = new Date(gig.start_time).toLocaleDateString("pt-BR", { weekday: "long" });
+        dayEarnings[day] = (dayEarnings[day] || 0) + (gig.cache || 0);
+      }
+    });
+
+    const topDay = Object.entries(dayEarnings)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    if (topDay && topDay[1] > 0 && pastGigs.length >= 3) {
+      insights.push({
+        type: "day",
+        message: `Você ganha mais tocando aos ${topDay[0]}`,
+        emoji: "💡",
+      });
+    }
+
+    // Shows acima de 2h rendem melhor
+    const longGigs = pastGigs.filter(gig => (gig.show_minutes || 0) >= 120);
+    const shortGigs = pastGigs.filter(gig => (gig.show_minutes || 0) < 120 && (gig.show_minutes || 0) > 0);
+    
+    if (longGigs.length > 0 && shortGigs.length > 0) {
+      const avgLong = longGigs.reduce((sum, g) => sum + (g.cache || 0), 0) / longGigs.length;
+      const avgShort = shortGigs.reduce((sum, g) => sum + (g.cache || 0), 0) / shortGigs.length;
+      
+      if (avgLong > avgShort * 1.1) {
+        insights.push({
+          type: "duration",
+          message: "Shows acima de 2h rendem melhor pra você",
+          emoji: "💡",
+        });
+      }
+    }
+
+    return insights;
+  };
+
+  const insights = calculateInsights();
+
+  // Dados para gráfico de evolução (últimos 6 meses)
   const last6Months = Array.from({ length: 6 }, (_, i) => {
     const date = new Date();
     date.setMonth(date.getMonth() - (5 - i));
     return {
-      month: date.toLocaleDateString("pt-BR", { month: "short", year: "numeric" }),
+      month: date.toLocaleDateString("pt-BR", { month: "short" }),
       monthKey: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`,
       earnings: 0,
       gigs: 0,
     };
   });
 
-  gigs.forEach(gig => {
+  pastGigs.forEach(gig => {
     if (gig.confirmed_at) {
       const date = new Date(gig.confirmed_at);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -168,11 +264,10 @@ export default function FinanceiroPage() {
   });
 
   const maxEarnings = Math.max(...last6Months.map(m => m.earnings), 1);
-  const maxGigs = Math.max(...last6Months.map(m => m.gigs), 1);
 
-  // Distribuição por instrumento
+  // Instrumentos mais rentáveis (ranking)
   const instrumentDistribution: Record<string, { count: number; earnings: number }> = {};
-  gigs.forEach(gig => {
+  pastGigs.forEach(gig => {
     const instrument = gig.instrument || "Outro";
     if (!instrumentDistribution[instrument]) {
       instrumentDistribution[instrument] = { count: 0, earnings: 0 };
@@ -183,76 +278,35 @@ export default function FinanceiroPage() {
 
   const topInstruments = Object.entries(instrumentDistribution)
     .map(([instrument, data]) => ({ instrument, ...data }))
-    .sort((a, b) => b.earnings - a.earnings)
-    .slice(0, 5);
+    .sort((a, b) => b.earnings - a.earnings);
 
   const maxInstrumentEarnings = Math.max(...topInstruments.map(i => i.earnings), 1);
 
-  // Trabalhos recentes (últimos 10)
-  const recentGigs = gigs.slice(0, 10);
-
-  // Ganhos esperados para as próximas semanas
-  const now = new Date();
-  const upcomingGigs = gigs.filter(gig => {
-    if (!gig.start_time) return false;
-    const startDate = new Date(gig.start_time);
-    return startDate > now;
-  });
-
-  // Calcular ganhos esperados por semana
-  const weeklyExpectedEarnings: Record<string, { weekStart: Date; week: string; earnings: number; count: number }> = {};
-  
-  upcomingGigs.forEach(gig => {
-    if (!gig.start_time) return;
-    const startDate = new Date(gig.start_time);
-    const weekStart = new Date(startDate);
-    const dayOfWeek = startDate.getDay(); // 0 = Domingo, 1 = Segunda, etc.
-    weekStart.setDate(startDate.getDate() - dayOfWeek); // Volta para o domingo
-    weekStart.setHours(0, 0, 0, 0);
-    const weekKey = weekStart.toISOString().split('T')[0];
-    
-    if (!weeklyExpectedEarnings[weekKey]) {
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      weeklyExpectedEarnings[weekKey] = {
-        weekStart: new Date(weekStart),
-        week: `${weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} - ${weekEnd.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
-        earnings: 0,
-        count: 0,
-      };
-    }
-    
-    weeklyExpectedEarnings[weekKey].earnings += gig.cache || 0;
-    weeklyExpectedEarnings[weekKey].count += 1;
-  });
-
-  const weeklyEarningsArray = Object.values(weeklyExpectedEarnings)
-    .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
-    .slice(0, 4); // Próximas 4 semanas
-
-  const totalExpectedEarnings = upcomingGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
-
-  // Função para formatar valores
-  const formatCurrency = (value: number) => {
-    if (!showValues) return "••••••";
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
+  // Emojis para instrumentos
+  const instrumentEmojis: Record<string, string> = {
+    Violão: "🎸",
+    Guitarra: "🎸",
+    Baixo: "🎸",
+    Bateria: "🥁",
+    Teclado: "⌨️",
+    Piano: "🎹",
+    Vocal: "🎤",
+    Saxofone: "🎷",
+    Trompete: "🎺",
+    Outro: "🎵",
   };
 
-  const formatNumber = (value: number) => {
-    if (!showValues) return "•••";
-    return new Intl.NumberFormat("pt-BR").format(value);
+  const getInstrumentEmoji = (instrument: string) => {
+    return instrumentEmojis[instrument] || "🎵";
   };
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout fullWidth>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando dados financeiros...</p>
+            <p className="mt-4 text-gray-600">Carregando seus ganhos...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -261,7 +315,7 @@ export default function FinanceiroPage() {
 
   if (error) {
     return (
-      <DashboardLayout>
+      <DashboardLayout fullWidth>
         <div className="rounded-lg border border-red-500 bg-red-50 px-4 py-3 text-sm text-red-800">
           <p className="font-semibold">Erro ao carregar dados financeiros:</p>
           <p className="mt-1">{error}</p>
@@ -272,423 +326,316 @@ export default function FinanceiroPage() {
 
   return (
     <DashboardLayout fullWidth>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Veja como sua música está gerando resultados e planeje seus próximos passos
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 flex items-center gap-2">
+              💰 Seus ganhos com música
+            </h1>
+            <p className="text-base text-gray-600 mt-2">
+              Acompanhe quanto você já ganhou, quanto vai receber e como evoluir
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setShowValues(!showValues)}
-            className="border-gray-300"
-            title={showValues ? "Ocultar valores" : "Mostrar valores"}
-          >
-            {showValues ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-          </Button>
+          
+          {/* Toggle Básico/Avançado */}
+          <div className="flex items-center gap-3 bg-white rounded-lg border-2 border-gray-200 p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode("basic")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === "basic"
+                  ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Básico
+            </button>
+            <button
+              onClick={() => setViewMode("advanced")}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                viewMode === "advanced"
+                  ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Avançado
+            </button>
+          </div>
         </div>
 
-        {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-green-900">
-                Ganhos Totais
-              </CardTitle>
-              <DollarSign className="h-5 w-5 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-900">
-                {formatCurrency(totalEarnings)}
-              </div>
-              <p className="text-xs text-green-700 mt-1">
-                {totalGigs === 0 
-                  ? "Comece a aceitar gigs para ver seus ganhos aqui"
-                  : totalGigs === 1 
-                    ? "1 trabalho confirmado" 
-                    : `${totalGigs} trabalhos confirmados`}
-              </p>
-              {totalEarnings > 0 && (
-                <p className="text-xs text-green-600/80 mt-1 font-medium">
-                  🎉 Você já ganhou {formatCurrency(totalEarnings)} tocando!
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-blue-900">
-                Este Mês
-              </CardTitle>
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-900">
-                {formatCurrency(earningsLast30Days)}
-              </div>
-              <p className="text-xs text-blue-700 mt-1">
-                {(() => {
-                  const monthGigs = gigs.filter(gig => gig.confirmed_at && new Date(gig.confirmed_at) >= thirtyDaysAgo).length;
-                  if (monthGigs === 0) return "Nenhum trabalho este mês ainda";
-                  if (monthGigs === 1) return "1 trabalho confirmado";
-                  return `${monthGigs} trabalhos confirmados`;
-                })()}
-              </p>
-              {earningsLast30Days > 0 && totalEarnings > earningsLast30Days && (
-                <p className="text-xs text-blue-600/80 mt-1">
-                  {((earningsLast30Days / totalEarnings) * 100).toFixed(0)}% do seu total
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-purple-900">
-                Horas Trabalhadas
-              </CardTitle>
-              <Clock className="h-5 w-5 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-900">
-                {formatNumber(totalHours)}
-              </div>
-              <p className="text-xs text-purple-700 mt-1">
-                {formatNumber(totalMinutes)} minutos totais
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-orange-900">
-                Média por Hora
-              </CardTitle>
-              <BarChart3 className="h-5 w-5 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-900">
-                {formatCurrency(averagePerHour)}
-              </div>
-              <p className="text-xs text-orange-700 mt-1">
-                {formatCurrency(averagePerGig)} por trabalho
-              </p>
-              {topInstruments.length > 0 && (
-                <p className="text-xs text-orange-600/80 mt-1 font-medium">
-                  Seu instrumento mais rentável: {topInstruments[0].instrument}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Card de Ganhos Esperados */}
-        <Card className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-indigo-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-indigo-900">
-              <Calendar className="h-5 w-5 text-indigo-600" />
-              Ganhos Esperados - Próximas Semanas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Total esperado */}
-              <div className="bg-white/60 rounded-xl p-4 border border-indigo-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-indigo-700 mb-1">
-                      {totalExpectedEarnings > 0 ? "💰 Você vai receber" : "Nenhum trabalho confirmado"}
-                    </p>
-                    <p className="text-2xl font-bold text-indigo-900">
-                      {formatCurrency(totalExpectedEarnings)}
-                    </p>
-                    {totalExpectedEarnings > 0 && (
-                      <p className="text-xs text-indigo-600/80 mt-1">
-                        {upcomingGigs.length === 1 
-                          ? "1 gig confirmada nas próximas semanas"
-                          : `${upcomingGigs.length} gigs confirmadas nas próximas semanas`}
-                      </p>
-                    )}
-                  </div>
-                  {totalExpectedEarnings > 0 && (
-                    <div className="text-right">
-                      <p className="text-sm text-indigo-600 font-semibold">
-                        {upcomingGigs.length} {upcomingGigs.length === 1 ? "gig" : "gigs"}
-                      </p>
-                    </div>
-                  )}
+        {/* MODO BÁSICO */}
+        {viewMode === "basic" && (
+          <div className="space-y-6">
+            {/* BLOCO 1 — HERO FINANCEIRO */}
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500">
+              <CardContent className="p-8 md:p-12 text-white">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="text-5xl">💰</div>
                 </div>
-              </div>
+                <h2 className="text-xl md:text-2xl font-semibold mb-2">Total já ganho</h2>
+                <p className="text-4xl md:text-5xl font-bold mb-4">{formatCurrency(totalEarnings)}</p>
+                <div className="flex items-center gap-2 text-white/90">
+                  <span className="text-lg font-medium">
+                    {pastGigs.length} {pastGigs.length === 1 ? "show confirmado" : "shows confirmados"}
+                  </span>
+                </div>
+                {totalEarnings > 0 && (
+                  <p className="mt-4 text-lg font-medium">
+                    Você já ganhou dinheiro tocando 🎶
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
-              {/* Ganhos por semana */}
-              {weeklyEarningsArray.length > 0 ? (
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-indigo-900">Próximas 4 Semanas</p>
-                  {weeklyEarningsArray.map((weekData, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-white/60 rounded-lg p-3 border border-indigo-100 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                          {idx + 1}
+            {/* BLOCO 2 — AGORA & FUTURO */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border-2 border-blue-200 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="text-3xl">📅</div>
+                    <h3 className="text-lg font-semibold text-gray-900">Este mês</h3>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900 mb-2">{formatCurrency(thisMonthEarnings)}</p>
+                  <p className="text-sm text-gray-600">
+                    {thisMonthGigs.length} {thisMonthGigs.length === 1 ? "show confirmado" : "shows confirmados"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-purple-200 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="text-3xl">🔮</div>
+                    <h3 className="text-lg font-semibold text-gray-900">Você vai receber</h3>
+                  </div>
+                  <p className="text-3xl font-bold text-gray-900 mb-2">{formatCurrency(futureEarnings)}</p>
+                  <p className="text-sm text-gray-600">
+                    Próximas semanas
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <p className="text-sm text-gray-500 text-center -mt-4">
+              Previsão baseada em shows já confirmados
+            </p>
+
+            {/* BLOCO 3 — PRÓXIMOS SHOWS */}
+            {futureGigs.length > 0 && (
+              <Card className="border-2 border-gray-200 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Próximos shows</h3>
+                  <div className="space-y-3">
+                    {futureGigs.slice(0, 10).map((gig) => (
+                      <div
+                        key={gig.id}
+                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{getInstrumentEmoji(gig.instrument || "Outro")}</span>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {formatDate(gig.start_time)} · {gig.location_name || gig.city || "Local"}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{weekData.week}</p>
-                          <p className="text-xs text-gray-600">
-                            {weekData.count} {weekData.count === 1 ? "trabalho" : "trabalhos"}
-                          </p>
+                        <p className="text-lg font-bold text-gray-900">{formatCurrency(gig.cache || 0)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* BLOCO 4 — CTA EDUCATIVO */}
+            <Card className="border-2 border-gray-200 bg-gray-50">
+              <CardContent className="p-6 text-center">
+                <p className="text-base text-gray-700 mb-3">
+                  Quer entender quais shows rendem mais pra você?
+                </p>
+                <Button
+                  onClick={() => setViewMode("advanced")}
+                  className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
+                >
+                  👉 Ative o modo avançado
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* MODO AVANÇADO */}
+        {viewMode === "advanced" && (
+          <div className="space-y-8">
+            {/* BLOCO 1 — RESUMO PROFISSIONAL */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-2 border-green-200 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <h3 className="text-sm font-semibold text-gray-700">💰 Total já ganho</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalEarnings)}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {pastGigs.length} {pastGigs.length === 1 ? "show" : "shows"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-blue-200 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <h3 className="text-sm font-semibold text-gray-700">📅 Este mês</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(thisMonthEarnings)}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {thisMonthGigs.length} {thisMonthGigs.length === 1 ? "show" : "shows"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-purple-200 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-sm font-semibold text-gray-700">⏱ Horas tocadas</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{totalHours}</p>
+                  <p className="text-xs text-gray-500 mt-1">Total acumulado</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-orange-200 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="h-5 w-5 text-orange-600" />
+                    <h3 className="text-sm font-semibold text-gray-700">💸 Quanto você ganha por hora</h3>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(earningsPerHour)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Média geral</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* BLOCO 2 — INSIGHTS AUTOMÁTICOS */}
+            {insights.length > 0 && (
+              <Card className="border-2 border-purple-200 shadow-md bg-gradient-to-br from-purple-50 to-pink-50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-900">Insights automáticos</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {insights.map((insight, idx) => (
+                      <div key={idx} className="flex items-center gap-3 bg-white/60 rounded-lg p-3 border border-purple-100">
+                        <span className="text-2xl">{insight.emoji}</span>
+                        <p className="text-base text-gray-800 font-medium">{insight.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* BLOCO 3 — EVOLUÇÃO DE GANHOS */}
+            <Card className="border-2 border-gray-200 shadow-md">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">Evolução de ganhos</h3>
+                <div className="space-y-4">
+                  {last6Months.map((month, idx) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700 font-medium capitalize">{month.month}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-gray-900 font-semibold">{formatCurrency(month.earnings)}</span>
+                          <span className="text-gray-500 text-xs">
+                            {month.gigs} {month.gigs === 1 ? "show" : "shows"}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-indigo-900">
-                          {formatCurrency(weekData.earnings)}
-                        </p>
+                      <div className="relative h-8 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500"
+                          style={{ width: `${(month.earnings / maxEarnings) * 100}%` }}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-6 bg-white/60 rounded-lg border border-indigo-100">
-                  <Calendar className="h-8 w-8 text-indigo-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">
-                    Nenhum trabalho confirmado nas próximas semanas
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Gráfico de Evolução de Ganhos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Evolução de Ganhos (Últimos 6 Meses)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {last6Months.map((month, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700 font-medium">{month.month}</span>
-                      <div className="flex items-center gap-4">
-                        <span className="text-gray-600">
-                          {formatCurrency(month.earnings)}
-                        </span>
-                        <span className="text-gray-500 text-xs">
-                          {formatNumber(month.gigs)} {month.gigs === 1 ? "trabalho" : "trabalhos"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="relative h-8 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(month.earnings / maxEarnings) * 100}%` }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-900">
-                        {showValues && month.earnings > 0 && (
-                          <span>{((month.earnings / maxEarnings) * 100).toFixed(0)}%</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Gráfico de Distribuição por Instrumento */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Music className="h-5 w-5" />
-                Top 5 Instrumentos
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topInstruments.length > 0 ? (
-                  topInstruments.map((item, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
-                            {item.instrument}
-                          </Badge>
-                          <span className="text-gray-500 text-xs">
-                            {formatNumber(item.count)} {item.count === 1 ? "trabalho" : "trabalhos"}
-                          </span>
+            {/* BLOCO 4 — INSTRUMENTOS MAIS RENTÁVEIS */}
+            {topInstruments.length > 0 && (
+              <Card className="border-2 border-gray-200 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Instrumentos mais rentáveis</h3>
+                  <div className="space-y-4">
+                    {topInstruments.slice(0, 5).map((item, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{getInstrumentEmoji(item.instrument)}</span>
+                            <span className="text-gray-900 font-medium">{item.instrument}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-gray-600 text-xs">
+                              {item.count} {item.count === 1 ? "show" : "shows"}
+                            </span>
+                            <span className="text-gray-900 font-bold">{formatCurrency(item.earnings)}</span>
+                          </div>
                         </div>
-                        <span className="text-gray-700 font-semibold">
-                          {formatCurrency(item.earnings)}
-                        </span>
+                        <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                            style={{ width: `${(item.earnings / maxInstrumentEarnings) * 100}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="relative h-6 bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className="absolute left-0 top-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
-                          style={{ width: `${(item.earnings / maxInstrumentEarnings) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-8">
-                    Nenhum dado disponível
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Estatísticas Adicionais */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-700">
-                Trabalhos por Mês (Média)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
-                {formatNumber(Math.round(totalGigs / 6 * 10) / 10)}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">
-                Baseado nos últimos 6 meses
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-700">
-                Ganho Médio por Trabalho
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
-                {formatCurrency(averagePerGig)}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">
-                {totalGigs} {totalGigs === 1 ? "trabalho" : "trabalhos"} confirmados
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium text-gray-700">
-                Horas por Trabalho (Média)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
-                {formatNumber(totalGigs > 0 ? Math.round((totalHours / totalGigs) * 10) / 10 : 0)}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">
-                {formatNumber(totalGigs)} {totalGigs === 1 ? "trabalho" : "trabalhos"} analisados
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabela de Trabalhos Recentes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5" />
-              Trabalhos Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recentGigs.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                        Data
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                        Trabalho
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                        Local
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                        Instrumento
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">
-                        Duração
-                      </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">
-                        Cachê
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentGigs.map((gig) => {
-                      const date = gig.start_time
-                        ? new Date(gig.start_time).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                          })
-                        : "—";
-                      const duration = gig.show_minutes
-                        ? `${Math.floor(gig.show_minutes / 60)}h${gig.show_minutes % 60}m`
-                        : "—";
-                      const location = gig.location_name || gig.city || "—";
-
-                      return (
-                        <tr key={gig.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-700">{date}</td>
-                          <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                            {gig.title || "—"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {location}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge variant="outline" className="border-gray-300 text-gray-900 bg-gray-50">
-                              {gig.instrument || "—"}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">{duration}</td>
-                          <td className="py-3 px-4 text-right text-sm font-semibold text-gray-900">
-                            {formatCurrency(gig.cache || 0)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-sm text-gray-600">
-                  Nenhum trabalho confirmado ainda
-                </p>
-              </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+
+            {/* BLOCO 5 — PRÓXIMOS GANHOS DETALHADOS */}
+            {futureGigs.length > 0 && (
+              <Card className="border-2 border-gray-200 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Próximos ganhos detalhados</h3>
+                  <div className="space-y-3">
+                    {futureGigs.map((gig) => (
+                      <div
+                        key={gig.id}
+                        className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg border border-gray-200"
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="text-2xl">{getInstrumentEmoji(gig.instrument || "Outro")}</div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{gig.title}</p>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-600">
+                              <span>{formatDate(gig.start_time)}</span>
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {gig.location_name || gig.city || "Local"}
+                              </span>
+                              {gig.instrument && (
+                                <span>{gig.instrument}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-lg font-bold text-gray-900 ml-4">{formatCurrency(gig.cache || 0)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
 }
-
