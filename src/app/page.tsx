@@ -17,6 +17,7 @@ import {
   HeartHandshake,
   MapPin,
   MessageCircle,
+  Megaphone,
   ShieldCheck,
   Sparkles,
   Star,
@@ -213,9 +214,10 @@ export default async function Page() {
 
       <main className="relative">
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,179,71,0.35),_transparent_45%),radial-gradient(circle_at_70%_20%,_rgba(42,166,161,0.25),_transparent_40%),linear-gradient(180deg,_#fff7f0_0%,_#f8fbff_60%,_#ffffff_100%)]" />
-          <div className="absolute -top-24 right-0 h-[320px] w-[320px] rounded-full bg-[#ff6b4a]/20 blur-[120px]" />
-          <div className="absolute bottom-0 left-6 h-[280px] w-[280px] rounded-full bg-[#2aa6a1]/20 blur-[120px]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,_rgba(255,107,74,0.25),_transparent_45%),radial-gradient(circle_at_80%_12%,_rgba(42,166,161,0.25),_transparent_40%),radial-gradient(circle_at_40%_90%,_rgba(255,179,71,0.28),_transparent_48%),linear-gradient(140deg,_#fff2e9_0%,_#fffaf5_38%,_#eef8f7_100%)]" />
+          <div className="absolute -top-24 right-0 h-[340px] w-[340px] rounded-full bg-[#ff6b4a]/25 blur-[120px]" />
+          <div className="absolute bottom-0 left-6 h-[300px] w-[300px] rounded-full bg-[#2aa6a1]/25 blur-[120px]" />
+          <div className="absolute inset-x-0 top-24 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
 
           <div className="relative mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-24">
             <div className="space-y-6">
@@ -276,29 +278,63 @@ export default async function Page() {
             </div>
 
             <div className="relative space-y-4">
-              <Card className="border border-white/70 bg-gradient-to-br from-[#fff1e7] via-white to-[#e9f7f5] shadow-sm">
-                <CardContent className="space-y-3 p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
-                      Convite chegando
+              <Card className="border border-white/70 bg-gradient-to-br from-[#fff6ee] via-[#fffefb] to-[#eef8f7] shadow-[0_18px_45px_rgba(255,159,84,0.18)]">
+                <CardContent className="space-y-4 p-6">
+                  <div className="flex items-center justify-center rounded-3xl bg-gradient-to-br from-[#ffefe0] via-white to-[#eefaf7] p-6">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-md">
+                      <Megaphone className="h-8 w-8 text-[#ff6b4a]" />
                     </div>
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      Novo
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-2xl bg-emerald-400/90 px-4 py-3 text-white">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-white/80">Cache</p>
+                      <p className="text-xl font-semibold">R$ 450,00</p>
+                    </div>
+                    <span className="text-2xl font-semibold">R$</span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-lg font-semibold text-foreground">Pagode da Thati</p>
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white shadow">
+                        <span className="h-2 w-2 rounded-full bg-[#ff6b4a]" />
+                      </span>
+                      Publicado por Thatiane Scarpante
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                      Violao
+                    </span>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs text-foreground/70 shadow-sm">
+                      Sao Paulo - Centro
                     </span>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-lg font-semibold text-foreground">Show no Bar do Centro</p>
-                    <p className="text-sm text-foreground/70">
-                      Sabado, 21h • R$ 450 • Pop/Rock
-                    </p>
+
+                  <div className="grid gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-sm text-foreground/70 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-foreground/50">Distancia</p>
+                      <p className="text-lg font-semibold text-foreground">0,6 km</p>
+                      <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                        Proximo
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-foreground/50">Tempo de carro</p>
+                      <p className="text-lg font-semibold text-foreground">~10 min</p>
+                      <span className="text-xs text-foreground/60">Tempo estimado</span>
+                    </div>
                   </div>
+
                   <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/80 px-4 py-3">
                     <div className="flex items-center gap-2 text-sm text-foreground/70">
-                      <MapPin className="h-4 w-4 text-[#2aa6a1]" />
-                      6 km de voce
+                      <Calendar className="h-4 w-4 text-[#2aa6a1]" />
+                      01/01/2026 - 20:00
                     </div>
                     <Button size="sm" className="btn-gradient text-white">
-                      Ver convite
+                      Ver detalhes
                     </Button>
                   </div>
                 </CardContent>
@@ -340,7 +376,8 @@ export default async function Page() {
                 Plataforma que põe show na sua agenda
               </h2>
               <p className="text-lg text-foreground/75">
-                Você abre o app e já vê convite, meta do dia e o que fazer agora.\r\n                Resultado: mais show fechado e menos enrolação.
+                Você abre o app e já vê convite, meta do dia e o que fazer agora.
+                Resultado: mais show fechado e menos enrolação.
               </p>
               <div className="space-y-4">
                 {journeySteps.map((item) => (
