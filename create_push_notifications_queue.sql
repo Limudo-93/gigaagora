@@ -52,9 +52,17 @@ CREATE INDEX IF NOT EXISTS idx_push_notification_queue_status
   ON push_notification_queue(status, next_attempt_at);
 CREATE INDEX IF NOT EXISTS idx_push_notification_queue_user
   ON push_notification_queue(user_id);
-CREATE UNIQUE INDEX IF NOT EXISTS uq_push_notification_queue_event
-  ON push_notification_queue(user_id, event_key)
-  WHERE event_key IS NOT NULL;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_push_notification_queue_event'
+  ) THEN
+    ALTER TABLE push_notification_queue
+      ADD CONSTRAINT uq_push_notification_queue_event UNIQUE (user_id, event_key);
+  END IF;
+END $$;
 
 ALTER TABLE push_notification_queue ENABLE ROW LEVEL SECURITY;
 
