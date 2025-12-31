@@ -113,14 +113,15 @@ export async function createPushSubscription(
 ): Promise<PushSubscription | null> {
   try {
     // VAPID public key - deve ser configurado no ambiente
-    const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const rawVapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-    if (!vapidPublicKey) {
+    if (!rawVapidPublicKey) {
       const error = new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY não configurado");
       console.error("[Push Notifications] VAPID_PUBLIC_KEY não configurado");
       throw error;
     }
 
+    const vapidPublicKey = normalizeVapidKey(rawVapidPublicKey);
     const keyArray = urlBase64ToUint8Array(vapidPublicKey);
     // Type assertion necessário devido à inferência de tipos do TypeScript
     const subscription = await registration.pushManager.subscribe({
@@ -143,8 +144,12 @@ export async function createPushSubscription(
  * Converte VAPID key de Base64 URL para Uint8Array
  */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  if (!/^[A-Za-z0-9_-]+$/.test(base64String)) {
+    throw new Error("VAPID public key contém caracteres inválidos");
+  }
+
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 
   const rawData = window.atob(base64);
   const bytes = new Uint8Array(rawData.length);
@@ -154,6 +159,12 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   }
 
   return bytes;
+}
+
+function normalizeVapidKey(key: string): string {
+  const trimmed = key.trim();
+  // Remover qualquer whitespace interno acidental (copiar/colar)
+  return trimmed.replace(/\s+/g, "");
 }
 
 /**
