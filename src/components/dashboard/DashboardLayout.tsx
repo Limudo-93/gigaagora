@@ -12,10 +12,12 @@ export default function DashboardLayout({
   children,
   sidebar,
   fullWidth = false,
+  hideFooterOnMobile = false,
 }: {
   children: React.ReactNode;
   sidebar?: React.ReactNode;
   fullWidth?: boolean;
+  hideFooterOnMobile?: boolean;
 }) {
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -51,7 +53,13 @@ export default function DashboardLayout({
           )}
         </div>
       </main>
-      <Footer />
+      {hideFooterOnMobile ? (
+        <div className="hidden md:block">
+          <Footer />
+        </div>
+      ) : (
+        <Footer />
+      )}
     </div>
   );
 }

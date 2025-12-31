@@ -294,7 +294,7 @@ export default function MessagesPage() {
   }, []);
 
   return (
-    <DashboardLayout fullWidth>
+    <DashboardLayout fullWidth hideFooterOnMobile>
       <div className="flex min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-160px)] flex-col lg:flex-row bg-gray-50 relative overflow-hidden">
         {/* Lista de Conversas - Mobile first */}
         <div className={`${
