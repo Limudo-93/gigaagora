@@ -17,6 +17,7 @@ import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import { Button } from "@/components/ui/button";
 import EnablePushNotificationsCard from "@/components/push-notifications/EnablePushNotificationsCard";
 import PwaInstallGuideCard from "@/components/dashboard/PwaInstallGuideCard";
+import MissionProgressCard from "@/components/dashboard/MissionProgressCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -36,6 +37,9 @@ export default async function DashboardPage() {
 
       {/* 🎯 Bloco de Ação Prioritária - Topo do dashboard */}
       <PriorityActionBlock userId={user.id} />
+
+      {/* Missões e progresso */}
+      <MissionProgressCard />
 
       {/* Ativação natural de notificações */}
       <EnablePushNotificationsCard userId={user.id} />

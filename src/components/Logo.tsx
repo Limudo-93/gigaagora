@@ -35,11 +35,11 @@ export default function Logo({ size = "md", showText = true, className = "" }: L
       </div>
       {showText && (
         <div>
-          <span className={`${textSizes[size]} font-bold bg-gradient-to-r from-orange-600 via-pink-600 to-purple-600 bg-clip-text text-transparent`}>
+          <span className={`${textSizes[size]} font-semibold font-display bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent`}>
             Chama o Músico
           </span>
           {size !== "sm" && (
-            <p className="text-xs text-gray-500 -mt-1">Conectando talentos</p>
+            <p className="text-xs text-muted-foreground -mt-1">Conectando palcos e talentos</p>
           )}
         </div>
       )}

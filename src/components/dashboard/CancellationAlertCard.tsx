@@ -175,7 +175,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
               <Button
                 onClick={() => republishGig(notification.gig_id, notification.id)}
                 size="sm"
-                className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white text-xs md:text-sm"
+                className="w-full sm:w-auto bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white text-xs md:text-sm"
               >
                 <RefreshCw className="h-3.5 w-3.5 md:h-4 md:w-4 mr-1.5 md:mr-2" />
                 Republicar Gig

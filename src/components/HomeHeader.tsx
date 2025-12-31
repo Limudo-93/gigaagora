@@ -17,11 +17,14 @@ export default function HomeHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-white/60 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
-          <Link href={"/" as any}>
+          <Link href={"/" as any} className="flex items-center gap-2">
             <Logo size="md" />
+            <span className="hidden lg:inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              novo
+            </span>
           </Link>
           
           {/* Menu de navegação desktop - Links institucionais */}
@@ -30,7 +33,7 @@ export default function HomeHeader() {
               <Link 
                 key={link.href}
                 href={link.href} 
-                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
               >
                 {link.label}
               </Link>
@@ -41,7 +44,7 @@ export default function HomeHeader() {
             {/* Botão menu mobile */}
             <button
               type="button"
-              className="md:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-md text-foreground/80 hover:bg-white/60 transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -54,18 +57,14 @@ export default function HomeHeader() {
 
             {/* Botões de ação - desktop */}
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" className="text-foreground hover:bg-muted/50" asChild>
+              <Button variant="ghost" className="text-foreground hover:bg-white/60" asChild>
                 <Link href={"/login" as any}>Entrar</Link>
               </Button>
               <Button 
-                className="text-white shadow-md transition-all duration-200" 
+                className="btn-gradient text-white shadow-md transition-all duration-200" 
                 asChild
-                style={{
-                  background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-                  color: "white"
-                }}
               >
-                <Link href={"/signup" as any}>Criar Conta</Link>
+                <Link href={"/signup" as any}>Começar missão</Link>
               </Button>
             </div>
           </div>
@@ -73,31 +72,27 @@ export default function HomeHeader() {
 
         {/* Menu mobile */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
+          <div className="md:hidden mt-4 pb-4 border-t border-white/60">
             <nav className="flex flex-col gap-4 pt-4">
               {navLinks.map((link) => (
                 <Link 
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-gray-700 hover:text-primary transition-colors py-2"
+                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="flex flex-col gap-2 pt-2 border-t border-gray-200">
-                <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-muted/50" asChild>
+              <div className="flex flex-col gap-2 pt-2 border-t border-white/60">
+                <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-white/60" asChild>
                   <Link href={"/login" as any} onClick={() => setMobileMenuOpen(false)}>Entrar</Link>
                 </Button>
                 <Button 
-                  className="w-full text-white shadow-md transition-all duration-200" 
+                  className="w-full btn-gradient text-white shadow-md transition-all duration-200" 
                   asChild
-                  style={{
-                    background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-                    color: "white"
-                  }}
                 >
-                  <Link href={"/signup" as any} onClick={() => setMobileMenuOpen(false)}>Criar Conta</Link>
+                  <Link href={"/signup" as any} onClick={() => setMobileMenuOpen(false)}>Começar missão</Link>
                 </Button>
               </div>
             </nav>

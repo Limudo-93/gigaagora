@@ -372,7 +372,7 @@ export default function GigDetailsDialog({
             {roles.length > 0 && (
               <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/50 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-purple-500 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] flex items-center justify-center">
                     <ClipboardList size={16} className="text-white" />
                   </div>
                   <p className="text-base font-semibold text-gray-900">Vagas / Requisitos</p>
@@ -504,7 +504,7 @@ export default function GigDetailsDialog({
                       >
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={musician.musician_photo_url || undefined} />
-                          <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white text-sm">
+                          <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white text-sm">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
@@ -534,7 +534,7 @@ export default function GigDetailsDialog({
                 <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white/80">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={contractorInfo.contractor_photo_url || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white text-sm">
+                    <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white text-sm">
                       {/* Iniciais do contratante (corrigido para TypeScript) */}
                       {contractorInfo.contractor_name
                         ? contractorInfo.contractor_name
@@ -565,7 +565,7 @@ export default function GigDetailsDialog({
                     onOpenChange(false);
                   }
                 }}
-                className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
+                className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white"
               >
                 <Users className="mr-2 h-4 w-4" />
                 Ver Matches

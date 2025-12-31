@@ -20,7 +20,7 @@ export default function NotFound() {
         <div className="relative z-10 max-w-2xl w-full text-center space-y-6 sm:space-y-8">
           {/* 404 Number */}
           <div className="space-y-2">
-            <h1 className="text-8xl sm:text-9xl font-bold bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+            <h1 className="text-8xl sm:text-9xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent">
               404
             </h1>
             <div className="flex items-center justify-center gap-2 text-primary">

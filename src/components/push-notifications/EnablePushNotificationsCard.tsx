@@ -114,10 +114,10 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
   const showPwaHint = !isStandalone && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="border-amber-200 bg-amber-50/60">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Bell className="h-5 w-5 text-blue-600" />
+          <Bell className="h-5 w-5 text-[#ff6b4a]" />
           Ative as notificações
         </CardTitle>
       </CardHeader>
@@ -127,7 +127,7 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
         </p>
 
         {showPwaHint && (
-          <div className="text-xs text-blue-800 bg-white/80 border border-blue-200 rounded-lg p-3">
+          <div className="text-xs text-amber-900 bg-white/80 border border-amber-200 rounded-lg p-3">
             No iOS, instale o app na Tela de Início para receber notificações.
           </div>
         )}
@@ -135,7 +135,7 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
         {status === "idle" && (
           <Button
             onClick={handleEnable}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+            className="w-full btn-gradient text-white"
           >
             <Bell className="mr-2 h-4 w-4" />
             Ativar notificações
@@ -143,8 +143,8 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
         )}
 
         {status === "registering" && (
-          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
-            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-amber-200">
+            <Loader2 className="h-5 w-5 animate-spin text-[#ff6b4a]" />
             <p className="text-sm text-gray-700">{message}</p>
           </div>
         )}

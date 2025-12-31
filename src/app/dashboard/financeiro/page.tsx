@@ -344,7 +344,7 @@ export default function FinanceiroPage() {
               onClick={() => setViewMode("basic")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 viewMode === "basic"
-                  ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-sm"
+                  ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -354,7 +354,7 @@ export default function FinanceiroPage() {
               onClick={() => setViewMode("advanced")}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 viewMode === "advanced"
-                  ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-sm"
+                  ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -367,7 +367,7 @@ export default function FinanceiroPage() {
         {viewMode === "basic" && (
           <div className="space-y-6">
             {/* BLOCO 1 — HERO FINANCEIRO */}
-            <Card className="border-0 shadow-xl bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500">
+            <Card className="border-0 shadow-xl gradient-music">
               <CardContent className="p-8 md:p-12 text-white">
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-5xl">💰</div>
@@ -455,7 +455,7 @@ export default function FinanceiroPage() {
                 </p>
                 <Button
                   onClick={() => setViewMode("advanced")}
-                  className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
+                  className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white"
                 >
                   👉 Ative o modo avançado
                 </Button>
@@ -639,3 +639,4 @@ export default function FinanceiroPage() {
     </DashboardLayout>
   );
 }
+

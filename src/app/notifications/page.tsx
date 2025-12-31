@@ -379,7 +379,7 @@ export default function NotificationsTestPage() {
                   <Button
                     onClick={() => sendNotification(template, selectedUserIds)}
                     disabled={sending || selectedUserIds.length === 0}
-                    className="w-full bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
+                    className="w-full bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white"
                   >
                     {sending ? (
                       <>

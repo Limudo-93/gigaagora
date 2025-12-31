@@ -5,35 +5,38 @@
 @layer base {
   :root {
     /* Cores base - serão sobrescritas pelo sistema de temas */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 28 100% 98%;
+    --foreground: 220 25% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 25% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 25% 14%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 16 88% 56%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 34 100% 94%;
+    --secondary-foreground: 24 20% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 40% 94%;
+    --muted-foreground: 24 12% 38%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 176 55% 38%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 28 30% 86%;
+    --input: 28 30% 86%;
+    --ring: 16 88% 56%;
 
-    --radius: 0.5rem;
+    --radius: 0.9rem;
+    --brand-1: #ff6b4a;
+    --brand-2: #ffb347;
+    --brand-3: #2aa6a1;
   }
 
   * {
@@ -43,11 +46,17 @@
   body {
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
+    background-image: radial-gradient(circle at 10% 20%, rgba(255, 179, 71, 0.2), transparent 40%),
+      radial-gradient(circle at 80% 0%, rgba(42, 166, 161, 0.15), transparent 45%),
+      linear-gradient(180deg, rgba(255, 247, 237, 0.9) 0%, rgba(244, 251, 255, 0.9) 100%);
+    background-attachment: fixed;
   }
 
   /* Garantir contraste adequado em todos os temas */
   h1, h2, h3, h4, h5, h6 {
     @apply text-foreground;
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 
   p, span, div {
@@ -63,11 +72,11 @@
 @layer components {
   /* Classes utilitárias para gradientes temáticos */
   .gradient-music {
-    background: var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%));
+    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%));
   }
 
   .gradient-text {
-    background: var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%));
+    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -80,7 +89,7 @@
 
   /* Botões com gradiente usando tema */
   .btn-gradient {
-    background: var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%));
+    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%));
     @apply text-primary-foreground shadow hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all;
   }
   
@@ -91,7 +100,7 @@
   /* Botão padrão com gradiente do tema */
   button[class*="bg-primary"],
   .btn-primary-gradient {
-    background: var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%)) !important;
+    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%)) !important;
   }
   
   button[class*="bg-primary"]:hover,

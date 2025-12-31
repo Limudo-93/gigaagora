@@ -51,7 +51,7 @@ export default function ThemedBackground() {
 
   // Mapear cores do tema para classes Tailwind
   const bgGradients: Record<ThemeName, string> = {
-    default: 'from-purple-50 via-orange-50 to-blue-50',
+    default: 'from-[#fff1e7] via-white to-[#e9f7f5]',
     ocean: 'from-blue-50 via-cyan-50 to-teal-50',
     sunset: 'from-orange-50 via-pink-50 to-rose-50',
     forest: 'from-green-50 via-emerald-50 to-amber-50',
@@ -60,12 +60,12 @@ export default function ThemedBackground() {
   };
 
   const radialGradients: Record<ThemeName, { color1: string; color2: string; color3: string }> = {
-    default: { color1: 'rgba(255,165,0,0.1)', color2: 'rgba(147,51,234,0.1)', color3: 'rgba(59,130,246,0.1)' },
+    default: { color1: 'rgba(255, 179, 71, 0.18)', color2: 'rgba(42, 166, 161, 0.15)', color3: 'rgba(255, 107, 74, 0.12)' },
     ocean: { color1: 'rgba(59,130,246,0.1)', color2: 'rgba(6,182,212,0.1)', color3: 'rgba(20,184,166,0.1)' },
     sunset: { color1: 'rgba(249,115,22,0.1)', color2: 'rgba(236,72,153,0.1)', color3: 'rgba(244,63,94,0.1)' },
     forest: { color1: 'rgba(22,163,74,0.1)', color2: 'rgba(16,185,129,0.1)', color3: 'rgba(217,119,6,0.1)' },
     royal: { color1: 'rgba(147,51,234,0.1)', color2: 'rgba(245,158,11,0.1)', color3: 'rgba(234,179,8,0.1)' },
-    dark: { color1: 'rgba(249,115,22,0.15)', color2: 'rgba(168,85,247,0.15)', color3: 'rgba(59,130,246,0.15)' },
+    dark: { color1: 'rgba(255, 107, 74, 0.2)', color2: 'rgba(255, 179, 71, 0.18)', color3: 'rgba(42, 166, 161, 0.18)' },
   };
 
   const gradients = radialGradients[theme];

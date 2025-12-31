@@ -46,7 +46,7 @@ export default function PwaInstallGuideCard() {
 
   return (
     <>
-      <Card className="border-2 border-primary/30 bg-gradient-to-br from-white via-orange-50 to-purple-50 shadow-sm">
+      <Card className="border-2 border-primary/30 bg-gradient-to-br from-white via-amber-50 to-teal-50 shadow-sm">
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -128,7 +128,7 @@ export default function PwaInstallGuideCard() {
 
               <div className="rounded-xl border border-gray-200 p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                  <MoreVertical className="h-4 w-4 text-purple-500" />
+                  <MoreVertical className="h-4 w-4 text-[#2aa6a1]" />
                   Android (Chrome)
                 </div>
                 <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-gray-600">

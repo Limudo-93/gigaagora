@@ -56,7 +56,7 @@ export default function InviteDetailsDialog({
           <div className="space-y-6">
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              <Badge className="bg-gradient-to-r from-orange-500 to-purple-500 text-white border-0">
+              <Badge className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white border-0">
                 Convite
               </Badge>
 
@@ -244,7 +244,7 @@ export default function InviteDetailsDialog({
             {/* Role (gig_roles) - Card moderno */}
             <div className="rounded-2xl border border-white/20 backdrop-blur-xl bg-gradient-to-br from-white/90 to-white/70 p-5 shadow-lg space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-purple-500 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] flex items-center justify-center">
                   <ClipboardList size={16} className="text-white" />
                 </div>
                 <p className="text-base font-semibold text-gray-900">Vaga / Requisitos</p>
@@ -358,7 +358,7 @@ export default function InviteDetailsDialog({
               </Button>
               <Button 
                 onClick={onAccept}
-                className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+                className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
               >
                 Aceitar
               </Button>

@@ -217,7 +217,7 @@ export default function AvaliacoesPage() {
               {/* Estatísticas principais */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-orange-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                  <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] flex items-center justify-center flex-shrink-0">
                     <Star className="h-6 w-6 sm:h-8 sm:w-8 text-white fill-white" />
                   </div>
                   <div className="min-w-0 flex-1">

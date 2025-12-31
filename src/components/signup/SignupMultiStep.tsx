@@ -460,7 +460,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
                     currentStep >= step
-                      ? "bg-gradient-to-r from-orange-500 to-purple-500 border-transparent text-white"
+                      ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] border-transparent text-white"
                       : "border-gray-300 bg-white text-gray-400"
                   }`}
                 >
@@ -474,7 +474,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   <div
                     className={`h-1 flex-1 mx-2 transition-all duration-300 ${
                       currentStep > step
-                        ? "bg-gradient-to-r from-orange-500 to-purple-500"
+                        ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1]"
                         : "bg-gray-200"
                     }`}
                   />
@@ -501,7 +501,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
         {currentStep === 1 && (
           <form onSubmit={handleStep1Submit} className="space-y-5 animate-fade-in">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent mb-2">
                 Criar sua conta
               </h2>
               <p className="text-sm text-gray-600">
@@ -629,7 +629,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
             <Button
               type="submit"
               disabled={loading || Object.keys(errors).length > 0}
-              className="w-full bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold"
+              className="w-full bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] hover:from-[#ff6b4a] hover:via-[#ffb347] hover:to-[#2aa6a1] text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold"
             >
               {loading ? (
                 <>
@@ -655,7 +655,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
         {currentStep === 2 && (
           <form onSubmit={handleStep2Submit} className="space-y-6 animate-fade-in">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent mb-3">
                 Complete seu perfil
               </h2>
               
@@ -684,7 +684,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 <div className="flex items-center gap-4">
                   <Avatar className="h-20 w-20 ring-2 ring-orange-500/20">
                     <AvatarImage src={data.photoUrl || undefined} />
-                    <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white text-xl">
+                    <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white text-xl">
                       {data.displayName.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -741,7 +741,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                       }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         data.instrument === instrument
-                          ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white shadow-md"
+                          ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white shadow-md"
                           : "bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50"
                       }`}
                     >
@@ -892,7 +892,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
               <Button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
+                className="flex-1 bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] hover:from-[#ff6b4a] hover:via-[#ffb347] hover:to-[#2aa6a1] text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
               >
                 {loading ? (
                   <>
@@ -927,7 +927,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent mb-3">
                 {isCPFProvided ? "Verificação em andamento" : "Seu perfil está quase pronto 🎶"}
               </h2>
               <p className="text-gray-600 text-base">
@@ -967,7 +967,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                     router.push("/login");
                   }
                 }}
-                className="w-full bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold hover:scale-[1.02]"
+                className="w-full bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] hover:from-[#ff6b4a] hover:via-[#ffb347] hover:to-[#2aa6a1] text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold hover:scale-[1.02]"
               >
                 Ir para o Dashboard
                 <ArrowRight className="ml-2 h-5 w-5" />

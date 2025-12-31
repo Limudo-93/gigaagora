@@ -214,7 +214,7 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
         {status === "idle" && (
           <Button
             onClick={handleForceRegister}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+            className="w-full btn-gradient text-white"
           >
             <Bell className="mr-2 h-4 w-4" />
             Forçar Registro Agora

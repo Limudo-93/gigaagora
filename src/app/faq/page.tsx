@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import Logo from "@/components/Logo";
+import HomeHeader from "@/components/HomeHeader";
+import MarketingFooter from "@/components/MarketingFooter";
 import {
   Music,
   ChevronDown,
@@ -114,28 +115,11 @@ export default function FAQPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <Logo size="md" />
-            </Link>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" className="text-gray-700 hover:text-gray-900 hover:bg-gray-100" asChild>
-                <Link href={"/login" as any}>Entrar</Link>
-              </Button>
-              <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white" asChild>
-                <Link href={"/signup" as any}>Criar Conta</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <HomeHeader />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 text-white py-20">
+      <section className="relative overflow-hidden gradient-music text-white py-20">
         <div className="absolute inset-0 opacity-20" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           backgroundSize: '60px 60px'
@@ -171,28 +155,28 @@ export default function FAQPage() {
               <Button
                 variant={selectedCategory === "todos" ? "default" : "outline"}
                 onClick={() => setSelectedCategory("todos")}
-                className={selectedCategory === "todos" ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white" : ""}
+                className={selectedCategory === "todos" ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white" : ""}
               >
                 Todos
               </Button>
               <Button
                 variant={selectedCategory === "geral" ? "default" : "outline"}
                 onClick={() => setSelectedCategory("geral")}
-                className={selectedCategory === "geral" ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white" : ""}
+                className={selectedCategory === "geral" ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white" : ""}
               >
                 Geral
               </Button>
               <Button
                 variant={selectedCategory === "musico" ? "default" : "outline"}
                 onClick={() => setSelectedCategory("musico")}
-                className={selectedCategory === "musico" ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white" : ""}
+                className={selectedCategory === "musico" ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white" : ""}
               >
                 Músico
               </Button>
               <Button
                 variant={selectedCategory === "contratante" ? "default" : "outline"}
                 onClick={() => setSelectedCategory("contratante")}
-                className={selectedCategory === "contratante" ? "bg-gradient-to-r from-orange-500 to-purple-500 text-white" : ""}
+                className={selectedCategory === "contratante" ? "bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white" : ""}
               >
                 Contratante
               </Button>
@@ -215,9 +199,9 @@ export default function FAQPage() {
                     >
                       <div className="flex items-start gap-4 flex-1">
                         <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          faq.category === "geral" ? "bg-orange-100 text-orange-600" :
-                          faq.category === "musico" ? "bg-purple-100 text-purple-600" :
-                          "bg-blue-100 text-blue-600"
+                          faq.category === "geral" ? "bg-orange-100 text-orange-700" :
+                          faq.category === "musico" ? "bg-emerald-100 text-emerald-700" :
+                          "bg-amber-100 text-amber-700"
                         }`}>
                           <HelpCircle className="h-4 w-4" />
                         </div>
@@ -278,7 +262,7 @@ export default function FAQPage() {
           </p>
           <Button
             size="lg"
-            className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
+            className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] text-white"
             asChild
           >
             <Link href={"/contato" as any}>Falar com Suporte</Link>
@@ -286,51 +270,7 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 flex items-center justify-center">
-                  <Music className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-xl font-bold">Chama o Músico</span>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Conectando talentos musicais com oportunidades de trabalho
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Plataforma</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/dashboard/gigs" className="hover:text-white">Trabalhos</Link></li>
-                <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
-                <li><Link href="/dashboard/perfil" className="hover:text-white">Perfil</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Sobre</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href={"/como-funciona" as any} className="hover:text-white">Como Funciona</Link></li>
-                <li><Link href={"/sobre" as any} className="hover:text-white">Sobre Nós</Link></li>
-                <li><Link href={"/contato" as any} className="hover:text-white">Contato</Link></li>
-                <li><Link href={"/faq" as any} className="hover:text-white">FAQ</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href={"/termos" as any} className="hover:text-white">Termos de Uso</Link></li>
-                <li><Link href={"/privacidade" as any} className="hover:text-white">Privacidade</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Chama o Músico. Todos os direitos reservados.</p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

@@ -49,10 +49,10 @@ function SignupForm({ referralCode }: { referralCode: string | null }) {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Background gradient com padrão sutil - igual ao dashboard */}
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-orange-50 to-blue-50 -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,165,0,0.1),transparent_50%)] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(147,51,234,0.1),transparent_50%)] -z-10" />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(59,130,246,0.1),transparent_50%)] -z-10" />
+      <div className="fixed inset-0 bg-gradient-to-br from-[#fff1e7] via-white to-[#e9f7f5] -z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,179,71,0.16),transparent_50%)] -z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(42,166,161,0.12),transparent_50%)] -z-10" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,74,0.12),transparent_50%)] -z-10" />
       
       {/* Padrão de ondas musicais sutil */}
       <div className="fixed inset-0 opacity-[0.03] -z-10" style={{

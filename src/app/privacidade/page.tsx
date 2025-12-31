@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import Logo from "@/components/Logo";
-import { Music } from "lucide-react";
+import HomeHeader from "@/components/HomeHeader";
+import MarketingFooter from "@/components/MarketingFooter";
 
 export const metadata = {
   title: "Política de Privacidade - Chama o Músico",
@@ -10,25 +9,8 @@ export const metadata = {
 
 export default function PrivacidadePage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/90 border-b border-gray-200 shadow-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <Logo size="md" />
-            </Link>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" className="text-gray-700 hover:text-gray-900 hover:bg-gray-100" asChild>
-                <Link href={"/login" as any}>Entrar</Link>
-              </Button>
-              <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white" asChild>
-                <Link href={"/signup" as any}>Criar Conta</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <HomeHeader />
 
       {/* Content */}
       <section className="py-20 bg-white">
@@ -201,51 +183,7 @@ export default function PrivacidadePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 flex items-center justify-center">
-                  <Music className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-xl font-bold">Chama o Músico</span>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Conectando talentos musicais com oportunidades de trabalho
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Plataforma</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/dashboard/gigs" className="hover:text-white">Trabalhos</Link></li>
-                <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
-                <li><Link href="/dashboard/perfil" className="hover:text-white">Perfil</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Sobre</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href={"/como-funciona" as any} className="hover:text-white">Como Funciona</Link></li>
-                <li><Link href={"/sobre" as any} className="hover:text-white">Sobre Nós</Link></li>
-                <li><Link href={"/contato" as any} className="hover:text-white">Contato</Link></li>
-                <li><Link href={"/faq" as any} className="hover:text-white">FAQ</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href={"/termos" as any} className="hover:text-white">Termos de Uso</Link></li>
-                <li><Link href={"/privacidade" as any} className="hover:text-white">Privacidade</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Chama o Músico. Todos os direitos reservados.</p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }

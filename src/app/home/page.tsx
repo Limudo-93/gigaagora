@@ -158,7 +158,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 text-white">
+      <section className="relative overflow-hidden gradient-music text-white">
         <div 
           className="absolute inset-0 opacity-20"
           style={{
@@ -391,7 +391,7 @@ export default async function HomePage() {
                       <div className="flex items-start gap-4">
                         <Avatar className="h-16 w-16 ring-2 ring-orange-500">
                           <AvatarImage src={profile.photo_url || ""} />
-                          <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white font-semibold">
+                          <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white font-semibold">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
@@ -473,7 +473,7 @@ export default async function HomePage() {
 
                 return (
                   <Card key={idx} className="border-0 shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
-                    <div className="h-48 bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 overflow-hidden flex items-center justify-center">
+                    <div className="h-48 gradient-music overflow-hidden flex items-center justify-center">
                       {gig.flyer_url ? (
                         <img
                           src={gig.flyer_url}
@@ -536,7 +536,7 @@ export default async function HomePage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-20 bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 text-white">
+      <section className="py-20 gradient-music text-white">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Pronto para começar?
@@ -566,4 +566,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
 

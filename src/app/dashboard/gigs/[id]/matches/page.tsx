@@ -979,7 +979,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                   <div className="flex items-start gap-4 mb-4">
                     <Avatar className="h-16 w-16 ring-2 ring-white shadow-lg flex-shrink-0">
                       <AvatarImage src={musician.musician_photo_url || ""} />
-                      <AvatarFallback className="bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 text-white font-semibold text-lg">
+                      <AvatarFallback className="gradient-music text-white font-semibold text-lg">
                         {getInitials(musician.musician_name)}
                       </AvatarFallback>
                     </Avatar>
@@ -1126,7 +1126,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                       Ver Perfil
                     </Button>
                     <Button
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="flex-1 bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200"
                       onClick={() => handleConfirmMusician(musician.invite_id, musician.musician_id)}
                       disabled={confirmingId === musician.invite_id}
                     >
@@ -1171,7 +1171,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                 <div className="flex items-start gap-4 pb-4 border-b border-gray-200">
                   <Avatar className="h-20 w-20 ring-2 ring-orange-500 shadow-lg">
                     <AvatarImage src={selectedMusician.musician_photo_url || ""} />
-                    <AvatarFallback className="bg-gradient-to-br from-orange-500 via-purple-500 to-blue-500 text-white font-semibold text-xl">
+                    <AvatarFallback className="gradient-music text-white font-semibold text-xl">
                       {getInitials(selectedMusician.musician_name)}
                     </AvatarFallback>
                   </Avatar>
@@ -1499,7 +1499,7 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
                     Denunciar
                   </Button>
                   <Button
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white"
+                    className="flex-1 bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white"
                     onClick={() => {
                       setProfileDialogOpen(false);
                       handleConfirmMusician(selectedMusician.invite_id, selectedMusician.musician_id);

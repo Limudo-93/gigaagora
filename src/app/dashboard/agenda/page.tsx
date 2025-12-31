@@ -393,24 +393,43 @@ export default function AgendaPage() {
     });
   };
 
+  const nextConfirmedGig = confirmedGigs.find((gig) => gig.start_time);
+
+  const monthSummary = useMemo(() => {
+    const month = currentMonth.getMonth();
+    const year = currentMonth.getFullYear();
+    const daysThisMonth = calendarDays.filter(
+      (day) => day.date.getMonth() === month && day.date.getFullYear() === year
+    );
+    return {
+      busy: daysThisMonth.filter((day) => day.status === "busy").length,
+      preferred: daysThisMonth.filter((day) => day.status === "preferred").length,
+      free: daysThisMonth.filter((day) => day.status === "free").length,
+    };
+  }, [calendarDays, currentMonth]);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Cabeçalho */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Minha Agenda</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Visualize seus shows confirmados e disponibilidade
+            <h1 className="text-2xl font-display font-semibold text-foreground">
+              Minha agenda de shows
+            </h1>
+            <p className="text-sm text-foreground/60 mt-1">
+              Acompanhe confirmações, pendências e exporte tudo para o seu calendário.
             </p>
           </div>
-          <Button
-            onClick={handleDownloadICS}
-            className="bg-orange-500 hover:bg-orange-600"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Baixar Calendário (.ics)
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" onClick={goToToday} className="border-white/70 bg-white/80">
+              Hoje
+            </Button>
+            <Button onClick={handleDownloadICS} className="btn-gradient text-white">
+              <Download className="mr-2 h-4 w-4" />
+              Baixar .ics
+            </Button>
+          </div>
         </div>
 
         {errorMsg && (
@@ -420,8 +439,74 @@ export default function AgendaPage() {
           </div>
         )}
 
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="border border-white/70 bg-white/80 shadow-sm">
+            <CardContent className="space-y-2 p-5">
+              <p className="text-xs uppercase tracking-wide text-foreground/60">
+                Próximo show
+              </p>
+              {nextConfirmedGig ? (
+                <>
+                  <p className="text-lg font-semibold text-foreground">
+                    {nextConfirmedGig.gig_title || "Show confirmado"}
+                  </p>
+                  <p className="text-sm text-foreground/70">
+                    {formatDateTimeBR(nextConfirmedGig.start_time)}
+                  </p>
+                  <p className="text-xs text-foreground/60">
+                    {buildLocationText(nextConfirmedGig)}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-foreground/60">
+                  Você ainda não tem shows confirmados.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-white/70 bg-white/80 shadow-sm">
+            <CardContent className="space-y-2 p-5">
+              <p className="text-xs uppercase tracking-wide text-foreground/60">
+                Convites pendentes
+              </p>
+              <p className="text-3xl font-semibold text-foreground">
+                {pendingInvites.length}
+              </p>
+              <p className="text-sm text-foreground/60">
+                Responda rápido para manter sua sequência.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-white/70 bg-white/80 shadow-sm">
+            <CardContent className="space-y-3 p-5">
+              <p className="text-xs uppercase tracking-wide text-foreground/60">
+                Disponibilidade do mês
+              </p>
+              <div className="flex flex-wrap gap-3 text-xs text-foreground/70">
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  Livres: {monthSummary.free}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-400" />
+                  Pendentes: {monthSummary.preferred}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-rose-400" />
+                  Ocupados: {monthSummary.busy}
+                </span>
+              </div>
+              <p className="text-xs text-foreground/60">
+                Clique em um dia para ver detalhes.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Próximos Eventos */}
-        <Card className="bg-white border-gray-200">
+        <Card className="border border-white/70 bg-white/80">
           <CardHeader>
             <CardTitle className="text-xl">Próximos Eventos</CardTitle>
           </CardHeader>
@@ -482,8 +567,8 @@ export default function AgendaPage() {
                     return (
                       <div
                         key={key}
-                        className={`rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
-                          isConfirmed ? "border-gray-200" : "border-yellow-200"
+                        className={`rounded-xl border bg-white/90 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
+                          isConfirmed ? "border-white/70" : "border-amber-200"
                         }`}
                         onClick={() => {
                           if (event.start_time) {
@@ -495,7 +580,7 @@ export default function AgendaPage() {
                           {dayMonth && monthName && (
                             <div
                               className={`flex flex-col items-center justify-center text-white rounded-lg px-4 py-3 min-w-[80px] ${
-                                isConfirmed ? "bg-orange-500" : "bg-yellow-500"
+                                isConfirmed ? "bg-[#ff6b4a]" : "bg-amber-500"
                               }`}
                             >
                               <div className="text-2xl font-bold">{dayMonth.split("/")[0]}</div>
@@ -507,7 +592,7 @@ export default function AgendaPage() {
                             <div className="flex flex-wrap items-center gap-2 mb-2">
                               <Badge
                                 className={`text-white text-xs ${
-                                  isConfirmed ? "bg-orange-500" : "bg-yellow-500"
+                                  isConfirmed ? "bg-emerald-500" : "bg-amber-500"
                                 }`}
                               >
                                 {isConfirmed ? "Confirmada" : "Pendente"}
@@ -541,7 +626,7 @@ export default function AgendaPage() {
         </Card>
 
         {/* Calendário Mensal */}
-        <Card className="bg-white border-gray-200">
+        <Card className="border border-white/70 bg-white/80">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl">Calendário</CardTitle>
@@ -550,7 +635,7 @@ export default function AgendaPage() {
                   variant="outline"
                   size="sm"
                   onClick={goToPreviousMonth}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 border-white/70 bg-white/80"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -558,7 +643,7 @@ export default function AgendaPage() {
                   variant="outline"
                   size="sm"
                   onClick={goToToday}
-                  className="h-8 px-3"
+                  className="h-8 px-3 border-white/70 bg-white/80"
                 >
                   Hoje
                 </Button>
@@ -566,7 +651,7 @@ export default function AgendaPage() {
                   variant="outline"
                   size="sm"
                   onClick={goToNextMonth}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 border-white/70 bg-white/80"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -597,9 +682,9 @@ export default function AgendaPage() {
                   isCurrentMonth;
 
                 const statusColors = {
-                  free: "bg-green-500",
-                  preferred: "bg-yellow-500",
-                  busy: "bg-red-500",
+                  free: "bg-emerald-400",
+                  preferred: "bg-amber-400",
+                  busy: "bg-rose-400",
                 };
 
                 const dayEvents = getDayEvents(day.date);
@@ -613,10 +698,10 @@ export default function AgendaPage() {
                     className={`
                       aspect-square p-1 border border-gray-200 rounded
                       ${!isCurrentMonth ? "opacity-40 bg-gray-50" : "bg-white"}
-                      ${isToday ? "ring-2 ring-orange-500" : ""}
+                      ${isToday ? "ring-2 ring-[#ff6b4a]" : ""}
                       flex flex-col items-center justify-center
-                      hover:bg-orange-50 hover:border-orange-300 transition-colors
-                      cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
+                      hover:bg-amber-50 hover:border-amber-200 transition-colors
+                      cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#ff6b4a] focus:ring-offset-1
                       ${day.status !== "free" ? "hover:shadow-sm" : ""}
                     `}
                   >
@@ -690,7 +775,7 @@ export default function AgendaPage() {
                             <div className="flex items-start gap-3">
                               <div
                                 className={`h-2 w-2 rounded-full mt-2 ${
-                                  isConfirmed ? "bg-red-500" : "bg-yellow-500"
+                                  isConfirmed ? "bg-emerald-500" : "bg-amber-500"
                                 }`}
                               />
                               <div className="flex-1 min-w-0">
@@ -698,8 +783,8 @@ export default function AgendaPage() {
                                   <Badge
                                     className={
                                       isConfirmed
-                                        ? "bg-orange-500 text-white text-xs"
-                                        : "bg-yellow-500 text-white text-xs"
+                                        ? "bg-emerald-500 text-white text-xs"
+                                        : "bg-amber-500 text-white text-xs"
                                     }
                                   >
                                     {isConfirmed ? "Confirmado" : "Pendente"}

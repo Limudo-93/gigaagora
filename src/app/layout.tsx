@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/ThemeProvider";
 import { NotificationProvider } from "@/components/ui/notification-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const displayFont = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: "Chama o Músico",
@@ -36,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>
+      <body className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}>
         <ThemeProvider>
           <NotificationProvider>
             {children}

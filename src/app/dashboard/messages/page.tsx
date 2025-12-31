@@ -346,7 +346,7 @@ export default function MessagesPage() {
                   </p>
                   {!searchTerm && (
                     <Link href="/dashboard/gigs">
-                      <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white">
+                      <Button className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white">
                         Ver gigs disponíveis
                       </Button>
                     </Link>
@@ -367,7 +367,7 @@ export default function MessagesPage() {
                       <div className="relative shrink-0">
                         <Avatar className="h-12 w-12 ring-2 ring-white">
                           <AvatarImage src={conv.other_user.photo_url || ""} />
-                          <AvatarFallback className="bg-gradient-to-br from-orange-500 to-purple-500 text-white font-semibold text-lg">
+                          <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white font-semibold text-lg">
                             {conv.other_user.display_name?.charAt(0).toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
@@ -543,7 +543,7 @@ export default function MessagesPage() {
                     type="submit"
                     disabled={!newMessage.trim() || sending}
                     size="icon"
-                    className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sending ? (
                       <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -567,7 +567,7 @@ export default function MessagesPage() {
                   Escolha uma conversa na lista para começar a trocar mensagens
                 </p>
                 <Link href="/dashboard/gigs">
-                  <Button className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white">
+                  <Button className="bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white">
                     Ver gigs disponíveis
                   </Button>
                 </Link>
