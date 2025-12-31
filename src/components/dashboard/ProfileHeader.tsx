@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Star } from "lucide-react";
+import { MapPin, ShieldCheck, Star } from "lucide-react";
 import LogoutButton from "@/app/dashboard/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
@@ -65,6 +65,7 @@ export default async function ProfileHeader() {
 
   // Verificar se é embaixador
   const isAmbassador = profile?.is_ambassador || badges?.some((b: any) => b.badge_type === 'ambassador') || false;
+  const isVerified = Boolean(profile?.cpf);
 
   // Buscar ranking do usuário
   const { data: ranking } = await supabase
@@ -132,6 +133,12 @@ export default async function ProfileHeader() {
             
             {isAmbassador && (
               <AmbassadorBadge size="sm" showText={true} />
+            )}
+            {isVerified && (
+              <Badge className="gap-1 bg-emerald-100 text-emerald-800 border border-emerald-200">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Verificado
+              </Badge>
             )}
             {ranking?.current_tier && (
               <RankingBadge tier={ranking.current_tier as any} size="sm" showText={true} />

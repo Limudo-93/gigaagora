@@ -33,10 +33,24 @@ interface SignupData {
   // Etapa 2
   photoUrl: string | null;
   instrument: string;
+  phone: string;
   city: string;
   state: string;
   bio: string;
   cpf: string;
+  sheetMusicReading: "none" | "basic" | "intermediate" | "advanced";
+  repertoire: string;
+  yearsExperience: string;
+  musicalEducation: string;
+  basePrice: string;
+  instagram: string;
+  facebook: string;
+  youtube: string;
+  tiktok: string;
+  twitter: string;
+  linkedin: string;
+  spotify: string;
+  soundcloud: string;
 }
 
 interface ValidationErrors {
@@ -65,10 +79,24 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
     confirmPassword: "",
     photoUrl: null,
     instrument: "",
+    phone: "",
     city: "",
     state: "",
     bio: "",
     cpf: "",
+    sheetMusicReading: "none",
+    repertoire: "",
+    yearsExperience: "",
+    musicalEducation: "",
+    basePrice: "",
+    instagram: "",
+    facebook: "",
+    youtube: "",
+    tiktok: "",
+    twitter: "",
+    linkedin: "",
+    spotify: "",
+    soundcloud: "",
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -376,14 +404,23 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
     setError(null);
 
     try {
+      const cpfDigits = data.cpf ? data.cpf.replace(/\D/g, "") : "";
+      if (cpfDigits && !validateCPF(cpfDigits)) {
+        setErrors((prev) => ({ ...prev, cpf: "CPF inválido" }));
+        setLoading(false);
+        return;
+      }
+
       const updates: any = {};
 
       if (data.photoUrl && !data.photoUrl.startsWith("data:")) {
         updates.photo_url = data.photoUrl;
       }
 
+      if (data.phone) updates.phone_e164 = data.phone.trim();
       if (data.city) updates.city = data.city;
       if (data.state) updates.state = data.state;
+      if (cpfDigits) updates.cpf = cpfDigits;
 
       // Atualizar perfil básico
       if (Object.keys(updates).length > 0) {
@@ -405,6 +442,28 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
       if (data.bio) {
         musicianUpdates.bio = data.bio;
       }
+      const yearsExperience = data.yearsExperience
+        ? Number(data.yearsExperience)
+        : null;
+      const basePrice = data.basePrice ? Number(data.basePrice) : null;
+      const metadata = {
+        socialMedia: {
+          instagram: data.instagram.trim(),
+          facebook: data.facebook.trim(),
+          youtube: data.youtube.trim(),
+          tiktok: data.tiktok.trim(),
+          twitter: data.twitter.trim(),
+          linkedin: data.linkedin.trim(),
+          spotify: data.spotify.trim(),
+          soundcloud: data.soundcloud.trim(),
+        },
+        sheetMusicReading: data.sheetMusicReading,
+        repertoire: data.repertoire.trim() || null,
+        yearsExperience: Number.isFinite(yearsExperience) ? yearsExperience : null,
+        musicalEducation: data.musicalEducation.trim() || null,
+        basePrice: Number.isFinite(basePrice) ? basePrice : null,
+      };
+      musicianUpdates.strengths_counts = metadata;
 
       if (Object.keys(musicianUpdates).length > 0) {
         const { error: musicianError } = await supabase
@@ -415,13 +474,6 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
         if (musicianError) {
           console.error("Error updating musician profile:", musicianError);
         }
-      }
-
-      // Se CPF foi preenchido, salvar (você pode criar uma tabela para isso ou adicionar ao perfil)
-      if (data.cpf && validateCPF(data.cpf.replace(/\D/g, ""))) {
-        // Por enquanto, vamos apenas marcar que o usuário preencheu o CPF
-        // Você pode criar uma tabela de verificação ou adicionar ao perfil
-        console.log("CPF fornecido:", data.cpf.replace(/\D/g, ""));
       }
 
       // Avançar para etapa 3
@@ -806,6 +858,18 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   </select>
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefone (WhatsApp)
+                </label>
+                <input
+                  type="tel"
+                  value={data.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all hover:border-gray-300"
+                  placeholder="+5511999999999"
+                />
+              </div>
 
               {/* Mini bio */}
               <div>
@@ -855,6 +919,145 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                     <strong>Usamos seu CPF apenas para confirmar sua identidade.</strong>{" "}
                     Perfis verificados têm mais destaque e confiança na plataforma.
                   </p>
+                </div>
+              </div>
+
+              {/* Informações musicais adicionais */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Leitura de partitura
+                </label>
+                <select
+                  value={data.sheetMusicReading}
+                  onChange={(e) =>
+                    handleChange("sheetMusicReading", e.target.value as SignupData["sheetMusicReading"])
+                  }
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                >
+                  <option value="none">Não leio partitura</option>
+                  <option value="basic">Básico</option>
+                  <option value="intermediate">Intermediário</option>
+                  <option value="advanced">Avançado</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Repertório
+                </label>
+                <textarea
+                  value={data.repertoire}
+                  onChange={(e) => handleChange("repertoire", e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
+                  placeholder="Liste estilos, artistas ou músicas que você toca"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Anos de experiência
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={data.yearsExperience}
+                    onChange={(e) => handleChange("yearsExperience", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cachê base (R$)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={data.basePrice}
+                    onChange={(e) => handleChange("basePrice", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Formação musical
+                </label>
+                <textarea
+                  value={data.musicalEducation}
+                  onChange={(e) => handleChange("musicalEducation", e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
+                  placeholder="Cursos, conservatórios, aulas, autodidata..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Redes sociais
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    value={data.instagram}
+                    onChange={(e) => handleChange("instagram", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="Instagram (@usuario)"
+                  />
+                  <input
+                    type="text"
+                    value={data.facebook}
+                    onChange={(e) => handleChange("facebook", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="Facebook"
+                  />
+                  <input
+                    type="text"
+                    value={data.youtube}
+                    onChange={(e) => handleChange("youtube", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="YouTube"
+                  />
+                  <input
+                    type="text"
+                    value={data.tiktok}
+                    onChange={(e) => handleChange("tiktok", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="TikTok"
+                  />
+                  <input
+                    type="text"
+                    value={data.twitter}
+                    onChange={(e) => handleChange("twitter", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="Twitter/X"
+                  />
+                  <input
+                    type="text"
+                    value={data.linkedin}
+                    onChange={(e) => handleChange("linkedin", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="LinkedIn"
+                  />
+                  <input
+                    type="text"
+                    value={data.spotify}
+                    onChange={(e) => handleChange("spotify", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="Spotify"
+                  />
+                  <input
+                    type="text"
+                    value={data.soundcloud}
+                    onChange={(e) => handleChange("soundcloud", e.target.value)}
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-2 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    placeholder="SoundCloud"
+                  />
                 </div>
               </div>
             </div>

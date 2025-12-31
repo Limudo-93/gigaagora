@@ -19,6 +19,7 @@ export default function EditPerfilPage() {
   // Dados do perfil básico
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [searchRadius, setSearchRadius] = useState(50); // Raio em km, padrão 50km
@@ -135,6 +136,7 @@ export default function EditPerfilPage() {
       if (profile) {
         setDisplayName(profile.display_name || "");
         setPhone(profile.phone_e164 || "");
+        setCpf((profile as any).cpf || "");
         setCity(profile.city || "");
         setState(profile.state || "");
         setPhotoUrl(profile.photo_url || "");
@@ -348,6 +350,7 @@ export default function EditPerfilPage() {
           user_id: user.id,
           display_name: displayName.trim() || null,
           phone_e164: phone.trim() || null,
+          cpf: cpf ? cpf.replace(/\D/g, "") : null,
           city: city.trim() || null,
           state: state.trim() || null,
           photo_url: finalPhotoUrl.trim() || null,
@@ -454,6 +457,7 @@ export default function EditPerfilPage() {
             saveProfile();
           }}
           className="space-y-6"
+          data-profile-edit
         >
           {/* Informações Básicas */}
           <Card className="bg-white border-white/70">
@@ -490,6 +494,22 @@ export default function EditPerfilPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="text-sm font-medium text-foreground" htmlFor="cpf">
+                    CPF
+                  </label>
+                  <input
+                    id="cpf"
+                    type="text"
+                    className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-foreground" htmlFor="photo">
                     Foto do Perfil

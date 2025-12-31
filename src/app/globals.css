@@ -232,6 +232,20 @@
   }
 }
 
+/* Form inputs in profile edit: ensure contrast on light backgrounds */
+[data-profile-edit] input:not([type="file"]),
+[data-profile-edit] select,
+[data-profile-edit] textarea {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+[data-profile-edit] input:not([type="file"])::placeholder,
+[data-profile-edit] textarea::placeholder {
+  color: hsl(var(--foreground) / 0.55);
+}
+
 /* Aplicar scrollbar temática globalmente */
 * {
   scrollbar-width: thin;
