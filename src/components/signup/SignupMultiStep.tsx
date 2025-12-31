@@ -18,6 +18,7 @@ import {
   Loader2,
   X,
   AlertCircle,
+  Shield,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -546,7 +547,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.email
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                      : "border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                      : "border-gray-200 hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                   }`}
                   placeholder="seu@email.com"
                 />
@@ -571,7 +572,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.password
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                      : "border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                      : "border-gray-200 hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                   }`}
                   placeholder="••••••••"
                 />
@@ -597,7 +598,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.confirmPassword
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
-                      : "border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                      : "border-gray-200 hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                   }`}
                   placeholder="••••••••"
                 />
@@ -641,17 +642,25 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 </>
               )}
             </Button>
+
+            {/* Microcopy de segurança */}
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
+              <Shield className="h-3 w-3 text-gray-400" />
+              <span>Seus dados estão protegidos. Nunca compartilhamos suas informações.</span>
+            </div>
           </form>
         )}
 
         {currentStep === 2 && (
           <form onSubmit={handleStep2Submit} className="space-y-6 animate-fade-in">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
                 Complete seu perfil
               </h2>
-              <p className="text-sm text-gray-600 mb-4">
-                Quanto mais completo, mais convites você recebe
+              
+              {/* Copy motivacional */}
+              <p className="text-base text-gray-700 font-medium mb-4">
+                Perfis completos recebem mais convites e melhores oportunidades
               </p>
               
               {/* Barra de progresso */}
@@ -660,7 +669,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   <span>Progresso do perfil</span>
                   <span>{profileProgress}% completo</span>
                 </div>
-                <Progress value={profileProgress} className="h-3" />
+                <Progress value={profileProgress} className="h-3 transition-all duration-500" />
               </div>
             </div>
 
@@ -722,9 +731,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 <select
                   value={data.instrument}
                   onChange={(e) => handleChange("instrument", e.target.value)}
-                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                  className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 >
-                  <option value="">Selecione seu instrumento</option>
+                  <option value="">Violão, Guitarra, Teclado, Voz...</option>
                   <option value="Acordeon">Acordeon</option>
                   <option value="Agogô">Agogô</option>
                   <option value="Aparelhagem de som">Aparelhagem de som</option>
@@ -771,8 +780,8 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                     type="text"
                     value={data.city}
                     onChange={(e) => handleChange("city", e.target.value)}
-                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                    placeholder="Sua cidade"
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all hover:border-gray-300"
+                    placeholder="São Paulo, Rio de Janeiro..."
                   />
                 </div>
                 <div>
@@ -782,7 +791,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   <select
                     value={data.state}
                     onChange={(e) => handleChange("state", e.target.value)}
-                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   >
                     <option value="">Selecione</option>
                     <option value="AC">Acre</option>
@@ -828,7 +837,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   rows={4}
                   maxLength={200}
                   className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
-                  placeholder="Conte um pouco sobre você e sua experiência musical..."
+                  placeholder="Conte um pouco sobre você, seus estilos favoritos e experiência..."
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   {data.bio.length}/200 caracteres
@@ -862,7 +871,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 p-3">
                   <p className="text-xs text-blue-800">
                     <strong>Usamos seu CPF apenas para confirmar sua identidade.</strong>{" "}
-                    Músicos verificados têm mais destaque e confiança na plataforma.
+                    Perfis verificados têm mais destaque e confiança na plataforma.
                   </p>
                 </div>
               </div>
@@ -882,19 +891,26 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
               </div>
             )}
 
+            {/* Nudge psicológico antes do botão "Pular" */}
+            <div className="rounded-lg bg-orange-50 border border-orange-200 p-3 mb-4">
+              <p className="text-sm text-orange-800 text-center font-medium">
+                🎯 Perfis completos recebem até 3x mais convites
+              </p>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setCurrentStep(3)}
-                className="flex-1"
+                className="flex-1 hover:bg-gray-50 transition-all"
               >
                 Pular por enquanto
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                className="flex-1 bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
               >
                 {loading ? (
                   <>
@@ -929,13 +945,13 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                {isCPFProvided ? "Verificação em andamento" : "Perfil não verificado"}
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-3">
+                {isCPFProvided ? "Verificação em andamento" : "Seu perfil está quase pronto 🎶"}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-base">
                 {isCPFProvided
                   ? "Seu CPF foi recebido e está em processo de verificação. Isso pode levar alguns dias."
-                  : "Você pode verificar seu perfil depois nas configurações para ter mais destaque na plataforma."}
+                  : "Você pode verificar seu perfil agora ou depois. Perfis verificados ganham mais destaque e confiança na plataforma."}
               </p>
             </div>
 
@@ -944,7 +960,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
                 isCPFProvided
                   ? "bg-green-100 text-green-700 border-2 border-green-300"
-                  : "bg-gray-100 text-gray-700 border-2 border-gray-300"
+                  : "bg-blue-100 text-blue-700 border-2 border-blue-300"
               }`}>
                 {isCPFProvided ? (
                   <>
@@ -954,13 +970,13 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 ) : (
                   <>
                     <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm font-semibold">Não verificado</span>
+                    <span className="text-sm font-semibold">Perfil básico</span>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
               <Button
                 onClick={() => {
                   if (userId) {
@@ -969,11 +985,14 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                     router.push("/login");
                   }
                 }}
-                className="w-full bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold"
+                className="w-full bg-gradient-to-r from-orange-500 via-purple-500 to-blue-500 hover:from-orange-600 hover:via-purple-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold hover:scale-[1.02]"
               >
                 Ir para o Dashboard
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+              <p className="text-xs text-gray-500 text-center">
+                Você pode completar ou verificar seu perfil a qualquer momento
+              </p>
             </div>
           </div>
         )}
