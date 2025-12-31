@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar, Clock, DollarSign, Check, X, Eye, Download, User, AlertTriangle, MapPin, Loader2, Navigation } from "lucide-react";
 import InviteDetailsDialog from "./InviteDetailsDialog";
-import { haversineKm, estimateTravelMin } from "@/lib/geo";
+import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
 
 type PendingInviteRow = {
   invite_id: string;
@@ -268,7 +268,23 @@ export default function PendingInvites({ userId }: { userId: string }) {
           address_text: gig?.address_text ?? null,
           city: gig?.city ?? null,
           state: gig?.state ?? null,
-          region_label: gig?.region_label ?? null,
+          region_label: (() => {
+            // Recalcular region_label se tivermos coordenadas, para garantir formato específico
+            if (gigLat != null && gigLng != null) {
+              const computed = computeRegionLabel(
+                gig?.state ?? null,
+                gig?.city ?? null,
+                gigLat,
+                gigLng
+              );
+              // Se o computed for mais específico (contém "Zona" ou cidade específica), usar ele
+              // Caso contrário, usar o do banco se existir
+              if (computed && (computed.includes("Zona") || computed.includes("—"))) {
+                return computed;
+              }
+            }
+            return gig?.region_label ?? null;
+          })(),
           gig_latitude: gigLat ?? null,
           gig_longitude: gigLng ?? null,
           instrument: role?.instrument ?? null,
