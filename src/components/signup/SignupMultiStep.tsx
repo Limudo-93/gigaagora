@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/lib/supabase/client";
+import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 import {
   User,
   Mail,
@@ -729,27 +730,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   Instrumento principal
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    "Violão",
-                    "Guitarra",
-                    "Baixo",
-                    "Bateria",
-                    "Teclado",
-                    "Piano",
-                    "Vocal",
-                    "Saxofone",
-                    "Trompete",
-                    "Trombone",
-                    "Flauta",
-                    "Violino",
-                    "Acordeon",
-                    "Sanfona",
-                    "Cavaquinho",
-                    "Contrabaixo",
-                    "Percussão",
-                    "Pandeiro",
-                    "Outro",
-                  ].map((instrument) => (
+                  {INSTRUMENT_OPTIONS.map((instrument) => (
                     <button
                       key={instrument}
                       type="button"

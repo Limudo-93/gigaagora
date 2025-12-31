@@ -7,6 +7,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Upload, X, Image as ImageIcon } from "lucide-react";
+import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 
 export default function EditPerfilPage() {
   const router = useRouter();
@@ -60,29 +61,8 @@ export default function EditPerfilPage() {
   const [newSetup, setNewSetup] = useState("");
   const [newPortfolioLink, setNewPortfolioLink] = useState("");
 
-  // Lista de instrumentos comuns
-  const commonInstruments = [
-    "Violão",
-    "Guitarra",
-    "Baixo",
-    "Bateria",
-    "Teclado",
-    "Piano",
-    "Vocal",
-    "Saxofone",
-    "Trompete",
-    "Trombone",
-    "Flauta",
-    "Violino",
-    "Violoncelo",
-    "Viola",
-    "Contrabaixo",
-    "Percussão",
-    "Cavaquinho",
-    "Bandolim",
-    "Acordeon",
-    "Sanfona",
-  ];
+  // Lista de instrumentos
+  const commonInstruments = INSTRUMENT_OPTIONS;
 
   const commonGenres = [
     "MPB",

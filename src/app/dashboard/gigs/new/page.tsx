@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Loader2
 import { createGigWithRegion } from "@/app/actions/gigs";
 import { computeRegionLabel } from "@/lib/geo";
 import { reverseGeocode, geocodeAddress } from "@/app/actions/geocoding";
+import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 
 type GigRole = {
   id: string;
@@ -54,40 +55,7 @@ export default function NewGigPage() {
   const [previewRegion, setPreviewRegion] = useState<string | null>(null);
 
   // Lista de instrumentos
-  const instrumentos = [
-    "Acordeon",
-    "Agogô",
-    "Aparelhagem de som",
-    "Baixo",
-    "Bandolim",
-    "Banjo",
-    "Bateria",
-    "Cavaquinho",
-    "Contrabaixo",
-    "Cuíca",
-    "Flauta",
-    "Guitarra",
-    "Outro",
-    "Pandeiro",
-    "Percussão",
-    "Piano",
-    "Reco-reco",
-    "Repique de mão",
-    "Sanfona",
-    "Saxofone",
-    "Surdo",
-    "Tamborim",
-    "Tantã",
-    "Teclado",
-    "Trombone",
-    "Trompete",
-    "Viola",
-    "Viola Caipira",
-    "Violino",
-    "Violoncelo",
-    "Violão",
-    "Vocal",
-  ];
+  const instrumentos = INSTRUMENT_OPTIONS;
 
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);

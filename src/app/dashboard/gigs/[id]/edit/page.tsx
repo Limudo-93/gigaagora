@@ -7,6 +7,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, Trash2, Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 
 type GigRole = {
   id: string;
@@ -48,41 +49,8 @@ export default function EditGigPage() {
   const [uploadingFlyer, setUploadingFlyer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Lista de instrumentos para o dropdown (Pagode e Sertanejo) - Ordem alfabética
-  const instrumentos = [
-    "Acordeon",
-    "Agogô",
-    "Aparelhagem de som",
-    "Baixo",
-    "Bandolim",
-    "Banjo",
-    "Bateria",
-    "Cavaquinho",
-    "Contrabaixo",
-    "Cuíca",
-    "Flauta",
-    "Guitarra",
-    "Outro",
-    "Pandeiro",
-    "Percussão",
-    "Piano",
-    "Reco-reco",
-    "Repique de mão",
-    "Sanfona",
-    "Saxofone",
-    "Surdo",
-    "Tamborim",
-    "Tantã",
-    "Teclado",
-    "Trombone",
-    "Trompete",
-    "Viola",
-    "Viola Caipira",
-    "Violino",
-    "Violoncelo",
-    "Violão",
-    "Vocal",
-  ];
+  // Lista de instrumentos
+  const instrumentos = INSTRUMENT_OPTIONS;
 
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);

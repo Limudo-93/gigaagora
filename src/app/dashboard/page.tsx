@@ -16,6 +16,7 @@ import ThemeSelector from "@/components/dashboard/ThemeSelector";
 import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import { Button } from "@/components/ui/button";
 import EnablePushNotificationsCard from "@/components/push-notifications/EnablePushNotificationsCard";
+import PwaInstallGuideCard from "@/components/dashboard/PwaInstallGuideCard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -29,6 +30,9 @@ export default async function DashboardPage() {
     <DashboardLayoutWithSidebar>
       {/* Card de Boas-vindas - Primeira vez */}
       <WelcomeCard />
+
+      {/* Guia rápido de instalação do app */}
+      <PwaInstallGuideCard />
 
       {/* 🎯 Bloco de Ação Prioritária - Topo do dashboard */}
       <PriorityActionBlock userId={user.id} />
