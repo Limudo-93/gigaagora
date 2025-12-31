@@ -76,6 +76,31 @@ CREATE TRIGGER trg_update_push_notification_queue_updated_at
   EXECUTE FUNCTION update_push_notification_queue_updated_at();
 
 -- Enqueue helper
+CREATE OR REPLACE FUNCTION try_notify_queue_processor()
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_has_net BOOLEAN;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'net'
+      AND p.proname = 'http_post'
+  ) INTO v_has_net;
+
+  IF v_has_net THEN
+    PERFORM net.http_post(
+      url := 'https://www.chamaomusico.com.br/api/notifications/process',
+      headers := jsonb_build_object('content-type', 'application/json'),
+      body := '{}'::jsonb
+    );
+  END IF;
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION enqueue_push_notification(
   p_user_id UUID,
   p_type notification_type,
@@ -108,6 +133,9 @@ BEGIN
   ON CONFLICT (user_id, event_key)
   DO UPDATE SET updated_at = NOW()
   RETURNING id INTO v_id;
+
+  -- Best-effort immediate dispatch if pg_net is available
+  PERFORM try_notify_queue_processor();
 
   RETURN v_id;
 END;
