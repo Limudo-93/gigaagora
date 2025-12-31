@@ -35,11 +35,12 @@ type NotificationTemplate = {
 
 export default function NotificationsTestPage() {
   const [userId, setUserId] = useState<string | null>(null);
-  const [users, setUsers] = useState<Array<{ id: string; display_name: string | null; email: string | null }>>([]);
+  const [users, setUsers] = useState<Array<{ id: string; display_name: string | null; email: string | null; hasSubscriptions?: boolean }>>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<Array<{ type: string; success: boolean; message: string }>>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [checkingSubscriptions, setCheckingSubscriptions] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -63,14 +64,48 @@ export default function NotificationsTestPage() {
         id: profile.user_id,
         display_name: profile.display_name || "Usuário sem nome",
         email: null, // Email não está disponível diretamente via RLS
+        hasSubscriptions: false, // Será verificado depois
       }));
 
       setUsers(usersList);
+      
+      // Verificar subscriptions para cada usuário
+      await checkUserSubscriptions(usersList.map(u => u.id));
     } catch (error: any) {
       console.error("Error loading users:", error);
       alert(`Erro ao carregar usuários: ${error.message}`);
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  const checkUserSubscriptions = async (userIds: string[]) => {
+    setCheckingSubscriptions(true);
+    try {
+      const subscriptionChecks = await Promise.all(
+        userIds.map(async (uid) => {
+          const { data, error } = await supabase.rpc("get_user_push_subscriptions", {
+            p_user_id: uid,
+          });
+          return {
+            userId: uid,
+            hasSubscriptions: !error && data && data.length > 0,
+            count: data?.length || 0,
+          };
+        })
+      );
+
+      setUsers(prev => prev.map(user => {
+        const check = subscriptionChecks.find(c => c.userId === user.id);
+        return {
+          ...user,
+          hasSubscriptions: check?.hasSubscriptions || false,
+        };
+      }));
+    } catch (error: any) {
+      console.error("Error checking subscriptions:", error);
+    } finally {
+      setCheckingSubscriptions(false);
     }
   };
 
@@ -326,6 +361,21 @@ export default function NotificationsTestPage() {
                 >
                   Limpar Seleção
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => checkUserSubscriptions(users.map(u => u.id))}
+                  disabled={checkingSubscriptions || users.length === 0}
+                >
+                  {checkingSubscriptions ? (
+                    <>
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      Verificando...
+                    </>
+                  ) : (
+                    "Atualizar Status"
+                  )}
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -358,7 +408,7 @@ export default function NotificationsTestPage() {
                       selectedUserIds.includes(user.id)
                         ? "border-orange-500 bg-orange-50"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    }`}
+                    } ${!user.hasSubscriptions ? "opacity-60" : ""}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -371,26 +421,49 @@ export default function NotificationsTestPage() {
                             <Check className="h-3 w-3 text-white" />
                           )}
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{user.display_name}</p>
-                          {user.email && (
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">{user.display_name}</p>
+                          {!user.hasSubscriptions && (
+                            <p className="text-xs text-orange-600 font-medium mt-0.5">
+                              ⚠️ Sem subscriptions ativas
+                            </p>
+                          )}
+                          {user.email && user.hasSubscriptions && (
                             <p className="text-xs text-gray-500">{user.email}</p>
                           )}
                         </div>
                       </div>
-                      {selectedUserIds.includes(user.id) && (
-                        <Badge className="bg-orange-500 text-white">
-                          Selecionado
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {user.hasSubscriptions && (
+                          <Badge variant="outline" className="text-xs border-green-500 text-green-700 bg-green-50">
+                            ✓ Ativo
+                          </Badge>
+                        )}
+                        {selectedUserIds.includes(user.id) && (
+                          <Badge className="bg-orange-500 text-white">
+                            Selecionado
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
             <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-gray-600">
-                <strong>{selectedUserIds.length}</strong> de <strong>{users.length}</strong> usuários selecionados
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-600">
+                  <strong>{selectedUserIds.length}</strong> de <strong>{users.length}</strong> usuários selecionados
+                </p>
+                {checkingSubscriptions && (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Verificando subscriptions...
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {users.filter(u => u.hasSubscriptions).length} usuário(s) com subscriptions ativas
               </p>
             </div>
           </CardContent>
@@ -494,13 +567,19 @@ export default function NotificationsTestPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-orange-900 mb-2">Importante</h3>
-                <ul className="text-sm text-orange-800 space-y-1 list-disc list-inside">
-                  <li>As notificações só funcionam em dispositivos que autorizaram as notificações</li>
-                  <li>Os usuários precisam ter o Service Worker registrado</li>
-                  <li>Esta página é apenas para testes - não use em produção sem validação adequada</li>
-                  <li>Verifique o console do navegador para logs detalhados</li>
+                <h3 className="font-semibold text-orange-900 mb-2">Por que estou vendo "Sem subscriptions ativas"?</h3>
+                <p className="text-sm text-orange-800 mb-3">
+                  Para receber notificações push, os usuários precisam:
+                </p>
+                <ul className="text-sm text-orange-800 space-y-1 list-disc list-inside mb-3">
+                  <li>Estar logados na plataforma no navegador/dispositivo</li>
+                  <li>Ter autorizado as notificações no navegador</li>
+                  <li>Ter visitado o dashboard (onde o PushNotificationManager registra automaticamente)</li>
+                  <li>Estar usando um navegador/dispositivo compatível com PWA</li>
                 </ul>
+                <p className="text-sm text-orange-800 font-medium">
+                  💡 <strong>Dica:</strong> Os usuários precisam acessar o dashboard pelo menos uma vez para que suas subscriptions sejam registradas automaticamente.
+                </p>
               </div>
             </div>
           </CardContent>
