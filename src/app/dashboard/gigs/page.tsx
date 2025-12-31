@@ -30,7 +30,7 @@ import GigDetailsDialog from "@/components/dashboard/GigDetailsDialog";
 import ShareGigButton from "@/components/dashboard/ShareGigButton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useNotification } from "@/components/ui/notification-provider";
-import { haversineKm, estimateTravelMin } from "@/lib/geo";
+import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
 
 type GigRow = {
   id: string;
@@ -322,7 +322,23 @@ export default function GigsPage() {
             cache: compatibleRole?.cache || null,
             latitude: gigLat ?? null,
             longitude: gigLng ?? null,
-            region_label: gig.region_label ?? null,
+            region_label: (() => {
+              // Recalcular region_label se tivermos coordenadas, para garantir formato específico
+              if (gigLat != null && gigLng != null) {
+                const computed = computeRegionLabel(
+                  gig.state ?? null,
+                  gig.city ?? null,
+                  gigLat,
+                  gigLng
+                );
+                // Se o computed for mais específico (contém "Zona" ou cidade específica), usar ele
+                // Caso contrário, usar o do banco se existir
+                if (computed && (computed.includes("Zona") || computed.includes("—"))) {
+                  return computed;
+                }
+              }
+              return gig.region_label ?? null;
+            })(),
             distance_km: distanceKm,
             estimated_travel_time_minutes: estimatedTravelTimeMinutes,
           });
