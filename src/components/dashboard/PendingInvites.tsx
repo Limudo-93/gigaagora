@@ -81,6 +81,8 @@ export default function PendingInvites({ userId }: { userId: string }) {
   const [maxRadiusKm, setMaxRadiusKm] = useState<number | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [showDeclineReasonDialog, setShowDeclineReasonDialog] = useState(false);
+  const [pendingDeclineInviteId, setPendingDeclineInviteId] = useState<string | null>(null);
 
   const count = useMemo(() => items.length, [items]);
 
@@ -423,14 +425,20 @@ export default function PendingInvites({ userId }: { userId: string }) {
     [setItems]
   );
 
-  const declineInvite = useCallback(async (inviteId: string) => {
+  const handleDeclineClick = useCallback((inviteId: string) => {
+    setPendingDeclineInviteId(inviteId);
+    setShowDeclineReasonDialog(true);
+  }, []);
+
+  const declineInvite = useCallback(async (inviteId: string, reason: DeclineReason) => {
     setBusyId(inviteId);
     setErrorMsg(null);
 
     try {
-      // Chama a RPC (pode retornar JSON ou void)
+      // Chama a RPC com motivo de recusa
       const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_decline_invite", {
         p_invite_id: inviteId,
+        p_decline_reason: reason,
       });
 
       if (rpcError) {
@@ -453,6 +461,8 @@ export default function PendingInvites({ userId }: { userId: string }) {
       console.log("Invite declined successfully:", rpcData);
       setItems((prev) => prev.filter((x) => x.invite_id !== inviteId));
       setBusyId(null);
+      setShowDeclineReasonDialog(false);
+      setPendingDeclineInviteId(null);
     } catch (err: any) {
       console.error("declineInvite exception:", err);
       setErrorMsg(err?.message ?? "Erro inesperado ao recusar convite.");
@@ -854,7 +864,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
                           <Button
                             variant="ghost"
                             className="w-full text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-                            onClick={() => declineInvite(r.invite_id)}
+                            onClick={() => handleDeclineClick(r.invite_id)}
                             disabled={busyId === r.invite_id}
                           >
                             {busyId === r.invite_id ? (

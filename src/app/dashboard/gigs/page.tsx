@@ -31,6 +31,7 @@ import ShareGigButton from "@/components/dashboard/ShareGigButton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useNotification } from "@/components/ui/notification-provider";
 import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
+import DeclineReasonDialog, { DeclineReason } from "@/components/dashboard/DeclineReasonDialog";
 
 type GigRow = {
   id: string;
@@ -103,7 +104,7 @@ export default function GigsPage() {
   const [userType, setUserType] = useState<"musician" | "contractor" | null>(null);
   const [deletingGigId, setDeletingGigId] = useState<string | null>(null);
   const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
-  const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
+  const [showDeclineReasonDialog, setShowDeclineReasonDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pendingDeclineInviteId, setPendingDeclineInviteId] = useState<string | null>(null);
   const [pendingDeclineGigId, setPendingDeclineGigId] = useState<string | null>(null);
@@ -691,7 +692,7 @@ export default function GigsPage() {
         )
       );
       setProcessingInviteId(null);
-      setShowDeclineConfirm(false);
+      setShowDeclineReasonDialog(false);
       setPendingDeclineInviteId(null);
       setPendingDeclineGigId(null);
       notification.showNotification({
@@ -703,7 +704,7 @@ export default function GigsPage() {
       console.error("declineInvite exception:", err);
       setError(err?.message ?? "Erro inesperado ao recusar convite.");
       setProcessingInviteId(null);
-      setShowDeclineConfirm(false);
+      setShowDeclineReasonDialog(false);
       setPendingDeclineInviteId(null);
       setPendingDeclineGigId(null);
     }
