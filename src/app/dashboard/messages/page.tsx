@@ -530,7 +530,10 @@ export default function MessagesPage() {
                         {selectedConversation.gig.id && (
                           <Button
                             size="sm"
-                            onClick={() => router.push(`/dashboard/gigs/${selectedConversation.gig.id}`)}
+                            onClick={() => {
+                              const gigUrl = `/dashboard/gigs/${selectedConversation.gig.id}`;
+                              router.push(gigUrl as any);
+                            }}
                             className="bg-gradient-to-r from-orange-500 to-purple-500 hover:from-orange-600 hover:to-purple-600 text-white shrink-0"
                           >
                             Ver gig
