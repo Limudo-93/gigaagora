@@ -135,3 +135,4 @@ Após seguir todos os passos:
 
 **Dica:** Se você já tem a chave no `.env.local`, é só copiar o valor de `NEXT_PUBLIC_VAPID_PUBLIC_KEY` e colar na Secret `VAPID_PUBLIC_KEY` do Supabase!
 
+
