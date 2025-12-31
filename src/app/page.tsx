@@ -18,6 +18,7 @@ import {
   MapPin,
   MessageCircle,
   Megaphone,
+  Music,
   ShieldCheck,
   Sparkles,
   Star,
@@ -214,24 +215,51 @@ export default async function Page() {
 
       <main className="relative">
         <section className="relative overflow-hidden">
-          {/* Background base com gradiente */}
+          {/* Background base com gradiente musical */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,_rgba(255,107,74,0.25),_transparent_45%),radial-gradient(circle_at_80%_12%,_rgba(42,166,161,0.25),_transparent_40%),radial-gradient(circle_at_40%_90%,_rgba(255,179,71,0.28),_transparent_48%),linear-gradient(140deg,_#fff2e9_0%,_#fffaf5_38%,_#eef8f7_100%)]" />
+          
+          {/* Padrão de notas musicais e símbolos */}
+          <div className="absolute inset-0 opacity-[0.08]">
+            <div className="absolute top-20 left-[10%] text-[#ff6b4a] text-6xl rotate-12 animate-pulse" style={{ animationDelay: '0s' }}>♪</div>
+            <div className="absolute top-40 right-[15%] text-[#2aa6a1] text-5xl -rotate-12 animate-pulse" style={{ animationDelay: '1s' }}>♫</div>
+            <div className="absolute bottom-32 left-[20%] text-[#ffb347] text-7xl rotate-45 animate-pulse" style={{ animationDelay: '2s' }}>♬</div>
+            <div className="absolute top-1/2 right-[25%] text-[#ff6b4a] text-4xl -rotate-45 animate-pulse" style={{ animationDelay: '1.5s' }}>♪</div>
+            <div className="absolute bottom-20 right-[10%] text-[#2aa6a1] text-6xl rotate-12 animate-pulse" style={{ animationDelay: '0.5s' }}>♫</div>
+            <div className="absolute top-1/3 left-[5%] text-[#ffb347] text-5xl rotate-90 animate-pulse" style={{ animationDelay: '2.5s' }}>♬</div>
+          </div>
           
           {/* Elementos gráficos flutuantes - círculos grandes */}
           <div className="absolute -top-24 right-0 h-[340px] w-[340px] rounded-full bg-[#ff6b4a]/25 blur-[120px] animate-pulse" />
           <div className="absolute bottom-0 left-6 h-[300px] w-[300px] rounded-full bg-[#2aa6a1]/25 blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
           <div className="absolute top-1/2 right-1/4 h-[200px] w-[200px] rounded-full bg-[#ffb347]/20 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
           
-          {/* Formas geométricas decorativas */}
+          {/* Ícones de música flutuantes */}
+          <div className="absolute top-32 right-[30%] opacity-20">
+            <Music className="h-16 w-16 text-[#ff6b4a] rotate-12 animate-bounce" style={{ animationDuration: '3s', animationDelay: '0s' }} />
+          </div>
+          <div className="absolute bottom-40 left-[25%] opacity-20">
+            <Music className="h-20 w-20 text-[#2aa6a1] -rotate-12 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }} />
+          </div>
+          <div className="absolute top-1/2 left-[15%] opacity-15">
+            <Music className="h-14 w-14 text-[#ffb347] rotate-45 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '2s' }} />
+          </div>
+          <div className="absolute top-20 right-[10%] opacity-15">
+            <Music className="h-12 w-12 text-[#ff6b4a] -rotate-45 animate-bounce" style={{ animationDuration: '4.5s', animationDelay: '0.5s' }} />
+          </div>
+          <div className="absolute bottom-20 left-[40%] opacity-15">
+            <Music className="h-10 w-10 text-[#2aa6a1] rotate-90 animate-bounce" style={{ animationDuration: '3.8s', animationDelay: '1.2s' }} />
+          </div>
+          
+          {/* Formas geométricas decorativas com tema musical */}
           <div className="absolute top-32 left-10 h-32 w-32 rotate-45 rounded-3xl bg-gradient-to-br from-[#ff6b4a]/10 to-transparent blur-xl" />
           <div className="absolute bottom-20 right-20 h-24 w-24 rotate-12 rounded-2xl bg-gradient-to-br from-[#2aa6a1]/10 to-transparent blur-lg" />
           <div className="absolute top-1/3 right-1/3 h-16 w-16 rotate-45 rounded-xl bg-gradient-to-br from-[#ffb347]/15 to-transparent blur-md" />
           
-          {/* Linhas decorativas */}
+          {/* Linhas decorativas com padrão de ondas sonoras */}
           <div className="absolute inset-x-0 top-24 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
           <div className="absolute inset-x-0 bottom-32 h-px bg-gradient-to-r from-transparent via-[#2aa6a1]/20 to-transparent" />
           
-          {/* Padrão de grid sutil */}
+          {/* Padrão de grid sutil com símbolos musicais */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,107,74,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,107,74,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
           
           {/* Partículas decorativas */}
@@ -298,64 +326,76 @@ export default async function Page() {
             </div>
 
             <div className="relative space-y-4">
-              <Card className="border border-white/70 bg-gradient-to-br from-[#fff6ee] via-[#fffefb] to-[#eef8f7] shadow-[0_18px_45px_rgba(255,159,84,0.18)]">
+              {/* Card principal - estilo glassmorphism */}
+              <Card className="border border-white/70 backdrop-blur-xl bg-white/60 shadow-[0_18px_45px_rgba(255,159,84,0.18)]">
                 <CardContent className="space-y-4 p-6">
-                  <div className="flex items-center justify-center rounded-3xl bg-gradient-to-br from-[#ffefe0] via-white to-[#eefaf7] p-6">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-md">
-                      <Megaphone className="h-8 w-8 text-[#ff6b4a]" />
-                    </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Music className="h-5 w-5 text-[#ff6b4a]" />
+                    <p className="text-lg font-semibold text-foreground">Show no Bar</p>
                   </div>
-
-                  <div className="flex items-center justify-between rounded-2xl bg-emerald-400/90 px-4 py-3 text-white">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-white/80">Cache</p>
-                      <p className="text-xl font-semibold">R$ 800,00</p>
-                    </div>
-                    <span className="text-2xl font-semibold">R$</span>
+                  
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <MapPin className="h-4 w-4 text-[#2aa6a1]" />
+                    <span>Zona Sul, SP</span>
                   </div>
-
-                  <div className="space-y-1">
-                    <p className="text-lg font-semibold text-foreground">Show de Rock no Centro</p>
-                    <div className="flex items-center gap-2 text-sm text-foreground/70">
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white shadow">
-                        <span className="h-2 w-2 rounded-full bg-[#ff6b4a]" />
-                      </span>
-                      Publicado por João Silva
-                    </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <Calendar className="h-4 w-4 text-[#ffb347]" />
+                    <span>Sábado, 20h</span>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                      Guitarra
-                    </span>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs text-foreground/70 shadow-sm">
-                      Rio de Janeiro - Copacabana
-                    </span>
+                  
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <span className="text-lg">R$</span>
+                    <span className="text-xl">500</span>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div className="grid gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-sm text-foreground/70 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-foreground/50">Distancia</p>
-                      <p className="text-lg font-semibold text-foreground">2,3 km</p>
-                      <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                        Proximo
-                      </span>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-foreground/50">Tempo de carro</p>
-                      <p className="text-lg font-semibold text-foreground">~15 min</p>
-                      <span className="text-xs text-foreground/60">Tempo estimado</span>
-                    </div>
+              {/* Cards adicionais no estilo glassmorphism */}
+              <Card className="border border-white/70 backdrop-blur-xl bg-white/60 shadow-lg">
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Music className="h-5 w-5 text-[#2aa6a1]" />
+                    <p className="text-base font-semibold text-foreground">Festival de Verão</p>
                   </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <MapPin className="h-4 w-4 text-[#2aa6a1]" />
+                    <span>Praia de Ipanema, RJ</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <Calendar className="h-4 w-4 text-[#ffb347]" />
+                    <span>Domingo, 18h</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <span className="text-lg">R$</span>
+                    <span className="text-xl">750</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-                  <div className="flex items-center justify-between rounded-2xl border border-white/70 bg-white/80 px-4 py-3">
-                    <div className="flex items-center gap-2 text-sm text-foreground/70">
-                      <Calendar className="h-4 w-4 text-[#2aa6a1]" />
-                      15/02/2025 - 21:00
-                    </div>
-                    <Button size="sm" className="btn-gradient text-white">
-                      Ver detalhes
-                    </Button>
+              <Card className="border border-white/70 backdrop-blur-xl bg-white/60 shadow-lg">
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Music className="h-5 w-5 text-[#ffb347]" />
+                    <p className="text-base font-semibold text-foreground">Samba na Lapa</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <MapPin className="h-4 w-4 text-[#2aa6a1]" />
+                    <span>Centro, RJ</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <Calendar className="h-4 w-4 text-[#ffb347]" />
+                    <span>Sexta, 22h</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <span className="text-lg">R$</span>
+                    <span className="text-xl">600</span>
                   </div>
                 </CardContent>
               </Card>
