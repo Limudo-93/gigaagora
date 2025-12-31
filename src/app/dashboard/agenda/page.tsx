@@ -326,8 +326,12 @@ export default function AgendaPage() {
                 .eq("id", gig.invite_id)
                 .single();
 
-              const gigLat = inviteData?.gigs?.latitude as number | null | undefined;
-              const gigLng = inviteData?.gigs?.longitude as number | null | undefined;
+              // Supabase retorna gigs como array mesmo com !inner, então precisamos pegar o primeiro elemento
+              const gigData = Array.isArray(inviteData?.gigs) ? inviteData.gigs[0] : inviteData?.gigs;
+              const roleData = Array.isArray(inviteData?.gig_roles) ? inviteData.gig_roles[0] : inviteData?.gig_roles;
+              
+              const gigLat = gigData?.latitude as number | null | undefined;
+              const gigLng = gigData?.longitude as number | null | undefined;
               
               let distanceKm: number | null = null;
               let estimatedTravelTimeMinutes: number | null = null;
@@ -339,22 +343,22 @@ export default function AgendaPage() {
 
               // Buscar nome do contratante
               let contractorName: string | null = null;
-              if (inviteData?.gigs?.contractor_id) {
+              if (gigData?.contractor_id) {
                 const { data: contractor } = await supabase
                   .from("profiles")
                   .select("display_name")
-                  .eq("user_id", inviteData.gigs.contractor_id)
+                  .eq("user_id", gigData.contractor_id)
                   .single();
                 contractorName = contractor?.display_name ?? null;
               }
 
               return {
                 ...gig,
-                cache: inviteData?.gig_roles?.cache ?? null,
+                cache: roleData?.cache ?? null,
                 latitude: gigLat ?? null,
                 longitude: gigLng ?? null,
-                region_label: inviteData?.gigs?.region_label ?? null,
-                flyer_url: inviteData?.gigs?.flyer_url ?? null,
+                region_label: gigData?.region_label ?? null,
+                flyer_url: gigData?.flyer_url ?? null,
                 contractor_name: contractorName,
                 distance_km: distanceKm,
                 estimated_travel_time_minutes: estimatedTravelTimeMinutes,
