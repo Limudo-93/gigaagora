@@ -100,6 +100,28 @@ export async function POST(request: NextRequest) {
           if (error) {
             console.error(`[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`, error);
             console.error(`[Send Notification] Response data:`, data);
+            const errorContext = (error as any).context;
+            let parsedBody: any = null;
+            let parsedStatus: number | null = null;
+
+            if (errorContext?.body && typeof errorContext.body === "string") {
+              try {
+                parsedBody = JSON.parse(errorContext.body);
+                parsedStatus = Number(parsedBody?.statusCode);
+              } catch (e) {
+                // ignore parse error
+              }
+            }
+
+            if (parsedBody?.deleteSubscription || parsedStatus === 404 || parsedStatus === 410) {
+              console.warn(`[Send Notification] Removing invalid subscription (${parsedStatus || "unknown"})`);
+              await supabaseAdmin
+                .from("push_subscriptions")
+                .delete()
+                .eq("endpoint", sub.endpoint);
+              return { deleted: true };
+            }
+
             // Extrair mensagem de erro limpa
             const errorMsg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
             throw new Error(errorMsg);

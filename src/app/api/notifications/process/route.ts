@@ -144,6 +144,21 @@ async function processQueue() {
               errorDetails.statusCode = errorContext.status;
             }
           }
+
+          const parsedBody = errorDetails.parsedBody;
+          const parsedStatus = Number(parsedBody?.statusCode ?? errorDetails.statusCode);
+          if (parsedBody?.deleteSubscription || parsedStatus === 404 || parsedStatus === 410) {
+            console.warn(
+              `[Notifications Process] Removing invalid subscription after error (${parsedStatus || "unknown"})`
+            );
+            await supabase
+              .from("push_subscriptions")
+              .delete()
+              .eq("endpoint", sub.endpoint);
+            successCount += 1;
+            lastError = `Subscription removida (${parsedStatus || "unknown"})`;
+            continue;
+          }
           
           // Log completo do erro
           console.error(`[Notifications Process] Full error details:`, JSON.stringify(errorDetails, null, 2));
