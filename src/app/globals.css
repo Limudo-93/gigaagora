@@ -46,10 +46,55 @@
   body {
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
-    background-image: radial-gradient(circle at 10% 20%, rgba(255, 179, 71, 0.2), transparent 40%),
-      radial-gradient(circle at 80% 0%, rgba(42, 166, 161, 0.15), transparent 45%),
-      linear-gradient(180deg, rgba(255, 247, 237, 0.9) 0%, rgba(244, 251, 255, 0.9) 100%);
+    background-image: 
+      /* Gradientes radiais musicais */
+      radial-gradient(circle at 10% 20%, rgba(255, 179, 71, 0.25), transparent 45%),
+      radial-gradient(circle at 80% 0%, rgba(42, 166, 161, 0.2), transparent 50%),
+      radial-gradient(circle at 50% 80%, rgba(255, 107, 74, 0.18), transparent 48%),
+      radial-gradient(circle at 90% 60%, rgba(255, 179, 71, 0.15), transparent 42%),
+      radial-gradient(circle at 20% 50%, rgba(42, 166, 161, 0.12), transparent 40%),
+      /* Gradiente linear base */
+      linear-gradient(140deg, rgba(255, 247, 237, 0.95) 0%, rgba(255, 250, 245, 0.92) 25%, rgba(250, 255, 253, 0.9) 50%, rgba(244, 251, 255, 0.92) 75%, rgba(255, 247, 237, 0.95) 100%);
     background-attachment: fixed;
+    position: relative;
+  }
+
+  /* Padrão de notas musicais no background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.04;
+    background-image: 
+      /* Notas musicais em diferentes posições */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ctext x='10' y='40' font-size='40' fill='%23ff6b4a'%3E♪%3C/text%3E%3Ctext x='60' y='80' font-size='35' fill='%232aa6a1'%3E♫%3C/text%3E%3Ctext x='20' y='100' font-size='45' fill='%23ffb347'%3E♬%3C/text%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Ctext x='30' y='60' font-size='50' fill='%232aa6a1'%3E♫%3C/text%3E%3Ctext x='80' y='100' font-size='40' fill='%23ff6b4a'%3E♪%3C/text%3E%3Ctext x='10' y='120' font-size='35' fill='%23ffb347'%3E♬%3C/text%3E%3C/svg%3E");
+    background-size: 200px 200px, 250px 250px;
+    background-position: 0 0, 100px 100px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* Padrão de ondas sonoras */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    background-image: 
+      /* Ondas sonoras */
+      url("data:image/svg+xml,%3Csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50 T150 50 T200 50' stroke='%23ff6b4a' fill='none' stroke-width='2'/%3E%3Cpath d='M0 50 Q25 70, 50 50 T100 50 T150 50 T200 50' stroke='%232aa6a1' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg width='150' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q20 20, 40 40 T80 40 T120 40 T150 40' stroke='%23ffb347' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-size: 300px 150px, 250px 120px;
+    background-position: 50px 100px, 200px 300px;
+    pointer-events: none;
+    z-index: -1;
   }
 
   /* Garantir contraste adequado em todos os temas */
@@ -187,6 +232,20 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* Animação de notas musicais flutuantes */
+  @keyframes floatMusic {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(5deg);
+    }
+  }
+
+  .music-notes-pattern {
+    animation: floatMusic 20s ease-in-out infinite;
   }
 
   .animate-fade-in {

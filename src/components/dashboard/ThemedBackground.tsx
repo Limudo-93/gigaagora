@@ -87,11 +87,38 @@ export default function ThemedBackground() {
         }}
       />
       
-      {/* Padrão de ondas musicais sutil */}
-      <div className="fixed inset-0 opacity-[0.03] -z-10" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50' stroke='%23000' fill='none' stroke-width='2'/%3E%3C/svg%3E")`,
-        backgroundSize: '200px 200px'
+      {/* Padrão de notas musicais flutuantes */}
+      <div className="fixed inset-0 opacity-[0.06] -z-10 music-notes-pattern" style={{
+        backgroundImage: `
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ctext x='10' y='50' font-size='50' fill='%23ff6b4a'%3E♪%3C/text%3E%3C/svg%3E"),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ctext x='20' y='60' font-size='40' fill='%232aa6a1'%3E♫%3C/text%3E%3C/svg%3E"),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Ctext x='15' y='80' font-size='55' fill='%23ffb347'%3E♬%3C/text%3E%3C/svg%3E")
+        `,
+        backgroundSize: '180px 180px, 150px 150px, 200px 200px',
+        backgroundPosition: '0 0, 80px 80px, 160px 160px'
       }} />
+      
+      {/* Padrão de ondas sonoras */}
+      <div className="fixed inset-0 opacity-[0.04] -z-10" style={{
+        backgroundImage: `
+          url("data:image/svg+xml,%3Csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50 T150 50 T200 50' stroke='%23ff6b4a' fill='none' stroke-width='2'/%3E%3Cpath d='M0 50 Q25 70, 50 50 T100 50 T150 50 T200 50' stroke='%232aa6a1' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"),
+          url("data:image/svg+xml,%3Csvg width='150' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q20 20, 40 40 T80 40 T120 40 T150 40' stroke='%23ffb347' fill='none' stroke-width='1.5'/%3E%3C/svg%3E")
+        `,
+        backgroundSize: '300px 150px, 250px 120px',
+        backgroundPosition: '50px 100px, 200px 300px'
+      }} />
+      
+      {/* Elementos musicais decorativos adicionais */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        {/* Círculos decorativos com tema musical */}
+        <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-gradient-to-br from-[#ff6b4a]/15 to-transparent blur-2xl animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="absolute bottom-32 right-16 w-40 h-40 rounded-full bg-gradient-to-br from-[#2aa6a1]/12 to-transparent blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-gradient-to-br from-[#ffb347]/18 to-transparent blur-xl animate-pulse" style={{ animationDuration: '3.5s', animationDelay: '2s' }} />
+        
+        {/* Formas geométricas musicais */}
+        <div className="absolute top-40 right-1/4 w-20 h-20 rotate-45 rounded-lg bg-gradient-to-br from-[#ff6b4a]/10 to-transparent blur-lg" />
+        <div className="absolute bottom-40 left-1/4 w-16 h-16 rotate-12 rounded-lg bg-gradient-to-br from-[#2aa6a1]/12 to-transparent blur-md" />
+      </div>
     </>
   );
 }
