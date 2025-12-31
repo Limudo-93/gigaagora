@@ -7,10 +7,18 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'uq_push_notification_queue_event'
+  ) AND NOT EXISTS (
+    SELECT 1
+    FROM pg_class
+    WHERE relname = 'uq_push_notification_queue_event'
   ) THEN
     ALTER TABLE push_notification_queue
       ADD CONSTRAINT uq_push_notification_queue_event UNIQUE (user_id, event_key);
   END IF;
+EXCEPTION
+  WHEN duplicate_object THEN
+    -- constraint/index already exists
+    NULL;
 END $$;
 
 -- cancellation_notifications: required for ON CONFLICT in older rpc
