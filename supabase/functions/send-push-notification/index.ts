@@ -190,6 +190,23 @@ serve(async (req) => {
       console.error("[Push Notification] Erro body:", pushError.body);
       console.error("[Push Notification] Erro stack:", pushError.stack);
       
+      const statusCode = Number(pushError?.statusCode);
+      if (statusCode === 404 || statusCode === 410) {
+        console.warn("[Push Notification] Subscription inválida/expirada, sinalizando para remoção");
+        return new Response(
+          JSON.stringify({
+            success: false,
+            deleteSubscription: true,
+            statusCode,
+            error: "Subscription inválida ou expirada",
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
       // Retornar erro mais específico
       const errorMessage = pushError.message || "Erro desconhecido ao enviar notificação";
       const errorDetails: any = {

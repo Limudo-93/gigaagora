@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/lib/supabase/server";
+
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Supabase service role env vars not configured");
+  }
+
+  return createSupabaseAdmin(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createServerClient();
+    const supabaseAdmin = getSupabaseAdmin();
     
     // Verificar autenticação
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -88,6 +103,16 @@ export async function POST(request: NextRequest) {
             // Extrair mensagem de erro limpa
             const errorMsg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
             throw new Error(errorMsg);
+          }
+
+          if (data && typeof data === "object" && (data as any).deleteSubscription) {
+            const statusCode = (data as any).statusCode;
+            console.warn(`[Send Notification] Removing invalid subscription (${statusCode || "unknown"})`);
+            await supabaseAdmin
+              .from("push_subscriptions")
+              .delete()
+              .eq("endpoint", sub.endpoint);
+            return { deleted: true };
           }
 
           // Verificar se data contém um erro (quando a função retorna erro mas invoke não marca como error)

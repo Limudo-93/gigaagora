@@ -162,6 +162,20 @@ async function processQueue() {
           throw new Error(errorMessage || "Edge function error");
         }
         
+        if (data && typeof data === "object" && (data as any).deleteSubscription) {
+          const statusCode = (data as any).statusCode;
+          console.warn(
+            `[Notifications Process] Deleting invalid subscription for user ${item.user_id} (${statusCode})`
+          );
+          await supabase
+            .from("push_subscriptions")
+            .delete()
+            .eq("endpoint", sub.endpoint);
+          successCount += 1;
+          lastError = `Subscription removida (${statusCode || "unknown"})`;
+          continue;
+        }
+
         if (data && typeof data === "object" && "error" in data) {
           const errorMsg = (data as any).error || "Edge function error";
           const errorDetails = (data as any).details || (data as any).body || "";
