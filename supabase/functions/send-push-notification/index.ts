@@ -10,6 +10,16 @@ const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY") || "";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY") || "";
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:admin@chamaomusico.com";
 
+// Log das variáveis de ambiente no início (sem valores sensíveis)
+console.log("[Push Notification] Variáveis VAPID carregadas:", {
+  hasPublicKey: !!VAPID_PUBLIC_KEY,
+  publicKeyLength: VAPID_PUBLIC_KEY.length,
+  hasPrivateKey: !!VAPID_PRIVATE_KEY,
+  privateKeyLength: VAPID_PRIVATE_KEY.length,
+  hasSubject: !!VAPID_SUBJECT,
+  subject: VAPID_SUBJECT,
+});
+
 serve(async (req) => {
   // CORS headers
   const corsHeaders = {
@@ -18,30 +28,35 @@ serve(async (req) => {
       "authorization, x-client-info, apikey, content-type",
   };
 
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
+  // Wrapper try-catch mais externo para capturar qualquer erro
   try {
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { headers: corsHeaders });
+    }
+
     // Log da requisição recebida
-    console.log("[Push Notification] Requisição recebida:", {
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries()),
-    });
+    console.log("[Push Notification] ========== INÍCIO DA REQUISIÇÃO ==========");
+    console.log("[Push Notification] Method:", req.method);
+    console.log("[Push Notification] URL:", req.url);
 
     // Parse do body com tratamento de erro
-    let body;
+    let body: any;
     try {
-      const bodyText = await req.text();
-      console.log("[Push Notification] Body recebido (primeiros 200 chars):", bodyText.substring(0, 200));
-      body = JSON.parse(bodyText);
+      // Tentar usar req.json() diretamente primeiro
+      body = await req.json();
+      console.log("[Push Notification] Body parseado com sucesso");
+      console.log("[Push Notification] Body keys:", Object.keys(body || {}));
     } catch (parseError: any) {
       console.error("[Push Notification] Erro ao fazer parse do JSON:", parseError);
+      console.error("[Push Notification] Parse error name:", parseError?.name);
+      console.error("[Push Notification] Parse error message:", parseError?.message);
+      console.error("[Push Notification] Parse error stack:", parseError?.stack);
+      
       return new Response(
         JSON.stringify({ 
           error: "Invalid JSON in request body",
-          details: parseError.message 
+          details: parseError?.message || String(parseError),
+          type: parseError?.name || "ParseError"
         }),
         {
           status: 400,
@@ -50,7 +65,7 @@ serve(async (req) => {
       );
     }
 
-    const { subscription, payload } = body;
+    const { subscription, payload } = body || {};
 
     if (!subscription || !payload) {
       return new Response(
@@ -208,24 +223,41 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error("[Push Notification] ========== ERRO GERAL ==========");
+    console.error("[Push Notification] ========== ERRO GERAL CAPTURADO ==========");
     console.error("[Push Notification] Error name:", error?.name);
     console.error("[Push Notification] Error message:", error?.message);
     console.error("[Push Notification] Error stack:", error?.stack);
     console.error("[Push Notification] Error type:", typeof error);
-    console.error("[Push Notification] Error keys:", Object.keys(error || {}));
+    console.error("[Push Notification] Error constructor:", error?.constructor?.name);
+    
+    if (error) {
+      try {
+        const errorKeys = Object.keys(error);
+        console.error("[Push Notification] Error keys:", errorKeys);
+        for (const key of errorKeys) {
+          try {
+            console.error(`[Push Notification] Error.${key}:`, error[key]);
+          } catch (e) {
+            console.error(`[Push Notification] Error.${key}: [não pode ser serializado]`);
+          }
+        }
+      } catch (e) {
+        console.error("[Push Notification] Não foi possível listar keys do erro");
+      }
+    }
     
     try {
       console.error("[Push Notification] Error JSON:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
     } catch (jsonError) {
       console.error("[Push Notification] Erro ao serializar error:", jsonError);
+      console.error("[Push Notification] Error toString:", String(error));
     }
     
     // Retornar erro mais detalhado
     const errorMessage = error?.message || error?.toString() || "Erro desconhecido ao enviar notificação";
     const errorDetails: any = {
       error: errorMessage,
-      type: error?.name || "Error",
+      type: error?.name || error?.constructor?.name || "Error",
     };
     
     // Adicionar mais detalhes se disponíveis
@@ -236,14 +268,20 @@ serve(async (req) => {
       try {
         errorDetails.body = typeof error.body === 'string' ? error.body : JSON.stringify(error.body);
       } catch (e) {
-        // Ignorar erro de serialização
+        errorDetails.body = "[não pode ser serializado]";
       }
     }
     
-    // Em desenvolvimento, adicionar stack trace
-    if (Deno.env.get("DENO_ENV") === "development" || Deno.env.get("ENVIRONMENT") === "development") {
-      errorDetails.stack = error?.stack;
-      errorDetails.details = error?.toString();
+    // Sempre adicionar stack trace para debug
+    if (error?.stack) {
+      errorDetails.stack = error.stack;
+    }
+    if (error?.toString) {
+      try {
+        errorDetails.details = error.toString();
+      } catch (e) {
+        errorDetails.details = "[não pode converter para string]";
+      }
     }
 
     return new Response(
