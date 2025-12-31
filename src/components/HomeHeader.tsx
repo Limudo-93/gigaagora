@@ -10,6 +10,7 @@ export default function HomeHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
+    { href: "/musicos" as any, label: "Músicos" },
     { href: "/como-funciona" as any, label: "Como Funciona" },
     { href: "/sobre" as any, label: "Sobre Nós" },
     { href: "/contato" as any, label: "Contato" },

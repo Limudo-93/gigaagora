@@ -41,6 +41,9 @@ export default function MarketingFooter() {
               Plataforma
             </p>
             <div className="flex flex-col gap-2">
+              <Link href="/musicos" className="hover:text-foreground">
+                Músicos
+              </Link>
               <Link href="/como-funciona" className="hover:text-foreground">
                 Como funciona
               </Link>
