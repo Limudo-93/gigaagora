@@ -21,6 +21,9 @@ async function processQueue() {
   const supabase = getSupabaseAdmin();
   const nowIso = new Date().toISOString();
 
+  console.log("[Notifications Process] Starting queue processing at", nowIso);
+
+  // Enfileirar notificações agendadas
   await supabase.rpc("rpc_enqueue_profile_completion");
   await supabase.rpc("rpc_enqueue_daily_reminder");
   await supabase.rpc("rpc_enqueue_invite_expiring");
@@ -36,34 +39,48 @@ async function processQueue() {
     .limit(BATCH_LIMIT);
 
   if (error) {
+    console.error("[Notifications Process] Error fetching queue:", error);
     throw error;
   }
+
+  console.log("[Notifications Process] Found", queue?.length || 0, "notifications to process");
 
   let processed = 0;
   let sent = 0;
   let failed = 0;
+  let skipped = 0;
 
   for (const item of queue || []) {
     processed += 1;
+    console.log(`[Notifications Process] Processing notification ${item.id} for user ${item.user_id}, type: ${item.notification_type}`);
+    
     const { data: subscriptions, error: subError } = await supabase.rpc(
       "get_user_push_subscriptions",
       { p_user_id: item.user_id }
     );
 
+    if (subError) {
+      console.error(`[Notifications Process] Error fetching subscriptions for user ${item.user_id}:`, subError);
+    }
+
+    // Se não houver subscriptions, marcar como "sent" (ignorada) para não ficar tentando
     if (subError || !subscriptions || subscriptions.length === 0) {
+      console.log(`[Notifications Process] No subscriptions found for user ${item.user_id}, skipping (user hasn't enabled push notifications)`);
       await supabase
         .from("push_notification_queue")
         .update({
-          status: "retry",
+          status: "sent", // Marcar como "sent" para não ficar tentando
           attempt_count: (item.attempt_count || 0) + 1,
           last_attempt_at: nowIso,
-          next_attempt_at: new Date(Date.now() + RETRY_MINUTES * 60 * 1000).toISOString(),
-          last_error: subError?.message || "No subscriptions",
+          sent_at: nowIso,
+          last_error: subError?.message || "Skipped: User has no active push subscriptions",
         })
         .eq("id", item.id);
-      failed += 1;
+      skipped += 1;
       continue;
     }
+
+    console.log(`[Notifications Process] Found ${subscriptions.length} subscription(s) for user ${item.user_id}`);
 
     let successCount = 0;
     let lastError: string | null = null;
@@ -78,6 +95,7 @@ async function processQueue() {
       };
 
       try {
+        console.log(`[Notifications Process] Sending notification to subscription ${sub.endpoint.substring(0, 50)}...`);
         const { data, error: sendError } = await supabase.functions.invoke("send-push-notification", {
           body: {
             subscription: subscriptionData,
@@ -86,15 +104,21 @@ async function processQueue() {
         });
 
         if (sendError) {
+          console.error(`[Notifications Process] Error sending to subscription:`, sendError);
           throw sendError;
         }
         if (data && typeof data === "object" && "error" in data) {
-          throw new Error((data as any).error || "Edge function error");
+          const errorMsg = (data as any).error || "Edge function error";
+          console.error(`[Notifications Process] Edge function returned error:`, errorMsg);
+          throw new Error(errorMsg);
         }
 
+        console.log(`[Notifications Process] Successfully sent notification to subscription`);
         successCount += 1;
       } catch (err: any) {
-        lastError = err?.message || String(err);
+        const errorMsg = err?.message || String(err);
+        console.error(`[Notifications Process] Failed to send notification:`, errorMsg);
+        lastError = errorMsg;
       }
     }
 
@@ -125,7 +149,7 @@ async function processQueue() {
     }
   }
 
-  return { processed, sent, failed };
+  return { processed, sent, failed, skipped };
 }
 
 async function handler(request: Request) {
@@ -133,14 +157,25 @@ async function handler(request: Request) {
   const secret = process.env.NOTIFICATIONS_CRON_SECRET;
   const auth = request.headers.get("authorization");
 
-  if (secret && !isCron && auth !== `Bearer ${secret}`) {
+  // Permitir acesso se:
+  // 1. É uma chamada de cron da Vercel (x-vercel-cron header)
+  // 2. Tem o secret correto no Authorization header
+  // 3. Não tem secret configurado (modo desenvolvimento)
+  const isAuthorized = 
+    isCron || 
+    (secret && auth === `Bearer ${secret}`) ||
+    !secret;
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const result = await processQueue();
+    console.log("[Notifications Process] Result:", result);
     return NextResponse.json({ ok: true, ...result });
   } catch (error: any) {
+    console.error("[Notifications Process] Error:", error);
     return NextResponse.json(
       { ok: false, error: error?.message || "Process failed" },
       { status: 500 }
