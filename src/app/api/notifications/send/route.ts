@@ -72,27 +72,27 @@ export async function POST(request: NextRequest) {
             vibrate: notification.vibrate || [200, 100, 200],
           };
 
-             const { data, error, status, statusText } = await supabase.functions.invoke("send-push-notification", {
-               body: {
-                 subscription: subscriptionData,
-                 payload: payload,
-               },
-             });
+          const { data, error } = await supabase.functions.invoke("send-push-notification", {
+            body: {
+              subscription: subscriptionData,
+              payload: payload,
+            },
+          });
 
-             if (error) {
-               console.error(`[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`, error);
-               console.error(`[Send Notification] Status: ${status}, StatusText: ${statusText}`);
-               console.error(`[Send Notification] Response data:`, data);
-               throw new Error(`Edge Function error: ${error.message || error} (Status: ${status || 'unknown'})`);
-             }
+          if (error) {
+            console.error(`[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`, error);
+            console.error(`[Send Notification] Response data:`, data);
+            throw new Error(`Edge Function error: ${error.message || JSON.stringify(error)}`);
+          }
 
-             if (status && status >= 400) {
-               const errorMessage = data?.error || data?.message || `Edge Function returned status ${status}`;
-               console.error(`[Send Notification] Non-2xx status ${status}:`, errorMessage);
-               throw new Error(`Edge Function returned a non-2xx status code: ${errorMessage}`);
-             }
+          // Verificar se data contém um erro
+          if (data && typeof data === 'object' && 'error' in data) {
+            const errorMessage = (data as any).error || (data as any).message || "Erro desconhecido da Edge Function";
+            console.error(`[Send Notification] Edge Function returned error:`, errorMessage);
+            throw new Error(`Edge Function error: ${errorMessage}`);
+          }
 
-             return data;
+          return data;
         } catch (err: any) {
           console.error(`[Send Notification] Failed for subscription:`, err);
           throw err;
