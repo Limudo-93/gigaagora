@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,35 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, Download, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import {
+  Calendar,
+  Clock,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Search,
+  Filter,
+  CalendarDays,
+  List,
+  Grid3x3,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { downloadICS, CalendarEvent } from "@/lib/ics-utils";
 import { useRouter } from "next/navigation";
+import { Calendar as BigCalendar, View, CalendarProps } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 type ConfirmedGigRow = {
   confirmation_id: string;
@@ -40,7 +66,27 @@ type PendingInviteRow = {
   end_time: string | null;
 };
 
-type DayStatus = "free" | "preferred" | "busy";
+type CalendarEventType = {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: {
+    type: "confirmed" | "pending";
+    gig: ConfirmedGigRow | PendingInviteRow;
+    location?: string;
+    instrument?: string;
+  };
+};
+
+// Localizer para react-big-calendar usando date-fns
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek: () => startOfWeek(new Date(), { weekStartsOn: 0 }),
+  getDay,
+  locales: { "pt-BR": ptBR },
+});
 
 function formatDateTimeBR(iso: string | null) {
   if (!iso) return "";
@@ -68,46 +114,21 @@ function buildLocationText(r: ConfirmedGigRow) {
   return parts.join(" • ");
 }
 
-function getDayKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function getDayStatus(
-  dayKey: string,
-  confirmedGigs: ConfirmedGigRow[],
-  pendingInvites: PendingInviteRow[]
-): DayStatus {
-  // Verifica se há shows confirmados neste dia
-  const hasConfirmed = confirmedGigs.some((gig) => {
-    if (!gig.start_time) return false;
-    const gigDate = new Date(gig.start_time);
-    return getDayKey(gigDate) === dayKey;
-  });
-
-  if (hasConfirmed) return "busy";
-
-  // Verifica se há convites pendentes neste dia
-  const hasPending = pendingInvites.some((invite) => {
-    if (!invite.start_time) return false;
-    const inviteDate = new Date(invite.start_time);
-    return getDayKey(inviteDate) === dayKey;
-  });
-
-  if (hasPending) return "preferred";
-
-  return "free";
-}
-
 export default function AgendaPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [confirmedGigs, setConfirmedGigs] = useState<ConfirmedGigRow[]>([]);
   const [pendingInvites, setPendingInvites] = useState<PendingInviteRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<View>("month");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "confirmed" | "pending">("all");
+  const [showConfirmed, setShowConfirmed] = useState(true);
+  const [showPending, setShowPending] = useState(true);
 
   // Busca o usuário atual
   useEffect(() => {
@@ -265,6 +286,67 @@ export default function AgendaPage() {
     fetchPending();
   }, [userId]);
 
+  // Converte gigs para eventos do calendário
+  const calendarEvents = useMemo(() => {
+    const events: CalendarEventType[] = [];
+
+    if (showConfirmed) {
+      confirmedGigs.forEach((gig) => {
+        if (gig.start_time && gig.end_time) {
+          const location = buildLocationText(gig);
+          events.push({
+            id: gig.confirmation_id,
+            title: gig.gig_title || "Show confirmado",
+            start: new Date(gig.start_time),
+            end: new Date(gig.end_time),
+            resource: {
+              type: "confirmed",
+              gig,
+              location,
+              instrument: gig.instrument || undefined,
+            },
+          });
+        }
+      });
+    }
+
+    if (showPending) {
+      pendingInvites.forEach((invite) => {
+        if (invite.start_time && invite.end_time) {
+          events.push({
+            id: invite.invite_id,
+            title: invite.gig_title || "Convite pendente",
+            start: new Date(invite.start_time),
+            end: new Date(invite.end_time),
+            resource: {
+              type: "pending",
+              gig: invite,
+            },
+          });
+        }
+      });
+    }
+
+    // Aplicar filtros
+    let filtered = events;
+
+    if (filterType !== "all") {
+      filtered = filtered.filter((e) => e.resource.type === filterType);
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (e) =>
+          e.title.toLowerCase().includes(term) ||
+          (e.resource.location && e.resource.location.toLowerCase().includes(term)) ||
+          (e.resource.instrument && e.resource.instrument.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  }, [confirmedGigs, pendingInvites, filterType, searchTerm, showConfirmed, showPending]);
+
   const handleDownloadICS = () => {
     const events: CalendarEvent[] = confirmedGigs
       .filter((gig) => gig.start_time && gig.end_time)
@@ -289,128 +371,107 @@ export default function AgendaPage() {
     downloadICS(events, "agenda-chamaomusico.ics");
   };
 
-  // Gera os dias do calendário
-  const calendarDays = useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const firstDayOfWeek = firstDay.getDay();
-    const daysInMonth = lastDay.getDate();
-
-    const days: Array<{ date: Date; status: DayStatus }> = [];
-
-    // Preenche dias do mês anterior
-    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-      const date = new Date(year, month, -i);
-      const dayKey = getDayKey(date);
-      days.push({
-        date,
-        status: getDayStatus(dayKey, confirmedGigs, pendingInvites),
-      });
-    }
-
-    // Dias do mês atual
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dayKey = getDayKey(date);
-      days.push({
-        date,
-        status: getDayStatus(dayKey, confirmedGigs, pendingInvites),
-      });
-    }
-
-    // Preenche dias do próximo mês para completar a grade
-    const remainingDays = 42 - days.length; // 6 semanas * 7 dias
-    for (let day = 1; day <= remainingDays; day++) {
-      const date = new Date(year, month + 1, day);
-      const dayKey = getDayKey(date);
-      days.push({
-        date,
-        status: getDayStatus(dayKey, confirmedGigs, pendingInvites),
-      });
-    }
-
-    return days;
-  }, [currentMonth, confirmedGigs, pendingInvites]);
-
-  const monthNames = [
-    "Janeiro",
-    "Fevereiro",
-    "Março",
-    "Abril",
-    "Maio",
-    "Junho",
-    "Julho",
-    "Agosto",
-    "Setembro",
-    "Outubro",
-    "Novembro",
-    "Dezembro",
-  ];
-
-  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-  const goToPreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  };
-
-  const goToNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-  };
-
-  const goToToday = () => {
-    setCurrentMonth(new Date());
-  };
-
-  // Obtém eventos de um dia específico
-  const getDayEvents = (date: Date) => {
-    const dayKey = getDayKey(date);
-    const dayConfirmed = confirmedGigs.filter((gig) => {
-      if (!gig.start_time) return false;
-      const gigDate = new Date(gig.start_time);
-      return getDayKey(gigDate) === dayKey;
-    });
-    const dayPending = pendingInvites.filter((invite) => {
-      if (!invite.start_time) return false;
-      const inviteDate = new Date(invite.start_time);
-      return getDayKey(inviteDate) === dayKey;
-    });
-    return { confirmed: dayConfirmed, pending: dayPending };
-  };
-
-  const handleDayClick = (date: Date) => {
-    setSelectedDate(date);
+  const handleSelectEvent = (event: CalendarEventType) => {
+    setSelectedEvent(event);
     setDialogOpen(true);
   };
 
-  const formatDateBR = (date: Date) => {
-    return date.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+  const handleNavigate = (date: Date) => {
+    setCurrentDate(date);
+  };
+
+  const eventStyleGetter = (event: CalendarEventType) => {
+    const isConfirmed = event.resource.type === "confirmed";
+    return {
+      className: isConfirmed
+        ? "rbc-event-confirmed"
+        : "rbc-event-pending",
+      style: {
+        backgroundColor: isConfirmed ? "#10b981" : "#f59e0b",
+        borderColor: isConfirmed ? "#059669" : "#d97706",
+        color: "white",
+        borderRadius: "4px",
+        padding: "2px 4px",
+        fontSize: "0.875rem",
+      },
+    };
   };
 
   const nextConfirmedGig = confirmedGigs.find((gig) => gig.start_time);
 
-  const monthSummary = useMemo(() => {
-    const month = currentMonth.getMonth();
-    const year = currentMonth.getFullYear();
-    const daysThisMonth = calendarDays.filter(
-      (day) => day.date.getMonth() === month && day.date.getFullYear() === year
-    );
+  const stats = useMemo(() => {
+    const thisMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    
+    const monthConfirmed = confirmedGigs.filter((gig) => {
+      if (!gig.start_time) return false;
+      const gigDate = new Date(gig.start_time);
+      return gigDate >= thisMonth && gigDate <= nextMonth;
+    }).length;
+
+    const monthPending = pendingInvites.filter((invite) => {
+      if (!invite.start_time) return false;
+      const inviteDate = new Date(invite.start_time);
+      return inviteDate >= thisMonth && inviteDate <= nextMonth;
+    }).length;
+
     return {
-      busy: daysThisMonth.filter((day) => day.status === "busy").length,
-      preferred: daysThisMonth.filter((day) => day.status === "preferred").length,
-      free: daysThisMonth.filter((day) => day.status === "free").length,
+      confirmed: monthConfirmed,
+      pending: monthPending,
+      total: confirmedGigs.length + pendingInvites.length,
     };
-  }, [calendarDays, currentMonth]);
+  }, [currentDate, confirmedGigs, pendingInvites]);
+
+  // Combina todos os eventos para exibir nos cards
+  const allEventsForCards = useMemo(() => {
+    const events: Array<{
+      type: "confirmed" | "pending";
+      gig: ConfirmedGigRow | PendingInviteRow;
+      start_time: string | null;
+      end_time: string | null;
+      title: string | null;
+      location?: string;
+      instrument?: string;
+    }> = [];
+
+    confirmedGigs.forEach((gig) => {
+      if (gig.start_time) {
+        events.push({
+          type: "confirmed",
+          gig,
+          start_time: gig.start_time,
+          end_time: gig.end_time,
+          title: gig.gig_title,
+          location: buildLocationText(gig),
+          instrument: gig.instrument || undefined,
+        });
+      }
+    });
+
+    pendingInvites.forEach((invite) => {
+      if (invite.start_time) {
+        events.push({
+          type: "pending",
+          gig: invite,
+          start_time: invite.start_time,
+          end_time: invite.end_time,
+          title: invite.gig_title,
+        });
+      }
+    });
+
+    return events
+      .filter((e) => e.start_time)
+      .sort((a, b) => {
+        const timeA = new Date(a.start_time!).getTime();
+        const timeB = new Date(b.start_time!).getTime();
+        return timeA - timeB;
+      });
+  }, [confirmedGigs, pendingInvites]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <DashboardLayout fullWidth>
+      <div className="space-y-6 w-full">
         {/* Cabeçalho */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -418,11 +479,11 @@ export default function AgendaPage() {
               Minha agenda de shows
             </h1>
             <p className="text-sm text-foreground/60 mt-1">
-              Acompanhe confirmações, pendências e exporte tudo para o seu calendário.
+              Visualize seus shows em diferentes formatos e gerencie sua agenda.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={goToToday} className="border-white/70 bg-white/80">
+            <Button variant="outline" onClick={() => setCurrentDate(new Date())} className="border-white/70 bg-white/80">
               Hoje
             </Button>
             <Button onClick={handleDownloadICS} className="btn-gradient text-white">
@@ -439,7 +500,8 @@ export default function AgendaPage() {
           </div>
         )}
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        {/* Cards de resumo */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="border border-white/70 bg-white/80 shadow-sm">
             <CardContent className="space-y-2 p-5">
               <p className="text-xs uppercase tracking-wide text-foreground/60">
@@ -447,21 +509,46 @@ export default function AgendaPage() {
               </p>
               {nextConfirmedGig ? (
                 <>
-                  <p className="text-lg font-semibold text-foreground">
+                  <p className="text-lg font-semibold text-foreground line-clamp-1">
                     {nextConfirmedGig.gig_title || "Show confirmado"}
                   </p>
                   <p className="text-sm text-foreground/70">
                     {formatDateTimeBR(nextConfirmedGig.start_time)}
                   </p>
-                  <p className="text-xs text-foreground/60">
-                    {buildLocationText(nextConfirmedGig)}
-                  </p>
                 </>
               ) : (
                 <p className="text-sm text-foreground/60">
-                  Você ainda não tem shows confirmados.
+                  Nenhum show confirmado
                 </p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border border-white/70 bg-white/80 shadow-sm">
+            <CardContent className="space-y-2 p-5">
+              <p className="text-xs uppercase tracking-wide text-foreground/60">
+                Total de eventos
+              </p>
+              <p className="text-3xl font-semibold text-foreground">
+                {stats.total}
+              </p>
+              <p className="text-sm text-foreground/60">
+                {stats.confirmed} confirmados, {stats.pending} pendentes
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-white/70 bg-white/80 shadow-sm">
+            <CardContent className="space-y-2 p-5">
+              <p className="text-xs uppercase tracking-wide text-foreground/60">
+                Este mês
+              </p>
+              <p className="text-3xl font-semibold text-foreground">
+                {stats.confirmed + stats.pending}
+              </p>
+              <p className="text-sm text-foreground/60">
+                Eventos agendados
+              </p>
             </CardContent>
           </Card>
 
@@ -474,356 +561,394 @@ export default function AgendaPage() {
                 {pendingInvites.length}
               </p>
               <p className="text-sm text-foreground/60">
-                Responda rápido para manter sua sequência.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-white/70 bg-white/80 shadow-sm">
-            <CardContent className="space-y-3 p-5">
-              <p className="text-xs uppercase tracking-wide text-foreground/60">
-                Disponibilidade do mês
-              </p>
-              <div className="flex flex-wrap gap-3 text-xs text-foreground/70">
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Livres: {monthSummary.free}
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-amber-400" />
-                  Pendentes: {monthSummary.preferred}
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-rose-400" />
-                  Ocupados: {monthSummary.busy}
-                </span>
-              </div>
-              <p className="text-xs text-foreground/60">
-                Clique em um dia para ver detalhes.
+                Aguardando resposta
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Próximos Eventos */}
+        {/* Filtros e controles */}
         <Card className="border border-white/70 bg-white/80">
-          <CardHeader>
-            <CardTitle className="text-xl">Próximos Eventos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="text-center py-6 text-sm text-gray-700">
-                Carregando...
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              {/* Busca */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                <Input
+                  placeholder="Buscar por título, local ou instrumento..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-white/70 bg-white/80"
+                />
               </div>
-            ) : confirmedGigs.length === 0 && pendingInvites.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm font-medium text-gray-900">
-                  Nenhum evento próximo
-                </p>
-                <p className="mt-1 text-xs text-gray-600">
-                  Você não tem shows confirmados ou convites pendentes.
-                </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Filtro por tipo */}
+                <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+                  <SelectTrigger className="w-[140px] border-white/70 bg-white/80">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="confirmed">Confirmados</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Toggle visibilidade */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowConfirmed(!showConfirmed)}
+                    className={`border-white/70 ${showConfirmed ? "bg-emerald-50" : "bg-white/80"}`}
+                  >
+                    {showConfirmed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    <span className="ml-2 hidden sm:inline">Confirmados</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPending(!showPending)}
+                    className={`border-white/70 ${showPending ? "bg-amber-50" : "bg-white/80"}`}
+                  >
+                    {showPending ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    <span className="ml-2 hidden sm:inline">Pendentes</span>
+                  </Button>
+                </div>
+
+                {/* Visualizações */}
+                <div className="flex items-center gap-1 border border-white/70 rounded-lg p-1 bg-white/80">
+                  <Button
+                    variant={view === "month" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("month")}
+                    className="h-8"
+                  >
+                    <Grid3x3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={view === "week" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("week")}
+                    className="h-8"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={view === "day" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("day")}
+                    className="h-8"
+                  >
+                    <Calendar className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={view === "agenda" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setView("agenda")}
+                    className="h-8"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Todos os eventos ordenados por data */}
-                {(() => {
-                  // Combina e ordena todos os eventos
-                  const allEvents = [
-                    ...confirmedGigs.map((gig) => ({
-                      ...gig,
-                      type: "confirmed" as const,
-                      sortDate: gig.start_time ? new Date(gig.start_time).getTime() : 0,
-                    })),
-                    ...pendingInvites.map((invite) => ({
-                      ...invite,
-                      type: "pending" as const,
-                      sortDate: invite.start_time ? new Date(invite.start_time).getTime() : 0,
-                    })),
-                  ]
-                    .filter((e) => e.sortDate > 0)
-                    .sort((a, b) => a.sortDate - b.sortDate);
+            </div>
+          </CardContent>
+        </Card>
 
-                  return allEvents.map((event) => {
-                    const isConfirmed = event.type === "confirmed";
-                    const when = formatDateTimeBR(event.start_time);
-                    const location = isConfirmed
-                      ? buildLocationText(event as ConfirmedGigRow)
-                      : null;
-                    const dateParts = when ? when.split(" ") : null;
-                    const dayMonth = dateParts
-                      ? dateParts[0].split("/").slice(0, 2).join("/")
-                      : null;
-                    const monthName = dateParts
-                      ? new Date(event.start_time || "").toLocaleDateString("pt-BR", {
-                          month: "short",
-                        }).toUpperCase()
-                      : null;
-
-                    const key = isConfirmed
-                      ? (event as ConfirmedGigRow).confirmation_id
-                      : (event as PendingInviteRow).invite_id;
-
-                    return (
+        {/* Próximos Eventos - Cards Redesenhados */}
+        {allEventsForCards.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-display font-semibold text-foreground">
+                Próximos Eventos
+              </h2>
+              <Badge variant="secondary" className="text-xs">
+                {allEventsForCards.length} {allEventsForCards.length === 1 ? "evento" : "eventos"}
+              </Badge>
+            </div>
+            
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {allEventsForCards.slice(0, 8).map((event) => {
+                const eventDate = event.start_time ? new Date(event.start_time) : null;
+                const isConfirmed = event.type === "confirmed";
+                const day = eventDate ? format(eventDate, "dd", { locale: ptBR }) : "";
+                const month = eventDate ? format(eventDate, "MMM", { locale: ptBR }).toUpperCase() : "";
+                const time = eventDate ? format(eventDate, "HH:mm", { locale: ptBR }) : "";
+                const weekday = eventDate ? format(eventDate, "EEEE", { locale: ptBR }) : "";
+                
+                return (
+                  <Card
+                    key={event.type === "confirmed" ? (event.gig as ConfirmedGigRow).confirmation_id : (event.gig as PendingInviteRow).invite_id}
+                    className="border border-white/70 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden group"
+                    onClick={() => {
+                      if (eventDate) {
+                        const calendarEvent: CalendarEventType = {
+                          id: event.type === "confirmed" ? (event.gig as ConfirmedGigRow).confirmation_id : (event.gig as PendingInviteRow).invite_id,
+                          title: event.title || "Show",
+                          start: eventDate,
+                          end: event.end_time ? new Date(event.end_time) : eventDate,
+                          resource: {
+                            type: event.type,
+                            gig: event.gig,
+                            location: event.location,
+                            instrument: event.instrument,
+                          },
+                        };
+                        setSelectedEvent(calendarEvent);
+                        setDialogOpen(true);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-0">
+                      {/* Header com data */}
                       <div
-                        key={key}
-                        className={`rounded-xl border bg-white/90 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${
-                          isConfirmed ? "border-white/70" : "border-amber-200"
+                        className={`relative p-4 text-white ${
+                          isConfirmed
+                            ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
+                            : "bg-gradient-to-br from-amber-500 to-amber-600"
                         }`}
-                        onClick={() => {
-                          if (event.start_time) {
-                            handleDayClick(new Date(event.start_time));
-                          }
-                        }}
                       >
-                        <div className="flex items-start gap-4">
-                          {dayMonth && monthName && (
-                            <div
-                              className={`flex flex-col items-center justify-center text-white rounded-lg px-4 py-3 min-w-[80px] ${
-                                isConfirmed ? "bg-[#ff6b4a]" : "bg-amber-500"
-                              }`}
-                            >
-                              <div className="text-2xl font-bold">{dayMonth.split("/")[0]}</div>
-                              <div className="text-sm font-medium">{monthName}</div>
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10" />
+                        <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full -ml-8 -mb-8" />
+                        <div className="relative flex items-center justify-between">
+                          <div>
+                            <div className="text-3xl font-bold">{day}</div>
+                            <div className="text-xs font-medium opacity-90">{month}</div>
+                          </div>
+                          <Badge
+                            className={`${
+                              isConfirmed
+                                ? "bg-emerald-700/50 text-white border-emerald-300/30"
+                                : "bg-amber-700/50 text-white border-amber-300/30"
+                            } border`}
+                          >
+                            {isConfirmed ? "Confirmado" : "Pendente"}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Conteúdo */}
+                      <div className="p-5 space-y-3">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-[#ff6b4a] transition-colors">
+                            {event.title || "Show"}
+                          </h3>
+                          <p className="text-xs text-foreground/60 mt-1 capitalize">{weekday}</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-foreground/70">
+                            <Clock className="h-4 w-4 text-[#ff6b4a]" />
+                            <span className="font-medium">{time}</span>
+                          </div>
+
+                          {event.location && (
+                            <div className="flex items-start gap-2 text-sm text-foreground/70">
+                              <MapPin className="h-4 w-4 text-[#2aa6a1] mt-0.5 shrink-0" />
+                              <span className="line-clamp-2">{event.location}</span>
                             </div>
                           )}
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <Badge
-                                className={`text-white text-xs ${
-                                  isConfirmed ? "bg-emerald-500" : "bg-amber-500"
-                                }`}
-                              >
-                                {isConfirmed ? "Confirmada" : "Pendente"}
+                          {event.instrument && (
+                            <div className="pt-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {event.instrument}
                               </Badge>
                             </div>
-                            <div className="text-sm font-semibold truncate text-gray-900 mb-1">
-                              {event.gig_title ?? "Show"}
-                            </div>
-                            {location && (
-                              <div className="text-xs text-gray-700 mb-1">
-                                {location}
-                              </div>
-                            )}
-                            {dateParts && (
-                              <div className="text-xs text-gray-700">
-                                {dateParts[1]}{" "}
-                                {isConfirmed && (event as ConfirmedGigRow).instrument
-                                  ? `• ${(event as ConfirmedGigRow).instrument}`
-                                  : ""}
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
+
+                        {!isConfirmed && (
+                          <div className="pt-2 border-t border-amber-100">
+                            <p className="text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
+                              Aguardando sua resposta
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    );
-                  });
-                })()}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Calendário Mensal */}
-        <Card className="border border-white/70 bg-white/80">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">Calendário</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToPreviousMonth}
-                  className="h-8 w-8 p-0 border-white/70 bg-white/80"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToToday}
-                  className="h-8 px-3 border-white/70 bg-white/80"
-                >
-                  Hoje
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToNextMonth}
-                  className="h-8 w-8 p-0 border-white/70 bg-white/80"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mt-2">
-              {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-            </p>
-          </CardHeader>
-          <CardContent>
-            {/* Grade do Calendário */}
-            <div className="grid grid-cols-7 gap-1">
-              {/* Cabeçalho dos dias da semana */}
-              {weekDays.map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-xs font-medium text-gray-600 py-2"
-                >
-                  {day}
-                </div>
-              ))}
-
-              {/* Dias do calendário */}
-              {calendarDays.map((day, index) => {
-                const isCurrentMonth = day.date.getMonth() === currentMonth.getMonth();
-                const isToday =
-                  getDayKey(day.date) === getDayKey(new Date()) &&
-                  isCurrentMonth;
-
-                const statusColors = {
-                  free: "bg-emerald-400",
-                  preferred: "bg-amber-400",
-                  busy: "bg-rose-400",
-                };
-
-                const dayEvents = getDayEvents(day.date);
-                const eventCount = dayEvents.confirmed.length + dayEvents.pending.length;
-
-                return (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => handleDayClick(day.date)}
-                    className={`
-                      aspect-square p-1 border border-gray-200 rounded
-                      ${!isCurrentMonth ? "opacity-40 bg-gray-50" : "bg-white"}
-                      ${isToday ? "ring-2 ring-[#ff6b4a]" : ""}
-                      flex flex-col items-center justify-center
-                      hover:bg-amber-50 hover:border-amber-200 transition-colors
-                      cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#ff6b4a] focus:ring-offset-1
-                      ${day.status !== "free" ? "hover:shadow-sm" : ""}
-                    `}
-                  >
-                    <div className="text-xs font-medium text-gray-900 mb-1">
-                      {day.date.getDate()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div
-                        className={`h-2 w-2 rounded-full ${statusColors[day.status]}`}
-                      />
-                      {eventCount > 0 && (
-                        <span className="text-[10px] font-semibold text-gray-600">
-                          {eventCount}
-                        </span>
-                      )}
-                    </div>
-                  </button>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
+
+            {allEventsForCards.length > 8 && (
+              <div className="text-center pt-2">
+                <p className="text-sm text-foreground/60">
+                  E mais {allEventsForCards.length - 8} {allEventsForCards.length - 8 === 1 ? "evento" : "eventos"}...
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Calendário */}
+        <Card className="border border-white/70 bg-white/80">
+          <CardContent className="p-4">
+            <div style={{ height: "700px" }}>
+              <BigCalendar
+                localizer={localizer}
+                events={calendarEvents}
+                startAccessor="start"
+                endAccessor="end"
+                view={view}
+                onView={setView}
+                date={currentDate}
+                onNavigate={handleNavigate}
+                onSelectEvent={handleSelectEvent}
+                eventPropGetter={eventStyleGetter}
+                messages={{
+                  next: "Próximo",
+                  previous: "Anterior",
+                  today: "Hoje",
+                  month: "Mês",
+                  week: "Semana",
+                  day: "Dia",
+                  agenda: "Agenda",
+                  date: "Data",
+                  time: "Hora",
+                  event: "Evento",
+                  noEventsInRange: "Nenhum evento neste período.",
+                }}
+                culture="pt-BR"
+                className="rbc-calendar-custom"
+              />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Dialog de Eventos do Dia */}
+        {/* Dialog de detalhes do evento */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
-                {selectedDate ? formatDateBR(selectedDate) : "Eventos"}
+                {selectedEvent?.title || "Detalhes do evento"}
               </DialogTitle>
               <DialogDescription>
-                Shows confirmados e convites pendentes para este dia
+                Informações completas sobre o show
               </DialogDescription>
             </DialogHeader>
-            {selectedDate && (
+            {selectedEvent && (
               <div className="space-y-4 mt-4">
-                {(() => {
-                  const events = getDayEvents(selectedDate);
-                  const allEvents = [
-                    ...events.confirmed.map((e) => ({ ...e, type: "confirmed" as const })),
-                    ...events.pending.map((e) => ({ ...e, type: "pending" as const })),
-                  ].sort((a, b) => {
-                    const timeA = a.start_time ? new Date(a.start_time).getTime() : 0;
-                    const timeB = b.start_time ? new Date(b.start_time).getTime() : 0;
-                    return timeA - timeB;
-                  });
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={
+                      selectedEvent.resource.type === "confirmed"
+                        ? "bg-emerald-500 text-white"
+                        : "bg-amber-500 text-white"
+                    }
+                  >
+                    {selectedEvent.resource.type === "confirmed" ? "Confirmado" : "Pendente"}
+                  </Badge>
+                  {selectedEvent.resource.instrument && (
+                    <Badge variant="secondary">
+                      {selectedEvent.resource.instrument}
+                    </Badge>
+                  )}
+                </div>
 
-                  if (allEvents.length === 0) {
-                    return (
-                      <div className="text-center py-8 text-gray-500">
-                        <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Nenhum evento neste dia</p>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div className="space-y-3">
-                      {allEvents.map((event, idx) => {
-                        const isConfirmed = event.type === "confirmed";
-                        const when = formatDateTimeBR(event.start_time);
-                        const location = isConfirmed
-                          ? buildLocationText(event as ConfirmedGigRow)
-                          : null;
-
-                        return (
-                          <div
-                            key={idx}
-                            className="rounded-lg border p-4 bg-white border-gray-200"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div
-                                className={`h-2 w-2 rounded-full mt-2 ${
-                                  isConfirmed ? "bg-emerald-500" : "bg-amber-500"
-                                }`}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Badge
-                                    className={
-                                      isConfirmed
-                                        ? "bg-emerald-500 text-white text-xs"
-                                        : "bg-amber-500 text-white text-xs"
-                                    }
-                                  >
-                                    {isConfirmed ? "Confirmado" : "Pendente"}
-                                  </Badge>
-                                </div>
-                                <h4 className="font-semibold text-gray-900 mb-1">
-                                  {event.gig_title || "Show"}
-                                </h4>
-                                {when && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-700 mb-1">
-                                    <Clock className="h-4 w-4" />
-                                    <span>{when}</span>
-                                  </div>
-                                )}
-                                {location && (
-                                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>{location}</span>
-                                  </div>
-                                )}
-                                {isConfirmed && (event as ConfirmedGigRow).instrument && (
-                                  <div className="text-xs text-gray-600 mt-1">
-                                    Instrumento: {(event as ConfirmedGigRow).instrument}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-foreground/70">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {format(selectedEvent.start, "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
+                        locale: ptBR,
                       })}
+                    </span>
+                  </div>
+
+                  {selectedEvent.resource.location && (
+                    <div className="flex items-center gap-2 text-sm text-foreground/70">
+                      <MapPin className="h-4 w-4" />
+                      <span>{selectedEvent.resource.location}</span>
                     </div>
-                  );
-                })()}
+                  )}
+
+                  {selectedEvent.resource.type === "confirmed" && (
+                    <div className="pt-3 border-t">
+                      <p className="text-sm font-semibold text-foreground mb-2">Detalhes adicionais:</p>
+                      <div className="space-y-1 text-sm text-foreground/70">
+                        <p>
+                          <span className="font-medium">Duração:</span>{" "}
+                          {Math.round(
+                            (selectedEvent.end.getTime() - selectedEvent.start.getTime()) / (1000 * 60)
+                          )}{" "}
+                          minutos
+                        </p>
+                        {selectedEvent.resource.instrument && (
+                          <p>
+                            <span className="font-medium">Instrumento:</span>{" "}
+                            {selectedEvent.resource.instrument}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedEvent.resource.type === "pending" && (
+                    <div className="pt-3 border-t">
+                      <p className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                        Este convite está aguardando sua resposta. Responda o mais rápido possível!
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </DialogContent>
         </Dialog>
       </div>
+
+      <style jsx global>{`
+        .rbc-calendar-custom {
+          font-family: inherit;
+        }
+        .rbc-header {
+          padding: 10px 3px;
+          font-weight: 600;
+          border-bottom: 2px solid #e5e7eb;
+        }
+        .rbc-today {
+          background-color: #fef3c7;
+        }
+        .rbc-off-range-bg {
+          background-color: #f9fafb;
+        }
+        .rbc-event-confirmed {
+          background-color: #10b981 !important;
+          border-color: #059669 !important;
+        }
+        .rbc-event-pending {
+          background-color: #f59e0b !important;
+          border-color: #d97706 !important;
+        }
+        .rbc-event {
+          cursor: pointer;
+          padding: 2px 5px;
+          border-radius: 4px;
+        }
+        .rbc-event:hover {
+          opacity: 0.8;
+        }
+        .rbc-toolbar button {
+          color: #374151;
+          border: 1px solid #d1d5db;
+          background: white;
+          padding: 6px 12px;
+          border-radius: 6px;
+        }
+        .rbc-toolbar button:hover {
+          background-color: #f3f4f6;
+        }
+        .rbc-toolbar button.rbc-active {
+          background-color: #ff6b4a;
+          color: white;
+          border-color: #ff6b4a;
+        }
+      `}</style>
     </DashboardLayout>
   );
 }
-
