@@ -7,18 +7,62 @@ Este erro acontece porque a **Edge Function do Supabase não está deployada** o
 ## 📋 Pré-requisitos
 
 1. **Supabase CLI instalado**
+
+   ⚠️ **Não use `npm install -g supabase`** - isso não é suportado!
+
+   **Opções de instalação no Windows:**
+
+   **Opção 1: Via Scoop (Recomendado)**
    ```bash
-   npm install -g supabase
+   # Instalar Scoop (se não tiver)
+   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+   irm get.scoop.sh | iex
+   
+   # Instalar Supabase CLI
+   scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+   scoop install supabase
+   ```
+
+   **Opção 2: Via Chocolatey**
+   ```bash
+   choco install supabase
+   ```
+
+   **Opção 3: Via npm npx (sem instalar globalmente)**
+   ```bash
+   # Não precisa instalar, apenas usar com npx
+   npx supabase --version
+   ```
+
+   **Opção 4: Download Manual**
+   - Baixe o executável: https://github.com/supabase/cli/releases
+   - Adicione ao PATH do sistema
+
+   **Verificar instalação:**
+   ```bash
+   # Se instalou o CLI:
+   supabase --version
+   
+   # Se está usando npx:
+   npx supabase --version
    ```
 
 2. **Login no Supabase**
    ```bash
+   # Se instalou o CLI:
    supabase login
+   
+   # Se está usando npx:
+   npx supabase login
    ```
 
 3. **Link do projeto**
    ```bash
+   # Se instalou o CLI:
    supabase link --project-ref seu-project-ref
+   
+   # Se está usando npx:
+   npx supabase link --project-ref seu-project-ref
    ```
 
 ## 🚀 Deploy da Edge Function
@@ -47,9 +91,14 @@ supabase/
 
 ### Passo 3: Deploy da Function
 
-Execute o comando:
+**Se você instalou o CLI:**
 ```bash
 supabase functions deploy send-push-notification
+```
+
+**Se você está usando npx (sem instalar):**
+```bash
+npx supabase functions deploy send-push-notification
 ```
 
 ### Passo 4: Verificar Deploy
