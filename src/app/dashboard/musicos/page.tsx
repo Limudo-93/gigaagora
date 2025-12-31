@@ -203,7 +203,7 @@ export default async function DashboardMusicosPage({
                 asChild
                 className="bg-white/80 border-white/70"
               >
-                <Link href={buildPageUrl(currentPage - 1)}>
+                <Link href={buildPageUrl(currentPage - 1) as any}>
                   <ChevronLeft className="h-4 w-4" />
                   Anterior
                 </Link>
@@ -235,7 +235,7 @@ export default async function DashboardMusicosPage({
                         : "bg-white/80 border-white/70"
                     }
                   >
-                    <Link href={buildPageUrl(pageNum)}>{pageNum}</Link>
+                    <Link href={buildPageUrl(pageNum) as any}>{pageNum}</Link>
                   </Button>
                 );
               })}
@@ -258,7 +258,7 @@ export default async function DashboardMusicosPage({
                 asChild
                 className="bg-white/80 border-white/70"
               >
-                <Link href={buildPageUrl(currentPage + 1)}>
+                <Link href={buildPageUrl(currentPage + 1) as any}>
                   Próxima
                   <ChevronRight className="h-4 w-4" />
                 </Link>
