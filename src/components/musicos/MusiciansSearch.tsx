@@ -180,7 +180,7 @@ export default function MusiciansSearch({
                     </Link>
                   </Button>
                   <Button variant="outline" asChild className="flex-1 bg-white/80 border-white/70">
-                    <Link href="/signup" as any>Convidar</Link>
+                    <Link href={"/signup" as any}>Convidar</Link>
                   </Button>
                 </div>
               </CardContent>
