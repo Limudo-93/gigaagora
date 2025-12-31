@@ -12,13 +12,13 @@ export default function MarketingFooter() {
         <div className="rounded-3xl bg-gradient-to-br from-[#fff1e7] via-white to-[#e9f7f5] p-6 shadow-sm lg:p-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+              <p className="text-sm font-semibold uppercase tracking-wide text-foreground/70">
                 Faça parte da comunidade
               </p>
               <h3 className="text-2xl font-display font-semibold text-foreground">
                 Instale o app e tenha gigs no bolso.
               </h3>
-              <p className="text-sm text-foreground/60">
+              <p className="text-base text-foreground/70">
                 Experiência completa com notificações, agenda e chats rápidos.
               </p>
             </div>
@@ -31,13 +31,13 @@ export default function MarketingFooter() {
         <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div className="space-y-3">
             <Logo size="md" />
-            <p className="text-sm text-foreground/60">
+            <p className="text-base text-foreground/70">
               A plataforma que conecta músicos e contratantes com eficiência,
               transparência e velocidade.
             </p>
           </div>
-          <div className="space-y-3 text-sm text-foreground/70">
-            <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+          <div className="space-y-3 text-sm text-foreground/80">
+            <p className="text-sm font-semibold uppercase tracking-wide text-foreground/70">
               Plataforma
             </p>
             <div className="flex flex-col gap-2">
@@ -58,8 +58,8 @@ export default function MarketingFooter() {
               </Link>
             </div>
           </div>
-          <div className="space-y-3 text-sm text-foreground/70">
-            <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+          <div className="space-y-3 text-sm text-foreground/80">
+            <p className="text-sm font-semibold uppercase tracking-wide text-foreground/70">
               Contato
             </p>
             <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export default function MarketingFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-white/60 pt-6 text-xs text-foreground/50 sm:flex-row">
+        <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-white/60 pt-6 text-sm text-foreground/60 sm:flex-row">
           <span>© 2025 Chama o Músico. Todos os direitos reservados.</span>
           <div className="flex gap-4">
             <Link href="/privacidade" className="hover:text-foreground">

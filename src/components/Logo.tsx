@@ -39,7 +39,7 @@ export default function Logo({ size = "md", showText = true, className = "" }: L
             Chama o Músico
           </span>
           {size !== "sm" && (
-            <p className="text-xs text-muted-foreground -mt-1">Conectando palcos e talentos</p>
+            <p className="text-sm text-foreground/70 -mt-1">Conectando palcos e talentos</p>
           )}
         </div>
       )}

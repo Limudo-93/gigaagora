@@ -34,7 +34,7 @@ export default function HomeHeader() {
               <Link 
                 key={link.href}
                 href={link.href} 
-                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                className="text-base font-medium text-foreground/90 hover:text-foreground transition-colors"
               >
                 {link.label}
               </Link>
@@ -79,10 +79,10 @@ export default function HomeHeader() {
                 <Link 
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.label}
+                className="text-base font-medium text-foreground/90 hover:text-foreground transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-2 border-t border-white/60">
