@@ -143,66 +143,66 @@ export default async function Page() {
 
   const statsItems = [
     {
-      label: "músicos prontos para gigs",
+      label: "músicos prontos pra tocar",
       value: formatCompact(stats.totalUsers || 0),
     },
     {
-      label: "oportunidades abertas agora",
+      label: "shows rolando agora",
       value: formatCompact(stats.totalGigs || 0),
     },
     {
-      label: "cache pago pela plataforma",
+      label: "grana já girada na plataforma",
       value: stats.totalCache ? formatCurrency(stats.totalCache) : "R$ 0",
     },
   ];
 
   const journeySteps = [
     {
-      title: "Crie seu perfil campeão",
-      description: "Você ganha destaque automático e começa a receber convites relevantes.",
+      title: "Monte seu perfil com capricho",
+      description: "O perfil bem feito aparece mais e chama convite melhor.",
       icon: Crown,
     },
     {
-      title: "Ative missões semanais",
-      description: "Cada missão aumenta sua visibilidade e acelera o fechamento de gigs.",
+      title: "Faz as missões da semana",
+      description: "Missão feita = mais gente te vê e chama mais rápido.",
       icon: Target,
     },
     {
-      title: "Feche gigs com velocidade",
-      description: "Alertas, chat e agenda inteligentes para nunca perder oportunidades.",
+      title: "Feche show sem perder tempo",
+      description: "Alerta, chat e agenda pra não deixar convite passar.",
       icon: Zap,
     },
   ];
 
   const features = [
     {
-      title: "Radar inteligente",
-      description: "Notificações certeiras com gigs do seu estilo e localização.",
+      title: "Radar certeiro",
+      description: "Notificações com show do seu estilo e perto de você.",
       icon: Compass,
     },
     {
-      title: "Chat instantâneo",
-      description: "Negocie, alinhe detalhes e feche rápido em um só lugar.",
+      title: "Chat direto",
+      description: "Alinha tudo e fecha no mesmo lugar.",
       icon: MessageCircle,
     },
     {
-      title: "Reputação que vende",
-      description: "Avaliações, selos e ranking deixam seu nome na frente.",
+      title: "Reputação que chama",
+      description: "Avaliações e ranking colocam seu nome no topo.",
       icon: Star,
     },
     {
-      title: "Agenda profissional",
-      description: "Visualize shows, conflitos e exporte seu calendário em 1 clique.",
+      title: "Agenda na mão",
+      description: "Vê seus shows e joga no calendário com 1 clique.",
       icon: Calendar,
     },
     {
-      title: "Contratantes premium",
-      description: "Filtre músicos verificados com histórico e feedback real.",
+      title: "Contratante de confiança",
+      description: "Contato com quem fecha certo e paga direitinho.",
       icon: ShieldCheck,
     },
     {
-      title: "Escala local",
-      description: "Mostre sua presença na cidade com provas sociais e gigs recentes.",
+      title: "Força na sua cidade",
+      description: "Mostra que você tá ativo e disponível por perto.",
       icon: Globe2,
     },
   ];
@@ -221,20 +221,19 @@ export default async function Page() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-amber-700">
                 <Sparkles className="h-4 w-4" />
-                Nova jornada de gigs em 2025
+                Bora lotar a agenda em 2025
               </div>
               <h1 className="text-4xl font-display font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                O hub definitivo para músicos lotarem a agenda e contratantes acharem o
+                O lugar onde músico fecha show e contratante acha o
                 <span className="gradient-text"> line-up perfeito</span>.
               </h1>
               <p className="text-lg text-foreground/80 sm:text-xl">
-                Experiência premium com gamificação, ranking ao vivo e convites sob medida.
-                Entre agora e desbloqueie gigs que pagam mais e chegam primeiro.
+                Tudo no esquema: convites certeiros, ranking que te dá moral e gigs\r\n                chegando mais rápido. Entrou, já começa a pingar proposta boa.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Button className="btn-gradient text-white" asChild>
                   <Link href="/signup">
-                    Criar conta premium
+                    Quero fechar show
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -245,15 +244,15 @@ export default async function Page() {
               <div className="flex flex-wrap gap-6 text-sm text-foreground/80">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  Match instantâneo por instrumento e estilo
+                  Convite na veia por instrumento e estilo
                 </div>
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4 text-orange-500" />
-                  Missões e metas semanais com bônus de visibilidade
+                  Missões simples pra te deixar em evidência
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-[#2aa6a1]" />
-                  Agenda sincronizada + download em .ics
+                  Agenda organizada \+ baixa pro seu calendário
                 </div>
               </div>
               {socialProofMusicians.length > 0 && (
@@ -269,7 +268,7 @@ export default async function Page() {
                     ))}
                   </div>
                   <span>
-                    +{formatCompact(stats.totalUsers || 0)} músicos ativos fechando gigs agora
+                    +{formatCompact(stats.totalUsers || 0)} músicos já fechando show agora
                   </span>
                 </div>
               )}
@@ -280,7 +279,7 @@ export default async function Page() {
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-foreground/60">Nível atual</p>
+                      <p className="text-xs uppercase tracking-wide text-foreground/60">Seu nível</p>
                       <p className="text-2xl font-semibold text-foreground">Headliner</p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#ff6b4a]/15 text-[#ff6b4a]">
@@ -297,7 +296,7 @@ export default async function Page() {
                     </div>
                   </div>
                   <div className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-900">
-                    Suba um nível e desbloqueie convites premium hoje.
+                    Sobe mais um nível e pinta convite top.
                   </div>
                 </CardContent>
               </Card>
@@ -306,7 +305,7 @@ export default async function Page() {
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-foreground/60">Missão de hoje</p>
+                      <p className="text-xs uppercase tracking-wide text-foreground/60">Tarefa de hoje</p>
                       <p className="text-lg font-semibold text-foreground">Responder 3 convites</p>
                     </div>
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#2aa6a1]/15 text-[#2aa6a1]">
@@ -315,10 +314,10 @@ export default async function Page() {
                   </div>
                   <div className="flex items-center gap-3 text-sm text-foreground/70">
                     <Flame className="h-4 w-4 text-orange-500" />
-                    Sequência ativa: 4 dias seguidos
+                    Sequência ativa: 4 dias direto
                   </div>
                   <Button className="w-full" variant="outline" asChild>
-                    <Link href="/signup">Entrar na missão</Link>
+                    <Link href="/signup">Bora começar</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -326,14 +325,14 @@ export default async function Page() {
               <Card className="border border-white/70 bg-white/80 shadow-sm">
                 <CardContent className="space-y-3 p-5">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-foreground">Radar ao vivo</p>
+                    <p className="text-sm font-semibold text-foreground">Radar ligado</p>
                     <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                       Online agora
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-foreground/70">
                     <MapPin className="h-4 w-4 text-[#2aa6a1]" />
-                    Shows em até 30 km da sua região
+                    Shows pertinho de você
                   </div>
                 </CardContent>
               </Card>
@@ -356,12 +355,10 @@ export default async function Page() {
           <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr]">
             <div className="space-y-6">
               <h2 className="text-3xl font-display font-semibold text-foreground sm:text-4xl">
-                A plataforma que transforma talento em agenda lotada
+                Plataforma que põe show na sua agenda
               </h2>
               <p className="text-lg text-foreground/75">
-                Cada clique aqui foi pensado para retenção. Você abre o app e já encontra
-                convites, metas e próximos passos. Resultado: mais gigs fechadas e menos
-                tempo perdido.
+                Você abre o app e já vê convite, meta do dia e o que fazer agora.\r\n                Resultado: mais show fechado e menos enrolação.
               </p>
               <div className="space-y-4">
                 {journeySteps.map((item) => (
@@ -378,7 +375,7 @@ export default async function Page() {
               </div>
               <Button className="btn-gradient text-white" asChild>
                 <Link href="/signup">
-                  Quero desbloquear isso
+                  Quero subir de nível
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -404,17 +401,16 @@ export default async function Page() {
           <div className="grid gap-8 rounded-3xl border border-white/70 bg-white/80 p-8 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-4">
               <h2 className="text-3xl font-display font-semibold text-foreground">
-                Agenda de shows com visão total
+                Agenda de shows do jeitinho certo
               </h2>
               <p className="text-base text-foreground/70">
-                Tudo organizado por status e prioridade. Baixe o calendário em .ics e
-                sincronize com Google, iCloud ou Outlook em segundos.
+                Tudo organizado por status. Baixa o calendário e joga no Google,\r\n                iCloud ou Outlook em segundos.
               </p>
               <div className="space-y-3">
                 {[
                   "Visão mensal, semanal e lista de eventos.",
-                  "Alertas automáticos para pendências e conflitos.",
-                  "Download instantâneo para o app de calendário.",
+                  "Alertas pra não esquecer nada.",
+                  "Baixa rapidinho pro seu calendário.",
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm text-foreground/70">
                     <Calendar className="mt-0.5 h-4 w-4 text-[#ff6b4a]" />
@@ -424,7 +420,7 @@ export default async function Page() {
               </div>
               <Button className="btn-gradient text-white" asChild>
                 <Link href="/signup">
-                  Quero minha agenda inteligente
+                  Quero minha agenda pronta
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -434,7 +430,7 @@ export default async function Page() {
                 <CardContent className="space-y-3 p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs uppercase tracking-wide text-foreground/60">Próximo show</p>
+                      <p className="text-xs uppercase tracking-wide text-foreground/60">Próximo som</p>
                       <p className="text-lg font-semibold text-foreground">Sábado, 20h</p>
                     </div>
                     <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -447,7 +443,7 @@ export default async function Page() {
               </Card>
               <Card className="border border-white/70 bg-white/90 shadow-sm">
                 <CardContent className="space-y-3 p-5">
-                  <p className="text-xs uppercase tracking-wide text-foreground/60">Checklist rápido</p>
+                  <p className="text-xs uppercase tracking-wide text-foreground/60">Checklist rapidinho</p>
                   <div className="flex items-center gap-2 text-sm text-foreground/70">
                     <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     Confirmar presença
@@ -471,16 +467,16 @@ export default async function Page() {
             {[
               {
                 label: "Para músicos",
-                title: "Seu nome no topo do ranking da sua cidade",
+                title: "Seu nome no topo da cena da sua cidade",
                 description:
-                  "Ganhe pontos, selos e destaque na vitrine. Receba convites certeiros e feche mais rápido.",
+                  "Ganhe pontos, selos e destaque. Receba convite certeiro e feche rápido.",
                 icon: TrendingUp,
               },
               {
                 label: "Para contratantes",
-                title: "Line-ups prontos com músicos verificados",
+                title: "Line-up pronto com músico confiável",
                 description:
-                  "Envie convites múltiplos, acompanhe respostas ao vivo e finalize em minutos.",
+                  "Manda vários convites, acompanha resposta na hora e fecha rapidinho.",
                 icon: HeartHandshake,
               },
             ].map((card) => (
@@ -508,12 +504,12 @@ export default async function Page() {
         <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-wide text-foreground/60">Comunidade ativa</p>
+              <p className="text-sm uppercase tracking-wide text-foreground/60">Comunidade na ativa</p>
               <h2 className="text-2xl font-display font-semibold text-foreground">
-                Músicos em destaque agora
+                Músicos em alta agora
               </h2>
               <p className="text-sm text-foreground/70">
-                Perfis com respostas rápidas e gigs confirmadas recentemente.
+                Perfis que respondem rápido e fecham show direto.
               </p>
             </div>
             <Button variant="outline" className="border-white/70 bg-white/60" asChild>
@@ -525,7 +521,7 @@ export default async function Page() {
             {socialProofMusicians.length === 0 ? (
               <Card className="border border-white/70 bg-white/80">
                 <CardContent className="p-6 text-sm text-foreground/60">
-                  Em breve você verá músicos recém-chegados por aqui.
+                  Logo mais vai aparecer músico novo aqui.
                 </CardContent>
               </Card>
             ) : (
@@ -563,17 +559,17 @@ export default async function Page() {
           <div className="rounded-3xl bg-gradient-to-br from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] p-8 text-white shadow-lg lg:p-12">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-2">
-                <p className="text-sm uppercase tracking-wide text-white/80">Pronto para subir de nível?</p>
+                <p className="text-sm uppercase tracking-wide text-white/80">Partiu fechar mais?</p>
                 <h2 className="text-3xl font-display font-semibold">
-                  Sua próxima gig começa agora.
+                  Seu próximo show começa agora.
                 </h2>
                 <p className="text-sm text-white/80">
-                  Crie sua conta, complete o perfil e comece a receber convites em poucas horas.
+                  Cria a conta, completa o perfil e já começa a pingar convite.
                 </p>
               </div>
               <Button className="bg-white text-[#2aa6a1] hover:bg-white/90" asChild>
                 <Link href="/signup">
-                  Criar conta grátis
+                  Quero entrar agora
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -586,3 +582,4 @@ export default async function Page() {
     </div>
   );
 }
+
