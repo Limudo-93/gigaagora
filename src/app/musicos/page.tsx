@@ -147,6 +147,7 @@ export default async function MusicosPage({
           <MusiciansSearch
             initialResults={results}
             filters={{ q, instrument, city }}
+            basePath="/musicos"
           />
         </section>
       </main>

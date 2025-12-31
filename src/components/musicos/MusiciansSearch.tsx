@@ -44,9 +44,11 @@ function getInitials(name: string | null | undefined): string {
 export default function MusiciansSearch({
   initialResults,
   filters,
+  basePath = "/musicos",
 }: {
   initialResults: PublicMusician[];
   filters: Filters;
+  basePath?: string;
 }) {
   const [results, setResults] = useState<PublicMusician[]>(initialResults);
   const [usingLocation, setUsingLocation] = useState(false);
@@ -166,7 +168,7 @@ export default function MusiciansSearch({
 
                 <div className="flex items-center gap-2">
                   <Button asChild className="btn-gradient flex-1">
-                    <Link href={`/musicos/${buildMusicianSlug(musician.display_name || "musico", musician.user_id)}`}>
+                    <Link href={`${basePath}/${buildMusicianSlug(musician.display_name || "musico", musician.user_id)}`}>
                       Ver perfil
                     </Link>
                   </Button>
