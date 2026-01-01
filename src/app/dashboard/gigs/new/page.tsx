@@ -682,6 +682,27 @@ export default function NewGigPage() {
         return;
       }
 
+      if (saveStatus === "published") {
+        try {
+          const response = await fetch("/api/invites/auto-create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ gigId: gigData.id }),
+          });
+          if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            console.error(
+              "Auto-create invites failed:",
+              result?.error || response.statusText,
+            );
+          }
+        } catch (error) {
+          console.error("Auto-create invites request failed:", error);
+        }
+      }
+
       console.log("Gig created successfully:", gigData.id);
 
       if (saveStatus === "draft") {
