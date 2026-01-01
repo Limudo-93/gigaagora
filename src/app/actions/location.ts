@@ -5,12 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * Server action para atualizar a localização do usuário
  */
-export async function updateUserLocation(
-  latitude: number,
-  longitude: number
-) {
+export async function updateUserLocation(latitude: number, longitude: number) {
   const supabase = await createClient();
-  
+
   const {
     data: { user },
     error: userError,
@@ -56,4 +53,3 @@ export async function updateUserLocation(
     };
   }
 }
-

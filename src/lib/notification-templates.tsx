@@ -1,14 +1,14 @@
 import type React from "react";
-import { 
-  Bell, 
-  CheckCircle2, 
-  XCircle, 
-  Music, 
-  MessageSquare, 
-  Calendar, 
-  Star, 
-  AlertTriangle, 
-  Clock, 
+import {
+  Bell,
+  CheckCircle2,
+  XCircle,
+  Music,
+  MessageSquare,
+  Calendar,
+  Star,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 
 export type NotificationTemplate = {

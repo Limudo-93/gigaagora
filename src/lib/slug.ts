@@ -21,11 +21,16 @@ export function extractUserIdFromSlug(slug?: string | null): string | null {
 
   // Primeiro, tenta encontrar UUID completo (com hífens)
   const uuidMatch = slug.match(
-    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/,
   );
   if (uuidMatch) {
     const userId = uuidMatch[0];
-    console.log("[extractUserIdFromSlug] Found UUID:", userId, "from slug:", slug);
+    console.log(
+      "[extractUserIdFromSlug] Found UUID:",
+      userId,
+      "from slug:",
+      slug,
+    );
     return userId;
   }
 
@@ -34,7 +39,12 @@ export function extractUserIdFromSlug(slug?: string | null): string | null {
   if (compactMatch) {
     const value = compactMatch[0];
     const userId = `${value.slice(0, 8)}-${value.slice(8, 12)}-${value.slice(12, 16)}-${value.slice(16, 20)}-${value.slice(20)}`;
-    console.log("[extractUserIdFromSlug] Found compact UUID:", userId, "from slug:", slug);
+    console.log(
+      "[extractUserIdFromSlug] Found compact UUID:",
+      userId,
+      "from slug:",
+      slug,
+    );
     return userId;
   }
 

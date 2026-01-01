@@ -29,7 +29,7 @@ interface ReverseGeocodeResult {
  * Converte endereço (texto) em coordenadas usando Google Maps Geocoding API
  */
 export async function geocodeAddress(
-  address: string
+  address: string,
 ): Promise<GeocodeAddressResult> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -134,7 +134,7 @@ export async function geocodeAddress(
  */
 export async function reverseGeocode(
   latitude: number,
-  longitude: number
+  longitude: number,
 ): Promise<ReverseGeocodeResult> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
@@ -188,7 +188,10 @@ export async function reverseGeocode(
         administrativeAreaLevel1 = component.short_name; // UF (SP, RJ, etc)
         state = component.short_name;
       }
-      if (types.includes("sublocality") || types.includes("sublocality_level_1")) {
+      if (
+        types.includes("sublocality") ||
+        types.includes("sublocality_level_1")
+      ) {
         sublocality = component.long_name;
       }
       if (types.includes("neighborhood")) {
@@ -205,7 +208,7 @@ export async function reverseGeocode(
       latitude,
       longitude,
       city,
-      state
+      state,
     );
 
     return {
@@ -234,7 +237,7 @@ function computeRegionLabelFromCoords(
   lat: number,
   lng: number,
   city: string | null,
-  state: string | null
+  state: string | null,
 ): string {
   const cityNormalized = (city || "").trim().toUpperCase();
   const stateNormalized = (state || "").trim().toUpperCase();
@@ -300,4 +303,3 @@ function computeRegionLabelFromCoords(
     return "Localização não especificada";
   }
 }
-

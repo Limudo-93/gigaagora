@@ -33,7 +33,9 @@ export default function ReferralSystem() {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error: fetchError } = await supabase
@@ -60,16 +62,21 @@ export default function ReferralSystem() {
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
 
-      const { data, error: rpcError } = await supabase.rpc("rpc_create_referral_code", {
-        p_user_id: user.id,
-        p_max_uses: null, // Ilimitado
-        p_expires_at: null, // Sem expiração
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "rpc_create_referral_code",
+        {
+          p_user_id: user.id,
+          p_max_uses: null, // Ilimitado
+          p_expires_at: null, // Sem expiração
+        },
+      );
 
       if (rpcError) throw rpcError;
       if (data) {
@@ -145,7 +152,8 @@ export default function ReferralSystem() {
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-sm font-medium text-gray-700 mb-4">
-              Crie um código de indicação para convidar músicos para a plataforma.
+              Crie um código de indicação para convidar músicos para a
+              plataforma.
             </p>
             <Button
               onClick={createReferralCode}
@@ -178,8 +186,12 @@ export default function ReferralSystem() {
                   value={referralCode.code}
                   className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg bg-white text-gray-900 font-mono text-base font-semibold focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                 />
-                <Badge variant="secondary" className="whitespace-nowrap bg-gray-200 text-gray-900 font-semibold px-3 py-1.5">
-                  {referralCode.usage_count} {referralCode.usage_count === 1 ? "uso" : "usos"}
+                <Badge
+                  variant="secondary"
+                  className="whitespace-nowrap bg-gray-200 text-gray-900 font-semibold px-3 py-1.5"
+                >
+                  {referralCode.usage_count}{" "}
+                  {referralCode.usage_count === 1 ? "uso" : "usos"}
                 </Badge>
               </div>
             </div>
@@ -222,8 +234,10 @@ export default function ReferralSystem() {
 
             <div className="p-4 bg-blue-100 rounded-lg border-2 border-blue-300">
               <p className="text-sm font-medium text-blue-900 leading-relaxed">
-                <strong className="font-bold">Como funciona:</strong> Compartilhe seu código ou link com músicos.
-                Quando eles se cadastrarem usando seu código, você receberá crédito pela indicação.
+                <strong className="font-bold">Como funciona:</strong>{" "}
+                Compartilhe seu código ou link com músicos. Quando eles se
+                cadastrarem usando seu código, você receberá crédito pela
+                indicação.
               </p>
             </div>
           </div>
@@ -232,4 +246,3 @@ export default function ReferralSystem() {
     </Card>
   );
 }
-

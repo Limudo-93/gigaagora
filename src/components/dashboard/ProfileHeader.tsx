@@ -30,7 +30,7 @@ export default async function ProfileHeader() {
   // Isso garante consistência com a página de avaliações
   let avgRating: number | null = null;
   let ratingCount = 0;
-  
+
   try {
     const { data: ratingsData } = await supabase
       .from("ratings")
@@ -41,14 +41,19 @@ export default async function ProfileHeader() {
     if (ratingsData && ratingsData.length > 0) {
       // Filtrar apenas avaliações onde o usuário é o AVALIADO
       const userRatings = ratingsData.filter((r: any) => {
-        if (r.rated_type === 'musician' && r.musician_id === user.id) return true;
-        if (r.rated_type === 'contractor' && r.contractor_id === user.id) return true;
+        if (r.rated_type === "musician" && r.musician_id === user.id)
+          return true;
+        if (r.rated_type === "contractor" && r.contractor_id === user.id)
+          return true;
         return false;
       });
 
       if (userRatings.length > 0) {
         ratingCount = userRatings.length;
-        const sum = userRatings.reduce((acc: number, r: any) => acc + (r.rating || 0), 0);
+        const sum = userRatings.reduce(
+          (acc: number, r: any) => acc + (r.rating || 0),
+          0,
+        );
         avgRating = sum / ratingCount;
       }
     }
@@ -64,7 +69,10 @@ export default async function ProfileHeader() {
     .or("expires_at.is.null,expires_at.gt.now()");
 
   // Verificar se é embaixador
-  const isAmbassador = profile?.is_ambassador || badges?.some((b: any) => b.badge_type === 'ambassador') || false;
+  const isAmbassador =
+    profile?.is_ambassador ||
+    badges?.some((b: any) => b.badge_type === "ambassador") ||
+    false;
   const isVerified = Boolean(profile?.cpf);
 
   // Buscar ranking do usuário
@@ -75,7 +83,8 @@ export default async function ProfileHeader() {
     .single();
 
   // Calcular iniciais do nome (corrigido para TypeScript)
-  const displayName = profile?.display_name || user.email?.split("@")[0] || "Usuário";
+  const displayName =
+    profile?.display_name || user.email?.split("@")[0] || "Usuário";
   const initials = displayName
     .split(" ")
     .map((n: string) => n[0])
@@ -84,15 +93,16 @@ export default async function ProfileHeader() {
     .slice(0, 2);
 
   // Formatar localização
-  const location = profile?.city && profile?.state
-    ? `${profile.city}, ${profile.state}`
-    : profile?.city || profile?.state || null;
+  const location =
+    profile?.city && profile?.state
+      ? `${profile.city}, ${profile.state}`
+      : profile?.city || profile?.state || null;
 
   return (
     <div className="relative overflow-hidden flex flex-col gap-3 md:gap-4 rounded-2xl border border-border bg-card p-4 md:p-6 md:flex-row md:items-center md:justify-between shadow-lg">
       {/* Decorative gradient overlay */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
-      
+
       <div className="flex items-center gap-3 md:gap-4 relative z-10 flex-1 min-w-0">
         <div className="relative shrink-0">
           <div className="absolute inset-0 bg-primary/30 rounded-full blur-md" />
@@ -114,7 +124,7 @@ export default async function ProfileHeader() {
           <h2 className="text-lg md:text-xl font-bold text-foreground truncate">
             {displayName}
           </h2>
-          
+
           {/* Avaliação e Badges - mais compacto em mobile */}
           <div className="mt-1.5 md:mt-2 flex items-center gap-2 md:gap-3 flex-wrap">
             {avgRating !== null && avgRating > 0 && (
@@ -125,15 +135,14 @@ export default async function ProfileHeader() {
                 </span>
                 {ratingCount > 0 && (
                   <span className="text-[10px] md:text-xs text-muted-foreground hidden sm:inline">
-                    ({ratingCount} {ratingCount === 1 ? 'avaliação' : 'avaliações'})
+                    ({ratingCount}{" "}
+                    {ratingCount === 1 ? "avaliação" : "avaliações"})
                   </span>
                 )}
               </div>
             )}
-            
-            {isAmbassador && (
-              <AmbassadorBadge size="sm" showText={true} />
-            )}
+
+            {isAmbassador && <AmbassadorBadge size="sm" showText={true} />}
             {isVerified && (
               <Badge className="gap-1 bg-emerald-100 text-emerald-800 border border-emerald-200">
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -141,19 +150,23 @@ export default async function ProfileHeader() {
               </Badge>
             )}
             {ranking?.current_tier && (
-              <RankingBadge tier={ranking.current_tier as any} size="sm" showText={true} />
+              <RankingBadge
+                tier={ranking.current_tier as any}
+                size="sm"
+                showText={true}
+              />
             )}
             {badges && badges.length > 0 && (
-              <BadgeDisplay 
+              <BadgeDisplay
                 badges={badges.filter((b: any) => {
                   // Se já estamos mostrando o badge "Verificado" baseado em isVerified,
                   // não mostrar o badge "verified" do sistema de badges para evitar duplicação
-                  if (isVerified && b.badge_type === 'verified') {
+                  if (isVerified && b.badge_type === "verified") {
                     return false;
                   }
                   return true;
-                })} 
-                size="sm" 
+                })}
+                size="sm"
               />
             )}
           </div>
@@ -169,10 +182,12 @@ export default async function ProfileHeader() {
 
       {/* Botões - empilhados em mobile, lado a lado em desktop */}
       <div className="flex flex-col sm:flex-row gap-2 relative z-10 shrink-0 w-full sm:w-auto">
-        <Button asChild size="sm" className="w-full sm:w-auto text-xs md:text-sm">
-          <Link href={"/dashboard/perfil/edit" as any}>
-            Editar Perfil
-          </Link>
+        <Button
+          asChild
+          size="sm"
+          className="w-full sm:w-auto text-xs md:text-sm"
+        >
+          <Link href={"/dashboard/perfil/edit" as any}>Editar Perfil</Link>
         </Button>
         <div className="hidden md:block">
           <LogoutButton />

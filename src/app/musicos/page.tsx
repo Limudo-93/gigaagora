@@ -26,7 +26,11 @@ type PublicMusician = {
   rating_count?: number | null;
   is_trusted?: boolean | null;
   is_verified?: boolean;
-  badges?: Array<{ badge_type: string; earned_at: string; expires_at?: string | null }>;
+  badges?: Array<{
+    badge_type: string;
+    earned_at: string;
+    expires_at?: string | null;
+  }>;
 };
 
 export default async function MusicosPage({
@@ -61,12 +65,14 @@ export default async function MusicosPage({
   const { data: musicianProfiles } = ids.length
     ? await supabase
         .from("musician_profiles")
-        .select("user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted")
+        .select(
+          "user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted",
+        )
         .in("user_id", ids)
     : { data: [] };
 
   const profileMap = new Map(
-    (musicianProfiles || []).map((profile) => [profile.user_id, profile])
+    (musicianProfiles || []).map((profile) => [profile.user_id, profile]),
   );
 
   // Buscar badges para todos os músicos
@@ -79,7 +85,10 @@ export default async function MusicosPage({
     : { data: [] };
 
   // Criar mapa de badges por usuário
-  const badgesMap = new Map<string, Array<{ badge_type: string; earned_at: string; expires_at?: string | null }>>();
+  const badgesMap = new Map<
+    string,
+    Array<{ badge_type: string; earned_at: string; expires_at?: string | null }>
+  >();
   if (badgesData) {
     badgesData.forEach((badge: any) => {
       if (!badgesMap.has(badge.user_id)) {
@@ -91,14 +100,13 @@ export default async function MusicosPage({
 
   // Buscar informações de verificação (CPF) para filtrar badge "verified"
   const { data: profilesWithCpf } = ids.length
-    ? await supabase
-        .from("profiles")
-        .select("user_id, cpf")
-        .in("user_id", ids)
+    ? await supabase.from("profiles").select("user_id, cpf").in("user_id", ids)
     : { data: [] };
 
   const verifiedUsers = new Set(
-    (profilesWithCpf || []).filter((p: any) => p.cpf).map((p: any) => p.user_id)
+    (profilesWithCpf || [])
+      .filter((p: any) => p.cpf)
+      .map((p: any) => p.user_id),
   );
 
   let results: PublicMusician[] = profileList.map((profile) => {
@@ -108,12 +116,12 @@ export default async function MusicosPage({
     const isVerified = verifiedUsers.has(profile.user_id);
     const filteredBadges = userBadges.filter((b) => {
       // Se já está mostrando badge "Verificado" baseado em CPF, não mostrar badge "verified" do sistema
-      if (isVerified && b.badge_type === 'verified') {
+      if (isVerified && b.badge_type === "verified") {
         return false;
       }
       return true;
     });
-    
+
     return {
       user_id: profile.user_id,
       display_name: profile.display_name,
@@ -134,7 +142,7 @@ export default async function MusicosPage({
 
   if (instrument) {
     results = results.filter((musician) =>
-      musician.instruments?.includes(instrument)
+      musician.instruments?.includes(instrument),
     );
   }
 
@@ -147,14 +155,20 @@ export default async function MusicosPage({
             <div className="absolute -top-20 -right-16 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
             <div className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-teal-200/40 blur-3xl" />
             <div className="relative z-10">
-              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Explorar músicos</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">
+                Explorar músicos
+              </p>
               <h1 className="text-2xl sm:text-3xl font-display font-semibold text-foreground">
                 Encontre músicos prontos para sua gig
               </h1>
               <p className="text-sm text-foreground/60 mt-2 max-w-2xl">
-                Perfis públicos com repertório, avaliações e disponibilidade. Salve seus favoritos e convide quando precisar.
+                Perfis públicos com repertório, avaliações e disponibilidade.
+                Salve seus favoritos e convide quando precisar.
               </p>
-              <form className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]" method="get">
+              <form
+                className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]"
+                method="get"
+              >
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   <input

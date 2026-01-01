@@ -18,7 +18,9 @@ const isStandalone = () => {
 export default function PwaInstallGuideCard() {
   const [isHidden, setIsHidden] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const [platform, setPlatform] = useState<"ios" | "android" | "other">("other");
+  const [platform, setPlatform] = useState<"ios" | "android" | "other">(
+    "other",
+  );
 
   useEffect(() => {
     const dismissed = localStorage.getItem(STORAGE_KEY) === "1";
@@ -73,9 +75,12 @@ export default function PwaInstallGuideCard() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-foreground/80">
-            {platform === "ios" && "No iPhone: use o botão de compartilhar do Safari."}
-            {platform === "android" && "No Android: instale pelo menu do Chrome."}
-            {platform === "other" && "Funciona em iOS e Android. Leva menos de 1 minuto."}
+            {platform === "ios" &&
+              "No iPhone: use o botão de compartilhar do Safari."}
+            {platform === "android" &&
+              "No Android: instale pelo menu do Chrome."}
+            {platform === "other" &&
+              "Funciona em iOS e Android. Leva menos de 1 minuto."}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button type="button" onClick={() => setIsOpen(true)}>
@@ -119,9 +124,15 @@ export default function PwaInstallGuideCard() {
                 </div>
                 <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-gray-600">
                   <li>Abra o site no Safari.</li>
-                  <li>Toque em <strong>Compartilhar</strong> (quadrado com seta).</li>
-                  <li>Escolha <strong>Adicionar à Tela de Início</strong>.</li>
-                  <li>Confirme em <strong>Adicionar</strong>.</li>
+                  <li>
+                    Toque em <strong>Compartilhar</strong> (quadrado com seta).
+                  </li>
+                  <li>
+                    Escolha <strong>Adicionar à Tela de Início</strong>.
+                  </li>
+                  <li>
+                    Confirme em <strong>Adicionar</strong>.
+                  </li>
                   <li>Abra o app pela nova imagem na sua tela.</li>
                 </ol>
               </div>
@@ -133,8 +144,13 @@ export default function PwaInstallGuideCard() {
                 </div>
                 <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-gray-600">
                   <li>Abra o site no Chrome.</li>
-                  <li>Toque no menu <strong>⋮</strong> (canto superior).</li>
-                  <li>Selecione <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+                  <li>
+                    Toque no menu <strong>⋮</strong> (canto superior).
+                  </li>
+                  <li>
+                    Selecione <strong>Instalar app</strong> ou{" "}
+                    <strong>Adicionar à tela inicial</strong>.
+                  </li>
                   <li>Confirme a instalação.</li>
                   <li>Abra pelo ícone criado no seu celular.</li>
                 </ol>
@@ -146,13 +162,18 @@ export default function PwaInstallGuideCard() {
                   Dica rápida
                 </div>
                 <p className="mt-2">
-                  Depois de instalar, o app abre mais rápido e fica separado do navegador.
+                  Depois de instalar, o app abre mais rápido e fica separado do
+                  navegador.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2 border-t border-gray-100 px-5 py-4 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+              >
                 Fechar
               </Button>
               <Button type="button" onClick={dismissCard}>

@@ -36,10 +36,10 @@ export async function createGigWithRegion(data: {
   let finalRegionLabel: string | null = null;
 
   // Se temos coordenadas mas não temos cidade/estado, fazer reverse geocoding
-  if ((finalLatitude && finalLongitude) && (!finalCity || !finalState)) {
+  if (finalLatitude && finalLongitude && (!finalCity || !finalState)) {
     try {
       const geocodeResult = await reverseGeocode(finalLatitude, finalLongitude);
-      
+
       if (!geocodeResult.error) {
         // Usar dados do geocoding se não foram fornecidos
         if (!finalCity && geocodeResult.city) {
@@ -63,7 +63,9 @@ export async function createGigWithRegion(data: {
   if (!finalLatitude || !finalLongitude || !finalCity || !finalState) {
     const { data: contractorProfile } = await supabase
       .from("profiles")
-      .select("last_known_latitude, last_known_longitude, last_known_city, last_known_state")
+      .select(
+        "last_known_latitude, last_known_longitude, last_known_city, last_known_state",
+      )
       .eq("user_id", data.contractor_id)
       .single();
 
@@ -85,12 +87,14 @@ export async function createGigWithRegion(data: {
   }
 
   // Calcular region_label (usar o do geocoding se disponível, senão calcular)
-  const regionLabel = finalRegionLabel || computeRegionLabel(
-    finalState,
-    finalCity,
-    finalLatitude ?? undefined,
-    finalLongitude ?? undefined
-  );
+  const regionLabel =
+    finalRegionLabel ||
+    computeRegionLabel(
+      finalState,
+      finalCity,
+      finalLatitude ?? undefined,
+      finalLongitude ?? undefined,
+    );
 
   // Inserir a gig
   const { data: gigData, error: gigError } = await supabase
@@ -147,7 +151,7 @@ export async function updateGigWithRegion(
     break_minutes?: number;
     status?: string;
     privacy_level?: "approx";
-  }
+  },
 ) {
   const supabase = await createClient();
 
@@ -168,14 +172,18 @@ export async function updateGigWithRegion(
   let finalRegionLabel: string | null = null;
 
   // Se temos coordenadas mas não temos cidade/estado (ou coordenadas mudaram), fazer reverse geocoding
-  const coordsChanged = 
+  const coordsChanged =
     (data.latitude !== undefined && data.latitude !== currentGig?.latitude) ||
     (data.longitude !== undefined && data.longitude !== currentGig?.longitude);
 
-  if ((finalLatitude && finalLongitude) && ((!finalCity || !finalState) || coordsChanged)) {
+  if (
+    finalLatitude &&
+    finalLongitude &&
+    (!finalCity || !finalState || coordsChanged)
+  ) {
     try {
       const geocodeResult = await reverseGeocode(finalLatitude, finalLongitude);
-      
+
       if (!geocodeResult.error) {
         // Usar dados do geocoding se não foram fornecidos ou se coordenadas mudaram
         if ((!finalCity || coordsChanged) && geocodeResult.city) {
@@ -196,12 +204,14 @@ export async function updateGigWithRegion(
   }
 
   // Recalcular region_label se location mudou (usar o do geocoding se disponível, senão calcular)
-  const regionLabel = finalRegionLabel || computeRegionLabel(
-    finalState,
-    finalCity,
-    finalLatitude ?? undefined,
-    finalLongitude ?? undefined
-  );
+  const regionLabel =
+    finalRegionLabel ||
+    computeRegionLabel(
+      finalState,
+      finalCity,
+      finalLatitude ?? undefined,
+      finalLongitude ?? undefined,
+    );
 
   // Preparar dados de atualização
   const updateData: any = {};
@@ -213,17 +223,22 @@ export async function updateGigWithRegion(
     updateData.location_name = data.location_name?.trim() || null;
   if (data.address_text !== undefined)
     updateData.address_text = data.address_text?.trim() || null;
-  if (data.city !== undefined || coordsChanged) updateData.city = finalCity?.trim() || null;
-  if (data.state !== undefined || coordsChanged) updateData.state = finalState?.trim() || null;
+  if (data.city !== undefined || coordsChanged)
+    updateData.city = finalCity?.trim() || null;
+  if (data.state !== undefined || coordsChanged)
+    updateData.state = finalState?.trim() || null;
   if (data.latitude !== undefined) updateData.latitude = finalLatitude;
   if (data.longitude !== undefined) updateData.longitude = finalLongitude;
   if (data.timezone !== undefined) updateData.timezone = data.timezone;
   if (data.start_time !== undefined) updateData.start_time = data.start_time;
   if (data.end_time !== undefined) updateData.end_time = data.end_time;
-  if (data.show_minutes !== undefined) updateData.show_minutes = data.show_minutes;
-  if (data.break_minutes !== undefined) updateData.break_minutes = data.break_minutes;
+  if (data.show_minutes !== undefined)
+    updateData.show_minutes = data.show_minutes;
+  if (data.break_minutes !== undefined)
+    updateData.break_minutes = data.break_minutes;
   if (data.status !== undefined) updateData.status = data.status;
-  if (data.privacy_level !== undefined) updateData.privacy_level = data.privacy_level;
+  if (data.privacy_level !== undefined)
+    updateData.privacy_level = data.privacy_level;
 
   // Sempre atualizar region_label (o trigger também fará isso, mas garantimos aqui)
   updateData.region_label = regionLabel;
@@ -243,4 +258,3 @@ export async function updateGigWithRegion(
 
   return { data: gigData, error: null };
 }
-

@@ -1,42 +1,62 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Bell, 
-  CheckCircle2, 
-  XCircle, 
-  Loader2, 
-  Users, 
-  User, 
+import {
+  Bell,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Users,
+  User,
   Send,
   AlertCircle,
   Check,
 } from "lucide-react";
-import { notificationTemplates, type NotificationTemplate } from "@/lib/notification-templates";
+import {
+  notificationTemplates,
+  type NotificationTemplate,
+} from "@/lib/notification-templates";
 
 export default function NotificationsTestPage() {
   const [userId, setUserId] = useState<string | null>(null);
-  const [users, setUsers] = useState<Array<{ id: string; display_name: string | null; email: string | null; hasSubscriptions?: boolean }>>([]);
+  const [users, setUsers] = useState<
+    Array<{
+      id: string;
+      display_name: string | null;
+      email: string | null;
+      hasSubscriptions?: boolean;
+    }>
+  >([]);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
-  const [results, setResults] = useState<Array<{ type: string; success: boolean; message: string }>>([]);
+  const [results, setResults] = useState<
+    Array<{ type: string; success: boolean; message: string }>
+  >([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [checkingSubscriptions, setCheckingSubscriptions] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserId(user?.id || null);
     };
     getUser();
   }, []);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
       const { data, error } = await supabase
@@ -54,40 +74,45 @@ export default function NotificationsTestPage() {
       }));
 
       setUsers(usersList);
-      
+
       // Verificar subscriptions para cada usuário
-      await checkUserSubscriptions(usersList.map(u => u.id));
+      await checkUserSubscriptions(usersList.map((u) => u.id));
     } catch (error: any) {
       console.error("Error loading users:", error);
       alert(`Erro ao carregar usuários: ${error.message}`);
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }, []);
 
   const checkUserSubscriptions = async (userIds: string[]) => {
     setCheckingSubscriptions(true);
     try {
       const subscriptionChecks = await Promise.all(
         userIds.map(async (uid) => {
-          const { data, error } = await supabase.rpc("get_user_push_subscriptions", {
-            p_user_id: uid,
-          });
+          const { data, error } = await supabase.rpc(
+            "get_user_push_subscriptions",
+            {
+              p_user_id: uid,
+            },
+          );
           return {
             userId: uid,
             hasSubscriptions: !error && data && data.length > 0,
             count: data?.length || 0,
           };
-        })
+        }),
       );
 
-      setUsers(prev => prev.map(user => {
-        const check = subscriptionChecks.find(c => c.userId === user.id);
-        return {
-          ...user,
-          hasSubscriptions: check?.hasSubscriptions || false,
-        };
-      }));
+      setUsers((prev) =>
+        prev.map((user) => {
+          const check = subscriptionChecks.find((c) => c.userId === user.id);
+          return {
+            ...user,
+            hasSubscriptions: check?.hasSubscriptions || false,
+          };
+        }),
+      );
     } catch (error: any) {
       console.error("Error checking subscriptions:", error);
     } finally {
@@ -97,9 +122,12 @@ export default function NotificationsTestPage() {
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
-  const sendNotification = async (template: NotificationTemplate, targetUserIds: string[]) => {
+  const sendNotification = async (
+    template: NotificationTemplate,
+    targetUserIds: string[],
+  ) => {
     if (targetUserIds.length === 0) {
       alert("Selecione pelo menos um usuário");
       return;
@@ -107,7 +135,11 @@ export default function NotificationsTestPage() {
 
     setSending(true);
     const notificationData = template.getData();
-    const newResults: Array<{ type: string; success: boolean; message: string }> = [];
+    const newResults: Array<{
+      type: string;
+      success: boolean;
+      message: string;
+    }> = [];
 
     try {
       for (const targetUserId of targetUserIds) {
@@ -128,7 +160,7 @@ export default function NotificationsTestPage() {
 
           if (!response.ok || !result.success) {
             let errorMsg = result.error || "Erro desconhecido";
-            
+
             // Evitar duplicação: se details contém a mesma mensagem, não adicionar
             if (result.details && result.details.length > 0) {
               const firstDetail = result.details[0];
@@ -137,62 +169,68 @@ export default function NotificationsTestPage() {
                 errorMsg = `${errorMsg}. Detalhes: ${result.details.join(", ")}`;
               }
             }
-            
+
             newResults.push({
               type: template.key,
               success: false,
-              message: `Erro para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId}: ${errorMsg}`,
+              message: `Erro para ${users.find((u) => u.id === targetUserId)?.display_name || targetUserId}: ${errorMsg}`,
             });
           } else {
             newResults.push({
               type: template.key,
               success: true,
-              message: `Enviado para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId} (${result.sent || 1} subscription${(result.sent || 1) > 1 ? 's' : ''} enviada${(result.sent || 1) > 1 ? 's' : ''})`,
+              message: `Enviado para ${users.find((u) => u.id === targetUserId)?.display_name || targetUserId} (${result.sent || 1} subscription${(result.sent || 1) > 1 ? "s" : ""} enviada${(result.sent || 1) > 1 ? "s" : ""})`,
             });
           }
         } catch (err: any) {
           newResults.push({
             type: template.key,
             success: false,
-            message: `Erro para ${users.find(u => u.id === targetUserId)?.display_name || targetUserId}: ${err.message}`,
+            message: `Erro para ${users.find((u) => u.id === targetUserId)?.display_name || targetUserId}: ${err.message}`,
           });
         }
       }
 
-      setResults(prev => [...newResults, ...prev]);
+      setResults((prev) => [...newResults, ...prev]);
     } catch (error: any) {
       console.error("Error sending notification:", error);
-      setResults(prev => [{
-        type: template.key,
-        success: false,
-        message: `Erro geral: ${error.message}`,
-      }, ...prev]);
+      setResults((prev) => [
+        {
+          type: template.key,
+          success: false,
+          message: `Erro geral: ${error.message}`,
+        },
+        ...prev,
+      ]);
     } finally {
       setSending(false);
     }
   };
 
   const toggleUser = (userId: string) => {
-    setSelectedUserIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+    setSelectedUserIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId],
     );
   };
 
   const selectAllUsers = () => {
-    setSelectedUserIds(users.map(u => u.id));
+    setSelectedUserIds(users.map((u) => u.id));
   };
 
   const clearSelection = () => {
     setSelectedUserIds([]);
   };
 
-  const forceRegisterSubscription = (targetUserId: string, userName: string) => {
+  const forceRegisterSubscription = (
+    targetUserId: string,
+    userName: string,
+  ) => {
     // Abre uma nova aba com a página de forçar registro
     // O usuário precisa estar logado como targetUserId para funcionar
     const url = `/dashboard/force-push-register?userId=${targetUserId}`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   };
 
   return (
@@ -205,7 +243,8 @@ export default function NotificationsTestPage() {
             Teste de Notificações Push
           </h1>
           <p className="text-gray-600">
-            Use esta página para testar o envio de notificações push para dispositivos móveis
+            Use esta página para testar o envio de notificações push para
+            dispositivos móveis
           </p>
         </div>
 
@@ -242,7 +281,7 @@ export default function NotificationsTestPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => checkUserSubscriptions(users.map(u => u.id))}
+                  onClick={() => checkUserSubscriptions(users.map((u) => u.id))}
                   disabled={checkingSubscriptions || users.length === 0}
                 >
                   {checkingSubscriptions ? (
@@ -266,7 +305,9 @@ export default function NotificationsTestPage() {
             ) : users.length === 0 ? (
               <div className="text-center py-8">
                 <User className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-sm text-gray-500">Nenhum usuário encontrado</p>
+                <p className="text-sm text-gray-500">
+                  Nenhum usuário encontrado
+                </p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -290,24 +331,30 @@ export default function NotificationsTestPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                          selectedUserIds.includes(user.id)
-                            ? "border-orange-500 bg-orange-500"
-                            : "border-gray-300"
-                        }`}>
+                        <div
+                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedUserIds.includes(user.id)
+                              ? "border-orange-500 bg-orange-500"
+                              : "border-gray-300"
+                          }`}
+                        >
                           {selectedUserIds.includes(user.id) && (
                             <Check className="h-3 w-3 text-white" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{user.display_name}</p>
+                          <p className="font-medium text-gray-900 truncate">
+                            {user.display_name}
+                          </p>
                           {!user.hasSubscriptions && (
                             <p className="text-xs text-orange-600 font-medium mt-0.5">
                               ⚠️ Sem subscriptions ativas
                             </p>
                           )}
                           {user.email && user.hasSubscriptions && (
-                            <p className="text-xs text-gray-500">{user.email}</p>
+                            <p className="text-xs text-gray-500">
+                              {user.email}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -318,7 +365,10 @@ export default function NotificationsTestPage() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              forceRegisterSubscription(user.id, user.display_name || "Usuário");
+                              forceRegisterSubscription(
+                                user.id,
+                                user.display_name || "Usuário",
+                              );
                             }}
                             className="text-xs h-7 px-2 border-orange-300 text-orange-600 hover:bg-orange-50"
                           >
@@ -326,7 +376,10 @@ export default function NotificationsTestPage() {
                           </Button>
                         )}
                         {user.hasSubscriptions && (
-                          <Badge variant="outline" className="text-xs border-green-500 text-green-700 bg-green-50">
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-green-500 text-green-700 bg-green-50"
+                          >
                             ✓ Ativo
                           </Badge>
                         )}
@@ -344,7 +397,8 @@ export default function NotificationsTestPage() {
             <div className="mt-4 pt-4 border-t">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-600">
-                  <strong>{selectedUserIds.length}</strong> de <strong>{users.length}</strong> usuários selecionados
+                  <strong>{selectedUserIds.length}</strong> de{" "}
+                  <strong>{users.length}</strong> usuários selecionados
                 </p>
                 {checkingSubscriptions && (
                   <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -354,7 +408,8 @@ export default function NotificationsTestPage() {
                 )}
               </div>
               <p className="text-xs text-gray-500">
-                {users.filter(u => u.hasSubscriptions).length} usuário(s) com subscriptions ativas
+                {users.filter((u) => u.hasSubscriptions).length} usuário(s) com
+                subscriptions ativas
               </p>
             </div>
           </CardContent>
@@ -362,10 +417,15 @@ export default function NotificationsTestPage() {
 
         {/* Templates de Notificação */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Tipos de Notificações</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Tipos de Notificações
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {notificationTemplates.map((template) => (
-              <Card key={template.key} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={template.key}
+                className="hover:shadow-lg transition-shadow"
+              >
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <span className="text-orange-500">{template.icon}</span>
@@ -428,9 +488,11 @@ export default function NotificationsTestPage() {
                       <XCircle className="h-5 w-5 text-red-600 shrink-0" />
                     )}
                     <div className="flex-1">
-                      <p className={`text-sm font-medium ${
-                        result.success ? "text-green-900" : "text-red-900"
-                      }`}>
+                      <p
+                        className={`text-sm font-medium ${
+                          result.success ? "text-green-900" : "text-red-900"
+                        }`}
+                      >
                         {result.message}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
@@ -458,18 +520,27 @@ export default function NotificationsTestPage() {
             <div className="flex items-start gap-3">
               <AlertCircle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-orange-900 mb-2">Por que estou vendo "Sem subscriptions ativas"?</h3>
+                <h3 className="font-semibold text-orange-900 mb-2">
+                  Por que estou vendo &quot;Sem subscriptions ativas&quot;?
+                </h3>
                 <p className="text-sm text-orange-800 mb-3">
                   Para receber notificações push, os usuários precisam:
                 </p>
                 <ul className="text-sm text-orange-800 space-y-1 list-disc list-inside mb-3">
                   <li>Estar logados na plataforma no navegador/dispositivo</li>
                   <li>Ter autorizado as notificações no navegador</li>
-                  <li>Ter visitado o dashboard (onde o PushNotificationManager registra automaticamente)</li>
-                  <li>Estar usando um navegador/dispositivo compatível com PWA</li>
+                  <li>
+                    Ter visitado o dashboard (onde o PushNotificationManager
+                    registra automaticamente)
+                  </li>
+                  <li>
+                    Estar usando um navegador/dispositivo compatível com PWA
+                  </li>
                 </ul>
                 <p className="text-sm text-orange-800 font-medium">
-                  💡 <strong>Dica:</strong> Os usuários precisam acessar o dashboard pelo menos uma vez para que suas subscriptions sejam registradas automaticamente.
+                  💡 <strong>Dica:</strong> Os usuários precisam acessar o
+                  dashboard pelo menos uma vez para que suas subscriptions sejam
+                  registradas automaticamente.
                 </p>
               </div>
             </div>
@@ -479,4 +550,3 @@ export default function NotificationsTestPage() {
     </DashboardLayout>
   );
 }
-

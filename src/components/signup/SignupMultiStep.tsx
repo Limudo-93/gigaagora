@@ -29,7 +29,7 @@ interface SignupData {
   email: string;
   password: string;
   confirmPassword: string;
-  
+
   // Etapa 2
   photoUrl: string | null;
   instrument: string;
@@ -64,14 +64,18 @@ interface ValidationErrors {
   cpf?: string;
 }
 
-export default function SignupMultiStep({ referralCode }: { referralCode: string | null }) {
+export default function SignupMultiStep({
+  referralCode,
+}: {
+  referralCode: string | null;
+}) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  
+
   const [data, setData] = useState<SignupData>({
     displayName: "",
     email: "",
@@ -106,13 +110,13 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
   const calculateProfileProgress = () => {
     let completed = 0;
     let total = 5; // foto, instrumento, cidade, estado, bio
-    
+
     if (data.photoUrl) completed++;
     if (data.instrument) completed++;
     if (data.city) completed++;
     if (data.state) completed++;
     if (data.bio) completed++;
-    
+
     return Math.round((completed / total) * 100);
   };
 
@@ -249,9 +253,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("profile-photos")
-          .getPublicUrl(filePath);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("profile-photos").getPublicUrl(filePath);
 
         setData((prev) => ({ ...prev, photoUrl: publicUrl }));
       } else {
@@ -293,15 +297,16 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
     setLoading(true);
 
     try {
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            display_name: data.displayName,
+      const { data: signupData, error: signupError } =
+        await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              display_name: data.displayName,
+            },
           },
-        },
-      });
+        });
 
       if (signupError) {
         throw signupError;
@@ -314,13 +319,11 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
       setUserId(signupData.user.id);
 
       // Criar perfil básico
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          user_id: signupData.user.id,
-          user_type: "musician",
-          display_name: data.displayName,
-        });
+      const { error: profileError } = await supabase.from("profiles").insert({
+        user_id: signupData.user.id,
+        user_type: "musician",
+        display_name: data.displayName,
+      });
 
       if (profileError) {
         console.error("Error creating profile:", profileError);
@@ -364,7 +367,7 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
           const response = await fetch(data.photoUrl);
           const blob = await response.blob();
           const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
-          
+
           const fileExt = "jpg";
           const fileName = `${signupData.user.id}-${Date.now()}.${fileExt}`;
           const filePath = `${signupData.user.id}/${fileName}`;
@@ -374,9 +377,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
             .upload(filePath, file, { upsert: true });
 
           if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage
-              .from("profile-photos")
-              .getPublicUrl(filePath);
+            const {
+              data: { publicUrl },
+            } = supabase.storage.from("profile-photos").getPublicUrl(filePath);
             setData((prev) => ({ ...prev, photoUrl: publicUrl }));
           }
         } catch (uploadErr) {
@@ -459,7 +462,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
         },
         sheetMusicReading: data.sheetMusicReading,
         repertoire: data.repertoire.trim() || null,
-        yearsExperience: Number.isFinite(yearsExperience) ? yearsExperience : null,
+        yearsExperience: Number.isFinite(yearsExperience)
+          ? yearsExperience
+          : null,
         musicalEducation: data.musicalEducation.trim() || null,
         basePrice: Number.isFinite(basePrice) ? basePrice : null,
       };
@@ -536,13 +541,19 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
           ))}
         </div>
         <div className="flex justify-between text-xs text-gray-500">
-          <span className={currentStep >= 1 ? "font-semibold text-orange-600" : ""}>
+          <span
+            className={currentStep >= 1 ? "font-semibold text-orange-600" : ""}
+          >
             Criar Conta
           </span>
-          <span className={currentStep >= 2 ? "font-semibold text-orange-600" : ""}>
+          <span
+            className={currentStep >= 2 ? "font-semibold text-orange-600" : ""}
+          >
             Completar Perfil
           </span>
-          <span className={currentStep >= 3 ? "font-semibold text-orange-600" : ""}>
+          <span
+            className={currentStep >= 3 ? "font-semibold text-orange-600" : ""}
+          >
             Verificação
           </span>
         </div>
@@ -551,7 +562,10 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
       {/* Conteúdo das etapas */}
       <div className="rounded-2xl border border-white/20 backdrop-blur-xl bg-white/90 p-6 md:p-8 shadow-xl">
         {currentStep === 1 && (
-          <form onSubmit={handleStep1Submit} className="space-y-5 animate-fade-in">
+          <form
+            onSubmit={handleStep1Submit}
+            className="space-y-5 animate-fade-in"
+          >
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent mb-2">
                 Criar sua conta
@@ -571,7 +585,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   type="text"
                   value={data.displayName}
                   onChange={(e) => handleChange("displayName", e.target.value)}
-                  onBlur={() => setTouched((prev) => ({ ...prev, displayName: true }))}
+                  onBlur={() =>
+                    setTouched((prev) => ({ ...prev, displayName: true }))
+                  }
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.displayName
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
@@ -596,7 +612,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   type="email"
                   value={data.email}
                   onChange={(e) => handleChange("email", e.target.value)}
-                  onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                  onBlur={() =>
+                    setTouched((prev) => ({ ...prev, email: true }))
+                  }
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.email
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
@@ -621,7 +639,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                   type="password"
                   value={data.password}
                   onChange={(e) => handleChange("password", e.target.value)}
-                  onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
+                  onBlur={() =>
+                    setTouched((prev) => ({ ...prev, password: true }))
+                  }
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.password
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
@@ -635,7 +655,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                     {errors.password}
                   </p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">Mínimo de 6 caracteres</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Mínimo de 6 caracteres
+                </p>
               </div>
 
               <div>
@@ -646,8 +668,12 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 <input
                   type="password"
                   value={data.confirmPassword}
-                  onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                  onBlur={() => setTouched((prev) => ({ ...prev, confirmPassword: true }))}
+                  onChange={(e) =>
+                    handleChange("confirmPassword", e.target.value)
+                  }
+                  onBlur={() =>
+                    setTouched((prev) => ({ ...prev, confirmPassword: true }))
+                  }
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
                     errors.confirmPassword
                       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
@@ -699,30 +725,39 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
             {/* Microcopy de segurança */}
             <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
               <Shield className="h-3 w-3 text-gray-400" />
-              <span>Seus dados estão protegidos. Nunca compartilhamos suas informações.</span>
+              <span>
+                Seus dados estão protegidos. Nunca compartilhamos suas
+                informações.
+              </span>
             </div>
           </form>
         )}
 
         {currentStep === 2 && (
-          <form onSubmit={handleStep2Submit} className="space-y-6 animate-fade-in">
+          <form
+            onSubmit={handleStep2Submit}
+            className="space-y-6 animate-fade-in"
+          >
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent mb-3">
                 Complete seu perfil
               </h2>
-              
+
               {/* Copy motivacional */}
               <p className="text-base text-gray-700 font-medium mb-4">
                 Perfis completos recebem mais convites e melhores oportunidades
               </p>
-              
+
               {/* Barra de progresso */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-medium text-gray-600">
                   <span>Progresso do perfil</span>
                   <span>{profileProgress}% completo</span>
                 </div>
-                <Progress value={profileProgress} className="h-3 transition-all duration-500" />
+                <Progress
+                  value={profileProgress}
+                  className="h-3 transition-all duration-500"
+                />
               </div>
             </div>
 
@@ -789,7 +824,10 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleChange("instrument", data.instrument === instrument ? "" : instrument);
+                        handleChange(
+                          "instrument",
+                          data.instrument === instrument ? "" : instrument,
+                        );
                       }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         data.instrument === instrument
@@ -893,12 +931,15 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
               {/* CPF (opcional) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  CPF <span className="text-gray-400 font-normal">(opcional)</span>
+                  CPF{" "}
+                  <span className="text-gray-400 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="text"
                   value={data.cpf}
-                  onChange={(e) => handleChange("cpf", formatCPF(e.target.value))}
+                  onChange={(e) =>
+                    handleChange("cpf", formatCPF(e.target.value))
+                  }
                   onBlur={() => setTouched((prev) => ({ ...prev, cpf: true }))}
                   maxLength={14}
                   className={`w-full rounded-lg border-2 px-4 py-3 text-sm transition-all ${
@@ -916,8 +957,11 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 )}
                 <div className="mt-2 rounded-lg bg-blue-50 border border-blue-200 p-3">
                   <p className="text-xs text-blue-800">
-                    <strong>Usamos seu CPF apenas para confirmar sua identidade.</strong>{" "}
-                    Perfis verificados têm mais destaque e confiança na plataforma.
+                    <strong>
+                      Usamos seu CPF apenas para confirmar sua identidade.
+                    </strong>{" "}
+                    Perfis verificados têm mais destaque e confiança na
+                    plataforma.
                   </p>
                 </div>
               </div>
@@ -930,7 +974,10 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 <select
                   value={data.sheetMusicReading}
                   onChange={(e) =>
-                    handleChange("sheetMusicReading", e.target.value as SignupData["sheetMusicReading"])
+                    handleChange(
+                      "sheetMusicReading",
+                      e.target.value as SignupData["sheetMusicReading"],
+                    )
                   }
                   className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm hover:border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                 >
@@ -963,7 +1010,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                     type="number"
                     min="0"
                     value={data.yearsExperience}
-                    onChange={(e) => handleChange("yearsExperience", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("yearsExperience", e.target.value)
+                    }
                     className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                     placeholder="0"
                   />
@@ -990,7 +1039,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
                 </label>
                 <textarea
                   value={data.musicalEducation}
-                  onChange={(e) => handleChange("musicalEducation", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("musicalEducation", e.target.value)
+                  }
                   rows={3}
                   className="w-full rounded-lg border-2 border-gray-200 px-4 py-3 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none"
                   placeholder="Cursos, conservatórios, aulas, autodidata..."
@@ -1116,11 +1167,13 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
         {currentStep === 3 && (
           <div className="text-center space-y-6 animate-fade-in">
             <div className="flex justify-center">
-              <div className={`h-20 w-20 rounded-full flex items-center justify-center ${
-                isCPFProvided 
-                  ? "bg-gradient-to-br from-green-500 to-emerald-500" 
-                  : "bg-gradient-to-br from-gray-400 to-gray-500"
-              }`}>
+              <div
+                className={`h-20 w-20 rounded-full flex items-center justify-center ${
+                  isCPFProvided
+                    ? "bg-gradient-to-br from-green-500 to-emerald-500"
+                    : "bg-gradient-to-br from-gray-400 to-gray-500"
+                }`}
+              >
                 {isCPFProvided ? (
                   <CheckCircle2 className="h-10 w-10 text-white" />
                 ) : (
@@ -1131,7 +1184,9 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
 
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent mb-3">
-                {isCPFProvided ? "Verificação em andamento" : "Seu perfil está quase pronto 🎶"}
+                {isCPFProvided
+                  ? "Verificação em andamento"
+                  : "Seu perfil está quase pronto 🎶"}
               </h2>
               <p className="text-gray-600 text-base">
                 {isCPFProvided
@@ -1142,15 +1197,19 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
 
             {/* Badge de status */}
             <div className="flex justify-center">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
-                isCPFProvided
-                  ? "bg-green-100 text-green-700 border-2 border-green-300"
-                  : "bg-blue-100 text-blue-700 border-2 border-blue-300"
-              }`}>
+              <div
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                  isCPFProvided
+                    ? "bg-green-100 text-green-700 border-2 border-green-300"
+                    : "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                }`}
+              >
                 {isCPFProvided ? (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-semibold">Em verificação</span>
+                    <span className="text-sm font-semibold">
+                      Em verificação
+                    </span>
                   </>
                 ) : (
                   <>
@@ -1185,4 +1244,3 @@ export default function SignupMultiStep({ referralCode }: { referralCode: string
     </div>
   );
 }
-

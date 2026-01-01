@@ -51,7 +51,11 @@ export default function MissionProgressCard() {
             <Button className="btn-gradient text-white" asChild>
               <Link href="/dashboard/perfil/edit">Completar perfil</Link>
             </Button>
-            <Button variant="outline" className="border-white/70 bg-white/80" asChild>
+            <Button
+              variant="outline"
+              className="border-white/70 bg-white/80"
+              asChild
+            >
               <Link href="/dashboard/gigs">Ver missões</Link>
             </Button>
           </div>

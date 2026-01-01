@@ -45,7 +45,12 @@ import {
 import { downloadICS, CalendarEvent } from "@/lib/ics-utils";
 import { useRouter } from "next/navigation";
 import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
-import { Calendar as BigCalendar, View, CalendarProps, dateFnsLocalizer } from "react-big-calendar";
+import {
+  Calendar as BigCalendar,
+  View,
+  CalendarProps,
+  dateFnsLocalizer,
+} from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -151,25 +156,58 @@ export default function AgendaPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<View>("month");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEventType | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEventType | null>(
+    null,
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "confirmed" | "pending">("all");
+  const [filterType, setFilterType] = useState<"all" | "confirmed" | "pending">(
+    "all",
+  );
   const [showConfirmed, setShowConfirmed] = useState(true);
   const [showPending, setShowPending] = useState(true);
-  const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
-  const [musicianLocation, setMusicianLocation] = useState<{ lat: number; lng: number } | null>(null);
-  
+  const [processingInviteId, setProcessingInviteId] = useState<string | null>(
+    null,
+  );
+  const [musicianLocation, setMusicianLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+
   // Cores diferentes para cada card
   const cardColors = [
-    { header: "from-amber-500 to-amber-600", badge: "bg-amber-700/50 border-amber-300/30" },
-    { header: "from-blue-500 to-blue-600", badge: "bg-blue-700/50 border-blue-300/30" },
-    { header: "from-purple-500 to-purple-600", badge: "bg-purple-700/50 border-purple-300/30" },
-    { header: "from-pink-500 to-pink-600", badge: "bg-pink-700/50 border-pink-300/30" },
-    { header: "from-indigo-500 to-indigo-600", badge: "bg-indigo-700/50 border-indigo-300/30" },
-    { header: "from-teal-500 to-teal-600", badge: "bg-teal-700/50 border-teal-300/30" },
-    { header: "from-rose-500 to-rose-600", badge: "bg-rose-700/50 border-rose-300/30" },
-    { header: "from-cyan-500 to-cyan-600", badge: "bg-cyan-700/50 border-cyan-300/30" },
+    {
+      header: "from-amber-500 to-amber-600",
+      badge: "bg-amber-700/50 border-amber-300/30",
+    },
+    {
+      header: "from-blue-500 to-blue-600",
+      badge: "bg-blue-700/50 border-blue-300/30",
+    },
+    {
+      header: "from-purple-500 to-purple-600",
+      badge: "bg-purple-700/50 border-purple-300/30",
+    },
+    {
+      header: "from-pink-500 to-pink-600",
+      badge: "bg-pink-700/50 border-pink-300/30",
+    },
+    {
+      header: "from-indigo-500 to-indigo-600",
+      badge: "bg-indigo-700/50 border-indigo-300/30",
+    },
+    {
+      header: "from-teal-500 to-teal-600",
+      badge: "bg-teal-700/50 border-teal-300/30",
+    },
+    {
+      header: "from-rose-500 to-rose-600",
+      badge: "bg-rose-700/50 border-rose-300/30",
+    },
+    {
+      header: "from-cyan-500 to-cyan-600",
+      badge: "bg-cyan-700/50 border-cyan-300/30",
+    },
   ];
 
   // Busca o usuário atual
@@ -219,7 +257,9 @@ export default function AgendaPage() {
 
     const fetchConfirmed = async () => {
       try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_list_upcoming_confirmed_gigs");
+        const { data: rpcData, error: rpcError } = await supabase.rpc(
+          "rpc_list_upcoming_confirmed_gigs",
+        );
 
         let transformed: ConfirmedGigRow[] = [];
 
@@ -227,7 +267,8 @@ export default function AgendaPage() {
           // Fallback: busca direta com mais informações
           const { data: directData, error: directError } = await supabase
             .from("confirmations")
-            .select(`
+            .select(
+              `
               id,
               created_at,
               invite_id,
@@ -255,7 +296,8 @@ export default function AgendaPage() {
                   )
                 )
               )
-            `)
+            `,
+            )
             .eq("invites.musician_id", userId)
             .gte("invites.gigs.start_time", new Date().toISOString())
             .order("invites.gigs.start_time", { ascending: true });
@@ -272,12 +314,17 @@ export default function AgendaPage() {
             const role = gig?.gig_roles?.[0];
             const gigLat = gig?.latitude as number | null | undefined;
             const gigLng = gig?.longitude as number | null | undefined;
-            
+
             let distanceKm: number | null = null;
             let estimatedTravelTimeMinutes: number | null = null;
-            
+
             if (musicianLocation && gigLat != null && gigLng != null) {
-              distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+              distanceKm = haversineKm(
+                musicianLocation.lat,
+                musicianLocation.lng,
+                gigLat,
+                gigLng,
+              );
               estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
             }
 
@@ -310,7 +357,8 @@ export default function AgendaPage() {
               // Buscar cache e coordenadas
               const { data: inviteData } = await supabase
                 .from("invites")
-                .select(`
+                .select(
+                  `
                   gig_role_id,
                   gig_roles!inner(
                     cache
@@ -322,22 +370,32 @@ export default function AgendaPage() {
                     flyer_url,
                     contractor_id
                   )
-                `)
+                `,
+                )
                 .eq("id", gig.invite_id)
                 .single();
 
               // Supabase retorna gigs como array mesmo com !inner, então precisamos pegar o primeiro elemento
-              const gigData = Array.isArray(inviteData?.gigs) ? inviteData.gigs[0] : inviteData?.gigs;
-              const roleData = Array.isArray(inviteData?.gig_roles) ? inviteData.gig_roles[0] : inviteData?.gig_roles;
-              
+              const gigData = Array.isArray(inviteData?.gigs)
+                ? inviteData.gigs[0]
+                : inviteData?.gigs;
+              const roleData = Array.isArray(inviteData?.gig_roles)
+                ? inviteData.gig_roles[0]
+                : inviteData?.gig_roles;
+
               const gigLat = gigData?.latitude as number | null | undefined;
               const gigLng = gigData?.longitude as number | null | undefined;
-              
+
               let distanceKm: number | null = null;
               let estimatedTravelTimeMinutes: number | null = null;
-              
+
               if (musicianLocation && gigLat != null && gigLng != null) {
-                distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+                distanceKm = haversineKm(
+                  musicianLocation.lat,
+                  musicianLocation.lng,
+                  gigLat,
+                  gigLng,
+                );
                 estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
               }
 
@@ -363,22 +421,29 @@ export default function AgendaPage() {
                 distance_km: distanceKm,
                 estimated_travel_time_minutes: estimatedTravelTimeMinutes,
               };
-            })
+            }),
           );
 
           transformed = enriched;
         }
 
-        const sorted = transformed.sort((a: ConfirmedGigRow, b: ConfirmedGigRow) => {
-          if (!a.start_time) return 1;
-          if (!b.start_time) return -1;
-          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-        });
+        const sorted = transformed.sort(
+          (a: ConfirmedGigRow, b: ConfirmedGigRow) => {
+            if (!a.start_time) return 1;
+            if (!b.start_time) return -1;
+            return (
+              new Date(a.start_time).getTime() -
+              new Date(b.start_time).getTime()
+            );
+          },
+        );
 
         setConfirmedGigs(sorted);
       } catch (e: any) {
         console.error("fetchConfirmed exception:", e);
-        setErrorMsg(e?.message ?? "Erro inesperado ao carregar shows confirmados.");
+        setErrorMsg(
+          e?.message ?? "Erro inesperado ao carregar shows confirmados.",
+        );
       }
     };
 
@@ -391,7 +456,9 @@ export default function AgendaPage() {
 
     const fetchPending = async () => {
       try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_list_pending_invites");
+        const { data: rpcData, error: rpcError } = await supabase.rpc(
+          "rpc_list_pending_invites",
+        );
 
         let transformed: PendingInviteRow[] = [];
 
@@ -399,7 +466,8 @@ export default function AgendaPage() {
           // Fallback: busca direta com mais informações
           const { data: directData, error: directError } = await supabase
             .from("invites")
-            .select(`
+            .select(
+              `
               id,
               gig_id,
               gig_role_id,
@@ -422,7 +490,8 @@ export default function AgendaPage() {
                   cache
                 )
               )
-            `)
+            `,
+            )
             .eq("musician_id", userId)
             .eq("status", "pending")
             .order("created_at", { ascending: false });
@@ -433,16 +502,23 @@ export default function AgendaPage() {
           }
 
           transformed = (directData ?? []).map((invite: any) => {
-            const gig = Array.isArray(invite.gigs) ? invite.gigs[0] : invite.gigs;
+            const gig = Array.isArray(invite.gigs)
+              ? invite.gigs[0]
+              : invite.gigs;
             const role = gig?.gig_roles?.[0];
             const gigLat = gig?.latitude as number | null | undefined;
             const gigLng = gig?.longitude as number | null | undefined;
-            
+
             let distanceKm: number | null = null;
             let estimatedTravelTimeMinutes: number | null = null;
-            
+
             if (musicianLocation && gigLat != null && gigLng != null) {
-              distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+              distanceKm = haversineKm(
+                musicianLocation.lat,
+                musicianLocation.lng,
+                gigLat,
+                gigLng,
+              );
               estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
             }
 
@@ -473,24 +549,31 @@ export default function AgendaPage() {
               // Buscar coordenadas e outras informações
               const { data: gigData } = await supabase
                 .from("gigs")
-                .select(`
+                .select(
+                  `
                   latitude,
                   longitude,
                   region_label,
                   flyer_url,
                   contractor_id
-                `)
+                `,
+                )
                 .eq("id", invite.gig_id)
                 .single();
 
               const gigLat = gigData?.latitude as number | null | undefined;
               const gigLng = gigData?.longitude as number | null | undefined;
-              
+
               let distanceKm: number | null = null;
               let estimatedTravelTimeMinutes: number | null = null;
-              
+
               if (musicianLocation && gigLat != null && gigLng != null) {
-                distanceKm = haversineKm(musicianLocation.lat, musicianLocation.lng, gigLat, gigLng);
+                distanceKm = haversineKm(
+                  musicianLocation.lat,
+                  musicianLocation.lng,
+                  gigLat,
+                  gigLng,
+                );
                 estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
               }
 
@@ -515,7 +598,7 @@ export default function AgendaPage() {
                 distance_km: distanceKm,
                 estimated_travel_time_minutes: estimatedTravelTimeMinutes,
               };
-            })
+            }),
           );
         }
 
@@ -583,13 +666,22 @@ export default function AgendaPage() {
       filtered = filtered.filter(
         (e) =>
           e.title.toLowerCase().includes(term) ||
-          (e.resource.location && e.resource.location.toLowerCase().includes(term)) ||
-          (e.resource.instrument && e.resource.instrument.toLowerCase().includes(term))
+          (e.resource.location &&
+            e.resource.location.toLowerCase().includes(term)) ||
+          (e.resource.instrument &&
+            e.resource.instrument.toLowerCase().includes(term)),
       );
     }
 
     return filtered;
-  }, [confirmedGigs, pendingInvites, filterType, searchTerm, showConfirmed, showPending]);
+  }, [
+    confirmedGigs,
+    pendingInvites,
+    filterType,
+    searchTerm,
+    showConfirmed,
+    showPending,
+  ]);
 
   const handleDownloadICS = () => {
     const events: CalendarEvent[] = confirmedGigs
@@ -622,7 +714,7 @@ export default function AgendaPage() {
 
   const handleAcceptInvite = async () => {
     if (!selectedEvent || selectedEvent.resource.type !== "pending") return;
-    
+
     const inviteId = (selectedEvent.resource.gig as PendingInviteRow).invite_id;
     if (!inviteId) return;
 
@@ -630,9 +722,12 @@ export default function AgendaPage() {
     setErrorMsg(null);
 
     try {
-      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_accept_invite", {
-        p_invite_id: inviteId,
-      });
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "rpc_accept_invite",
+        {
+          p_invite_id: inviteId,
+        },
+      );
 
       if (rpcError) {
         console.error("RPC acceptInvite error:", rpcError);
@@ -641,7 +736,12 @@ export default function AgendaPage() {
         return;
       }
 
-      if (rpcData && typeof rpcData === 'object' && 'ok' in rpcData && !rpcData.ok) {
+      if (
+        rpcData &&
+        typeof rpcData === "object" &&
+        "ok" in rpcData &&
+        !rpcData.ok
+      ) {
         const message = (rpcData as any)?.message || "Erro ao aceitar convite";
         setErrorMsg(message);
         setProcessingInviteId(null);
@@ -659,7 +759,7 @@ export default function AgendaPage() {
 
   const handleDeclineInvite = async () => {
     if (!selectedEvent || selectedEvent.resource.type !== "pending") return;
-    
+
     const inviteId = (selectedEvent.resource.gig as PendingInviteRow).invite_id;
     if (!inviteId) return;
 
@@ -671,9 +771,12 @@ export default function AgendaPage() {
     setErrorMsg(null);
 
     try {
-      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_decline_invite", {
-        p_invite_id: inviteId,
-      });
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "rpc_decline_invite",
+        {
+          p_invite_id: inviteId,
+        },
+      );
 
       if (rpcError) {
         console.error("RPC declineInvite error:", rpcError);
@@ -682,7 +785,12 @@ export default function AgendaPage() {
         return;
       }
 
-      if (rpcData && typeof rpcData === 'object' && 'ok' in rpcData && !rpcData.ok) {
+      if (
+        rpcData &&
+        typeof rpcData === "object" &&
+        "ok" in rpcData &&
+        !rpcData.ok
+      ) {
         const message = (rpcData as any)?.message || "Erro ao recusar convite";
         setErrorMsg(message);
         setProcessingInviteId(null);
@@ -705,9 +813,7 @@ export default function AgendaPage() {
   const eventStyleGetter = (event: CalendarEventType) => {
     const isConfirmed = event.resource.type === "confirmed";
     return {
-      className: isConfirmed
-        ? "rbc-event-confirmed"
-        : "rbc-event-pending",
+      className: isConfirmed ? "rbc-event-confirmed" : "rbc-event-pending",
       style: {
         backgroundColor: isConfirmed ? "#10b981" : "#f59e0b",
         borderColor: isConfirmed ? "#059669" : "#d97706",
@@ -722,9 +828,17 @@ export default function AgendaPage() {
   const nextConfirmedGig = confirmedGigs.find((gig) => gig.start_time);
 
   const stats = useMemo(() => {
-    const thisMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    
+    const thisMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1,
+    );
+    const nextMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0,
+    );
+
     const monthConfirmed = confirmedGigs.filter((gig) => {
       if (!gig.start_time) return false;
       const gigDate = new Date(gig.start_time);
@@ -807,10 +921,17 @@ export default function AgendaPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" onClick={() => setCurrentDate(new Date())} className="border-white/70 bg-white/80">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentDate(new Date())}
+              className="border-white/70 bg-white/80"
+            >
               Hoje
             </Button>
-            <Button onClick={handleDownloadICS} className="btn-gradient text-white">
+            <Button
+              onClick={handleDownloadICS}
+              className="btn-gradient text-white"
+            >
               <Download className="mr-2 h-4 w-4" />
               Baixar .ics
             </Button>
@@ -870,9 +991,7 @@ export default function AgendaPage() {
               <p className="text-3xl font-semibold text-foreground">
                 {stats.confirmed + stats.pending}
               </p>
-              <p className="text-sm text-foreground/60">
-                Eventos agendados
-              </p>
+              <p className="text-sm text-foreground/60">Eventos agendados</p>
             </CardContent>
           </Card>
 
@@ -884,9 +1003,7 @@ export default function AgendaPage() {
               <p className="text-3xl font-semibold text-foreground">
                 {pendingInvites.length}
               </p>
-              <p className="text-sm text-foreground/60">
-                Aguardando resposta
-              </p>
+              <p className="text-sm text-foreground/60">Aguardando resposta</p>
             </CardContent>
           </Card>
         </div>
@@ -899,36 +1016,59 @@ export default function AgendaPage() {
                 Próximos Eventos
               </h2>
               <Badge variant="secondary" className="text-xs">
-                {allEventsForCards.length} {allEventsForCards.length === 1 ? "evento" : "eventos"}
+                {allEventsForCards.length}{" "}
+                {allEventsForCards.length === 1 ? "evento" : "eventos"}
               </Badge>
             </div>
-            
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {allEventsForCards.slice(0, 8).map((event, index) => {
-                const eventDate = event.start_time ? new Date(event.start_time) : null;
+                const eventDate = event.start_time
+                  ? new Date(event.start_time)
+                  : null;
                 const isConfirmed = event.type === "confirmed";
-                const day = eventDate ? format(eventDate, "dd", { locale: ptBR }) : "";
-                const month = eventDate ? format(eventDate, "MMM", { locale: ptBR }).toUpperCase() : "";
-                const time = eventDate ? format(eventDate, "HH:mm", { locale: ptBR }) : "";
-                const weekday = eventDate ? format(eventDate, "EEEE", { locale: ptBR }) : "";
-                
+                const day = eventDate
+                  ? format(eventDate, "dd", { locale: ptBR })
+                  : "";
+                const month = eventDate
+                  ? format(eventDate, "MMM", { locale: ptBR }).toUpperCase()
+                  : "";
+                const time = eventDate
+                  ? format(eventDate, "HH:mm", { locale: ptBR })
+                  : "";
+                const weekday = eventDate
+                  ? format(eventDate, "EEEE", { locale: ptBR })
+                  : "";
+
                 // Seleciona cor baseada no índice, mas usa verde para confirmados
                 const colorIndex = index % cardColors.length;
-                const cardColor = isConfirmed 
-                  ? { header: "from-emerald-500 to-emerald-600", badge: "bg-emerald-700/50 border-emerald-300/30" }
+                const cardColor = isConfirmed
+                  ? {
+                      header: "from-emerald-500 to-emerald-600",
+                      badge: "bg-emerald-700/50 border-emerald-300/30",
+                    }
                   : cardColors[colorIndex];
-                
+
                 return (
                   <Card
-                    key={event.type === "confirmed" ? (event.gig as ConfirmedGigRow).confirmation_id : (event.gig as PendingInviteRow).invite_id}
+                    key={
+                      event.type === "confirmed"
+                        ? (event.gig as ConfirmedGigRow).confirmation_id
+                        : (event.gig as PendingInviteRow).invite_id
+                    }
                     className="border border-white/70 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden group"
                     onClick={() => {
                       if (eventDate) {
                         const calendarEvent: CalendarEventType = {
-                          id: event.type === "confirmed" ? (event.gig as ConfirmedGigRow).confirmation_id : (event.gig as PendingInviteRow).invite_id,
+                          id:
+                            event.type === "confirmed"
+                              ? (event.gig as ConfirmedGigRow).confirmation_id
+                              : (event.gig as PendingInviteRow).invite_id,
                           title: event.title || "Show",
                           start: eventDate,
-                          end: event.end_time ? new Date(event.end_time) : eventDate,
+                          end: event.end_time
+                            ? new Date(event.end_time)
+                            : eventDate,
                           resource: {
                             type: event.type,
                             gig: event.gig,
@@ -951,7 +1091,9 @@ export default function AgendaPage() {
                         <div className="relative flex items-center justify-between">
                           <div>
                             <div className="text-3xl font-bold">{day}</div>
-                            <div className="text-xs font-medium opacity-90">{month}</div>
+                            <div className="text-xs font-medium opacity-90">
+                              {month}
+                            </div>
                           </div>
                           <Badge
                             className={`${cardColor.badge} text-white border`}
@@ -968,9 +1110,15 @@ export default function AgendaPage() {
                           <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-3 text-white shadow-md">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-xs font-medium opacity-90 mb-0.5">Cachê</p>
+                                <p className="text-xs font-medium opacity-90 mb-0.5">
+                                  Cachê
+                                </p>
                                 <p className="text-xl font-bold">
-                                  R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(event.gig.cache)}
+                                  R${" "}
+                                  {new Intl.NumberFormat("pt-BR", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }).format(event.gig.cache)}
                                 </p>
                               </div>
                               <DollarSign className="h-6 w-6 opacity-80" />
@@ -982,7 +1130,9 @@ export default function AgendaPage() {
                           <h3 className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-[#ff6b4a] transition-colors">
                             {event.title || "Show"}
                           </h3>
-                          <p className="text-xs text-foreground/60 mt-1 capitalize">{weekday}</p>
+                          <p className="text-xs text-foreground/60 mt-1 capitalize">
+                            {weekday}
+                          </p>
                         </div>
 
                         {/* Informações principais */}
@@ -998,43 +1148,59 @@ export default function AgendaPage() {
                               <div className="flex-1 min-w-0">
                                 {event.gig.region_label ? (
                                   <div>
-                                    <p className="font-semibold text-foreground">{event.gig.region_label}</p>
-                                    <p className="text-xs text-muted-foreground line-clamp-1">{event.location}</p>
+                                    <p className="font-semibold text-foreground">
+                                      {event.gig.region_label}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground line-clamp-1">
+                                      {event.location}
+                                    </p>
                                   </div>
                                 ) : (
-                                  <span className="line-clamp-2">{event.location}</span>
+                                  <span className="line-clamp-2">
+                                    {event.location}
+                                  </span>
                                 )}
                               </div>
                             </div>
                           )}
 
                           {/* Distância e Tempo de Viagem */}
-                          {(event.gig.distance_km != null || event.gig.estimated_travel_time_minutes != null) && (
+                          {(event.gig.distance_km != null ||
+                            event.gig.estimated_travel_time_minutes !=
+                              null) && (
                             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/30">
                               {event.gig.distance_km != null && (
                                 <div className="flex items-center gap-2">
-                                  <Navigation className={`h-4 w-4 ${
-                                    event.gig.distance_km <= 7
-                                      ? "text-green-600"
-                                      : event.gig.distance_km <= 15
-                                      ? "text-blue-600"
-                                      : "text-orange-600"
-                                  }`} />
+                                  <Navigation
+                                    className={`h-4 w-4 ${
+                                      event.gig.distance_km <= 7
+                                        ? "text-green-600"
+                                        : event.gig.distance_km <= 15
+                                          ? "text-blue-600"
+                                          : "text-orange-600"
+                                    }`}
+                                  />
                                   <div>
-                                    <p className="text-xs text-muted-foreground">Distância</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Distância
+                                    </p>
                                     <p className="text-sm font-bold text-foreground">
                                       {event.gig.distance_km.toFixed(1)} km
                                     </p>
                                   </div>
                                 </div>
                               )}
-                              {event.gig.estimated_travel_time_minutes != null && (
+                              {event.gig.estimated_travel_time_minutes !=
+                                null && (
                                 <div className="flex items-center gap-2">
                                   <Clock className="h-4 w-4 text-blue-600" />
                                   <div>
-                                    <p className="text-xs text-muted-foreground">Tempo</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Tempo
+                                    </p>
                                     <p className="text-sm font-bold text-foreground">
-                                      ~{event.gig.estimated_travel_time_minutes} min
+                                      ~{event.gig.estimated_travel_time_minutes}{" "}
+                                      min
                                     </p>
                                   </div>
                                 </div>
@@ -1076,7 +1242,8 @@ export default function AgendaPage() {
             {allEventsForCards.length > 8 && (
               <div className="text-center pt-2">
                 <p className="text-sm text-foreground/60">
-                  E mais {allEventsForCards.length - 8} {allEventsForCards.length - 8 === 1 ? "evento" : "eventos"}...
+                  E mais {allEventsForCards.length - 8}{" "}
+                  {allEventsForCards.length - 8 === 1 ? "evento" : "eventos"}...
                 </p>
               </div>
             )}
@@ -1100,7 +1267,10 @@ export default function AgendaPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 {/* Filtro por tipo */}
-                <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+                <Select
+                  value={filterType}
+                  onValueChange={(v: any) => setFilterType(v)}
+                >
                   <SelectTrigger className="w-[140px] border-white/70 bg-white/80">
                     <Filter className="mr-2 h-4 w-4" />
                     <SelectValue />
@@ -1120,7 +1290,11 @@ export default function AgendaPage() {
                     onClick={() => setShowConfirmed(!showConfirmed)}
                     className={`border-white/70 ${showConfirmed ? "bg-emerald-50" : "bg-white/80"}`}
                   >
-                    {showConfirmed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {showConfirmed ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                     <span className="ml-2 hidden sm:inline">Confirmados</span>
                   </Button>
                   <Button
@@ -1129,7 +1303,11 @@ export default function AgendaPage() {
                     onClick={() => setShowPending(!showPending)}
                     className={`border-white/70 ${showPending ? "bg-amber-50" : "bg-white/80"}`}
                   >
-                    {showPending ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {showPending ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                     <span className="ml-2 hidden sm:inline">Pendentes</span>
                   </Button>
                 </div>
@@ -1230,7 +1408,9 @@ export default function AgendaPage() {
                         : "bg-amber-500 text-white"
                     }
                   >
-                    {selectedEvent.resource.type === "confirmed" ? "Confirmado" : "Pendente"}
+                    {selectedEvent.resource.type === "confirmed"
+                      ? "Confirmado"
+                      : "Pendente"}
                   </Badge>
                   {selectedEvent.resource.instrument && (
                     <Badge variant="secondary">
@@ -1243,9 +1423,13 @@ export default function AgendaPage() {
                   <div className="flex items-center gap-2 text-sm text-foreground/70">
                     <Clock className="h-4 w-4" />
                     <span>
-                      {format(selectedEvent.start, "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
-                        locale: ptBR,
-                      })}
+                      {format(
+                        selectedEvent.start,
+                        "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm",
+                        {
+                          locale: ptBR,
+                        },
+                      )}
                     </span>
                   </div>
 
@@ -1258,12 +1442,16 @@ export default function AgendaPage() {
 
                   {selectedEvent.resource.type === "confirmed" && (
                     <div className="pt-3 border-t">
-                      <p className="text-sm font-semibold text-foreground mb-2">Detalhes adicionais:</p>
+                      <p className="text-sm font-semibold text-foreground mb-2">
+                        Detalhes adicionais:
+                      </p>
                       <div className="space-y-1 text-sm text-foreground/70">
                         <p>
                           <span className="font-medium">Duração:</span>{" "}
                           {Math.round(
-                            (selectedEvent.end.getTime() - selectedEvent.start.getTime()) / (1000 * 60)
+                            (selectedEvent.end.getTime() -
+                              selectedEvent.start.getTime()) /
+                              (1000 * 60),
                           )}{" "}
                           minutos
                         </p>
@@ -1284,29 +1472,42 @@ export default function AgendaPage() {
                           Convite Pendente
                         </p>
                         <p className="text-sm text-amber-700">
-                          Este convite está aguardando sua resposta. Responda o mais rápido possível!
+                          Este convite está aguardando sua resposta. Responda o
+                          mais rápido possível!
                         </p>
                       </div>
-                      
+
                       <div className="flex gap-3">
                         <Button
                           onClick={handleAcceptInvite}
-                          disabled={processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id}
+                          disabled={
+                            processingInviteId ===
+                            (selectedEvent.resource.gig as PendingInviteRow)
+                              .invite_id
+                          }
                           className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
                         >
                           <Check className="mr-2 h-4 w-4" />
-                          {processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id
+                          {processingInviteId ===
+                          (selectedEvent.resource.gig as PendingInviteRow)
+                            .invite_id
                             ? "Processando..."
                             : "Aceitar Convite"}
                         </Button>
                         <Button
                           onClick={handleDeclineInvite}
-                          disabled={processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id}
+                          disabled={
+                            processingInviteId ===
+                            (selectedEvent.resource.gig as PendingInviteRow)
+                              .invite_id
+                          }
                           variant="destructive"
                           className="flex-1"
                         >
                           <X className="mr-2 h-4 w-4" />
-                          {processingInviteId === (selectedEvent.resource.gig as PendingInviteRow).invite_id
+                          {processingInviteId ===
+                          (selectedEvent.resource.gig as PendingInviteRow)
+                            .invite_id
                             ? "Processando..."
                             : "Recusar"}
                         </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import {
   registerServiceWorker,
@@ -18,33 +18,59 @@ interface PushNotificationManagerProps {
  * Componente que gerencia push notifications
  * Registra service worker, solicita permissão e salva subscription no banco
  */
-export default function PushNotificationManager({ userId }: PushNotificationManagerProps) {
+export default function PushNotificationManager({
+  userId,
+}: PushNotificationManagerProps) {
   const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission>("default");
+  const [permission, setPermission] =
+    useState<NotificationPermission>("default");
   const [isRegistered, setIsRegistered] = useState(false);
 
-  useEffect(() => {
-    // Verificar suporte
-    const supported = "serviceWorker" in navigator && "PushManager" in window;
-    setIsSupported(supported);
+  const saveSubscriptionToDatabase = useCallback(
+    async (subscription: PushSubscription) => {
+      if (!userId) return;
 
-    if (!supported) {
-      console.log("[Push Notifications] Não suportado neste navegador");
-      return;
-    }
+      try {
+        const subscriptionData = subscriptionToJson(subscription);
 
-    // Verificar permissão atual
-    if ("Notification" in window) {
-      setPermission(Notification.permission);
-    }
+        // Obter informações do dispositivo
+        const userAgent = navigator.userAgent;
+        const deviceInfo = {
+          platform: navigator.platform,
+          language: navigator.language,
+          userAgent: userAgent.substring(0, 200), // Limitar tamanho
+        };
 
-    // Inicializar notificações quando userId estiver disponível
-    if (userId) {
-      initializePushNotifications();
-    }
-  }, [userId]);
+        // Chamar RPC para salvar subscription
+        const { error } = await supabase.rpc("rpc_register_push_subscription", {
+          p_endpoint: subscriptionData.endpoint,
+          p_p256dh: subscriptionData.keys.p256dh,
+          p_auth: subscriptionData.keys.auth,
+          p_user_agent: userAgent,
+          p_device_info: deviceInfo,
+        });
 
-  const initializePushNotifications = async () => {
+        if (error) {
+          console.error(
+            "[Push Notifications] Erro ao salvar subscription:",
+            error,
+          );
+          throw error;
+        }
+
+        console.log("[Push Notifications] Subscription salva no banco");
+      } catch (error) {
+        console.error(
+          "[Push Notifications] Erro ao salvar subscription:",
+          error,
+        );
+        throw error;
+      }
+    },
+    [userId],
+  );
+
+  const initializePushNotifications = useCallback(async () => {
     if (!userId) return;
 
     try {
@@ -60,7 +86,10 @@ export default function PushNotificationManager({ userId }: PushNotificationMana
       setPermission(currentPermission);
 
       if (currentPermission !== "granted") {
-        console.log("[Push Notifications] Permissão não concedida:", currentPermission);
+        console.log(
+          "[Push Notifications] Permissão não concedida:",
+          currentPermission,
+        );
         return;
       }
 
@@ -84,45 +113,30 @@ export default function PushNotificationManager({ userId }: PushNotificationMana
     } catch (error) {
       console.error("[Push Notifications] Erro ao inicializar:", error);
     }
-  };
+  }, [userId, saveSubscriptionToDatabase]);
 
-  const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
-    if (!userId) return;
+  useEffect(() => {
+    // Verificar suporte
+    const supported = "serviceWorker" in navigator && "PushManager" in window;
+    setIsSupported(supported);
 
-    try {
-      const subscriptionData = subscriptionToJson(subscription);
-
-      // Obter informações do dispositivo
-      const userAgent = navigator.userAgent;
-      const deviceInfo = {
-        platform: navigator.platform,
-        language: navigator.language,
-        userAgent: userAgent.substring(0, 200), // Limitar tamanho
-      };
-
-      // Chamar RPC para salvar subscription
-      const { error } = await supabase.rpc("rpc_register_push_subscription", {
-        p_endpoint: subscriptionData.endpoint,
-        p_p256dh: subscriptionData.keys.p256dh,
-        p_auth: subscriptionData.keys.auth,
-        p_user_agent: userAgent,
-        p_device_info: deviceInfo,
-      });
-
-      if (error) {
-        console.error("[Push Notifications] Erro ao salvar subscription:", error);
-        throw error;
-      }
-
-      console.log("[Push Notifications] Subscription salva no banco");
-    } catch (error) {
-      console.error("[Push Notifications] Erro ao salvar subscription:", error);
-      throw error;
+    if (!supported) {
+      console.log("[Push Notifications] Não suportado neste navegador");
+      return;
     }
-  };
+
+    // Verificar permissão atual
+    if ("Notification" in window) {
+      setPermission(Notification.permission);
+    }
+
+    // Inicializar notificações quando userId estiver disponível
+    if (userId) {
+      initializePushNotifications();
+    }
+  }, [userId, initializePushNotifications]);
 
   // Este componente não renderiza nada visível
   // Ele apenas gerencia o registro de notificações em background
   return null;
 }
-

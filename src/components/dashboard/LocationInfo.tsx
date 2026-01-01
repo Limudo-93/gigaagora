@@ -22,11 +22,9 @@ export default function LocationInfo({
   estimatedTravelTimeMinutes,
   showDistance = true,
 }: LocationInfoProps) {
-  const locationParts = [
-    neighborhood,
-    municipality || city,
-    state,
-  ].filter(Boolean);
+  const locationParts = [neighborhood, municipality || city, state].filter(
+    Boolean,
+  );
 
   return (
     <div className="space-y-2">
@@ -39,23 +37,26 @@ export default function LocationInfo({
       )}
 
       {/* Distância e Tempo */}
-      {showDistance && (distanceKm !== null && distanceKm !== undefined || estimatedTravelTimeMinutes !== null && estimatedTravelTimeMinutes !== undefined) && (
-        <div className="flex items-center gap-3 flex-wrap">
-          {distanceKm !== null && distanceKm !== undefined && (
-            <Badge variant="outline" className="text-xs">
-              <MapPin className="h-3 w-3 mr-1" />
-              {distanceKm.toFixed(1)} km
-            </Badge>
-          )}
-          {estimatedTravelTimeMinutes !== null && estimatedTravelTimeMinutes !== undefined && (
-            <Badge variant="outline" className="text-xs">
-              <Clock className="h-3 w-3 mr-1" />
-              ~{estimatedTravelTimeMinutes} min
-            </Badge>
-          )}
-        </div>
-      )}
+      {showDistance &&
+        ((distanceKm !== null && distanceKm !== undefined) ||
+          (estimatedTravelTimeMinutes !== null &&
+            estimatedTravelTimeMinutes !== undefined)) && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {distanceKm !== null && distanceKm !== undefined && (
+              <Badge variant="outline" className="text-xs">
+                <MapPin className="h-3 w-3 mr-1" />
+                {distanceKm.toFixed(1)} km
+              </Badge>
+            )}
+            {estimatedTravelTimeMinutes !== null &&
+              estimatedTravelTimeMinutes !== undefined && (
+                <Badge variant="outline" className="text-xs">
+                  <Clock className="h-3 w-3 mr-1" />~
+                  {estimatedTravelTimeMinutes} min
+                </Badge>
+              )}
+          </div>
+        )}
     </div>
   );
 }
-

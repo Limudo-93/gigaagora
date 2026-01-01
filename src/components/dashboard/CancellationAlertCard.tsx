@@ -17,7 +17,9 @@ type CancellationNotification = {
 };
 
 export default function CancellationAlertCard({ userId }: { userId: string }) {
-  const [notifications, setNotifications] = useState<CancellationNotification[]>([]);
+  const [notifications, setNotifications] = useState<
+    CancellationNotification[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -28,7 +30,9 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
       try {
         const { data, error } = await supabase
           .from("cancellation_notifications")
-          .select("id, gig_id, gig_title, musician_name, instrument, created_at")
+          .select(
+            "id, gig_id, gig_title, musician_name, instrument, created_at",
+          )
           .eq("contractor_id", userId)
           .is("read_at", null)
           .order("created_at", { ascending: false });
@@ -61,7 +65,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
         },
         () => {
           loadNotifications();
-        }
+        },
       )
       .subscribe();
 
@@ -93,7 +97,7 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
       // Tentar usar a função RPC primeiro (se disponível)
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         "rpc_republish_gig",
-        { p_gig_id: gigId }
+        { p_gig_id: gigId },
       );
 
       if (rpcError) {
@@ -152,10 +156,16 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
                     Gig Cancelada
                   </CardTitle>
                   <p className="text-xs md:text-sm text-gray-700 dark:text-gray-300">
-                    <strong>{notification.musician_name || "Um músico"}</strong> cancelou sua participação na gig{" "}
-                    <strong>"{notification.gig_title || "sem título"}"</strong>
+                    <strong>{notification.musician_name || "Um músico"}</strong>{" "}
+                    cancelou sua participação na gig{" "}
+                    <strong>
+                      &quot;{notification.gig_title || "sem título"}&quot;
+                    </strong>
                     {notification.instrument && (
-                      <> para <strong>{notification.instrument}</strong></>
+                      <>
+                        {" "}
+                        para <strong>{notification.instrument}</strong>
+                      </>
                     )}
                   </p>
                 </div>
@@ -173,7 +183,9 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
           <CardContent>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3">
               <Button
-                onClick={() => republishGig(notification.gig_id, notification.id)}
+                onClick={() =>
+                  republishGig(notification.gig_id, notification.id)
+                }
                 size="sm"
                 className="w-full sm:w-auto bg-gradient-to-r from-[#ff6b4a] to-[#2aa6a1] hover:from-[#ff6b4a] hover:to-[#2aa6a1] text-white text-xs md:text-sm"
               >
@@ -186,7 +198,9 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
                 onClick={() => {
                   markAsRead(notification.id);
                   // Redirecionar para a página de edição da gig
-                  router.push(`/dashboard/gigs/${notification.gig_id}/edit` as any);
+                  router.push(
+                    `/dashboard/gigs/${notification.gig_id}/edit` as any,
+                  );
                 }}
                 className="w-full sm:w-auto text-xs md:text-sm"
               >
@@ -199,4 +213,3 @@ export default function CancellationAlertCard({ userId }: { userId: string }) {
     </div>
   );
 }
-

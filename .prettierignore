@@ -1,0 +1,10 @@
+node_modules
+.next
+.vercel
+.cursor
+package-lock.json
+.env*
+env.download
+ini.txt
+*.md
+*.sql

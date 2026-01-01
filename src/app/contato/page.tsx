@@ -25,7 +25,9 @@ export default function ContatoPage() {
     assunto: "",
     mensagem: "",
   });
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "sending" | "success" | "error"
+  >("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,11 @@ export default function ContatoPage() {
     }, 1500);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -52,10 +58,13 @@ export default function ContatoPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden gradient-music text-white py-20">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px'
-        }}></div>
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: "60px 60px",
+          }}
+        ></div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             Entre em Contato
@@ -79,9 +88,15 @@ export default function ContatoPage() {
                       <Mail className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                      <p className="text-gray-600 text-sm">contato@chamaomusico.com.br</p>
-                      <p className="text-gray-600 text-sm">suporte@chamaomusico.com.br</p>
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        Email
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        contato@chamaomusico.com.br
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        suporte@chamaomusico.com.br
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -94,9 +109,13 @@ export default function ContatoPage() {
                       <Phone className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Telefone</h3>
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        Telefone
+                      </h3>
                       <p className="text-gray-600 text-sm">(11) 99999-9999</p>
-                      <p className="text-gray-600 text-sm">Segunda a Sexta, 9h às 18h</p>
+                      <p className="text-gray-600 text-sm">
+                        Segunda a Sexta, 9h às 18h
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -109,9 +128,12 @@ export default function ContatoPage() {
                       <MapPin className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Endereço</h3>
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        Endereço
+                      </h3>
                       <p className="text-gray-600 text-sm">
-                        São Paulo, SP<br />
+                        São Paulo, SP
+                        <br />
                         Brasil
                       </p>
                     </div>
@@ -126,10 +148,14 @@ export default function ContatoPage() {
                       <Clock className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Horário de Atendimento</h3>
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        Horário de Atendimento
+                      </h3>
                       <p className="text-gray-600 text-sm">
-                        Segunda a Sexta: 9h às 18h<br />
-                        Sábado: 9h às 13h<br />
+                        Segunda a Sexta: 9h às 18h
+                        <br />
+                        Sábado: 9h às 13h
+                        <br />
                         Domingo: Fechado
                       </p>
                     </div>
@@ -147,15 +173,22 @@ export default function ContatoPage() {
                       <MessageSquare className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Envie sua Mensagem</h2>
-                      <p className="text-gray-600 text-sm">Responderemos o mais rápido possível</p>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        Envie sua Mensagem
+                      </h2>
+                      <p className="text-gray-600 text-sm">
+                        Responderemos o mais rápido possível
+                      </p>
                     </div>
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="nome"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Nome Completo *
                         </label>
                         <input
@@ -170,7 +203,10 @@ export default function ContatoPage() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Email *
                         </label>
                         <input
@@ -187,7 +223,10 @@ export default function ContatoPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="assunto" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="assunto"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Assunto *
                       </label>
                       <select
@@ -199,7 +238,9 @@ export default function ContatoPage() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition"
                       >
                         <option value="">Selecione um assunto</option>
-                        <option value="duvida">Dúvida sobre a plataforma</option>
+                        <option value="duvida">
+                          Dúvida sobre a plataforma
+                        </option>
                         <option value="suporte">Suporte técnico</option>
                         <option value="sugestao">Sugestão</option>
                         <option value="parceria">Parceria</option>
@@ -208,7 +249,10 @@ export default function ContatoPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="mensagem" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="mensagem"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Mensagem *
                       </label>
                       <textarea
@@ -226,7 +270,10 @@ export default function ContatoPage() {
                     {status === "success" && (
                       <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
                         <CheckCircle2 className="h-5 w-5" />
-                        <span>Mensagem enviada com sucesso! Entraremos em contato em breve.</span>
+                        <span>
+                          Mensagem enviada com sucesso! Entraremos em contato em
+                          breve.
+                        </span>
                       </div>
                     )}
 
@@ -279,5 +326,3 @@ export default function ContatoPage() {
     </div>
   );
 }
-
-

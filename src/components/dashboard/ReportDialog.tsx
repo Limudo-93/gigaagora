@@ -1,24 +1,64 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
-type ReportCategory = 
-  | 'inappropriate_behavior' | 'fake_profile' | 'spam' | 'harassment'
-  | 'fraud' | 'no_show' | 'unprofessional' | 'other';
+type ReportCategory =
+  | "inappropriate_behavior"
+  | "fake_profile"
+  | "spam"
+  | "harassment"
+  | "fraud"
+  | "no_show"
+  | "unprofessional"
+  | "other";
 
-const REPORT_CATEGORIES: { value: ReportCategory; label: string; description: string }[] = [
-  { value: 'inappropriate_behavior', label: 'Comportamento Inadequado', description: 'Comportamento ofensivo ou inapropriado' },
-  { value: 'fake_profile', label: 'Perfil Falso', description: 'Perfil suspeito ou falsificado' },
-  { value: 'spam', label: 'Spam', description: 'Mensagens ou ações de spam' },
-  { value: 'harassment', label: 'Assédio', description: 'Assédio ou intimidação' },
-  { value: 'fraud', label: 'Fraude', description: 'Tentativa de fraude ou golpe' },
-  { value: 'no_show', label: 'Não Compareceu', description: 'Não compareceu à gig sem avisar' },
-  { value: 'unprofessional', label: 'Não Profissional', description: 'Comportamento não profissional' },
-  { value: 'other', label: 'Outro', description: 'Outro motivo' },
+const REPORT_CATEGORIES: {
+  value: ReportCategory;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "inappropriate_behavior",
+    label: "Comportamento Inadequado",
+    description: "Comportamento ofensivo ou inapropriado",
+  },
+  {
+    value: "fake_profile",
+    label: "Perfil Falso",
+    description: "Perfil suspeito ou falsificado",
+  },
+  { value: "spam", label: "Spam", description: "Mensagens ou ações de spam" },
+  {
+    value: "harassment",
+    label: "Assédio",
+    description: "Assédio ou intimidação",
+  },
+  {
+    value: "fraud",
+    label: "Fraude",
+    description: "Tentativa de fraude ou golpe",
+  },
+  {
+    value: "no_show",
+    label: "Não Compareceu",
+    description: "Não compareceu à gig sem avisar",
+  },
+  {
+    value: "unprofessional",
+    label: "Não Profissional",
+    description: "Comportamento não profissional",
+  },
+  { value: "other", label: "Outro", description: "Outro motivo" },
 ];
 
 interface ReportDialogProps {
@@ -58,7 +98,9 @@ export default function ReportDialog({
     setError(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
@@ -70,7 +112,7 @@ export default function ReportDialog({
         invite_id: inviteId || null,
         category: category,
         description: description.trim(),
-        status: 'pending',
+        status: "pending",
       });
 
       if (insertError) throw insertError;
@@ -91,9 +133,12 @@ export default function ReportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Denunciar Usuário</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            Denunciar Usuário
+          </DialogTitle>
           <DialogDescription>
-            Ajude-nos a manter a plataforma segura reportando comportamentos inadequados.
+            Ajude-nos a manter a plataforma segura reportando comportamentos
+            inadequados.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,8 +161,12 @@ export default function ReportDialog({
                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <div className="font-medium text-sm text-gray-900">{cat.label}</div>
-                  <div className="text-xs text-gray-600 mt-1">{cat.description}</div>
+                  <div className="font-medium text-sm text-gray-900">
+                    {cat.label}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    {cat.description}
+                  </div>
                 </button>
               ))}
             </div>
@@ -174,4 +223,3 @@ export default function ReportDialog({
     </Dialog>
   );
 }
-

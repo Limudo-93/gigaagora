@@ -21,7 +21,7 @@ import {
 
 async function getStats() {
   const supabase = await createClient();
-  
+
   try {
     // Total de usuários
     const { count: totalUsers } = await supabase
@@ -36,9 +36,9 @@ async function getStats() {
 
     // Total de cachê pago (soma dos cache das gig_roles de gigs confirmadas)
     // Busca todas as confirmações e seus invites
-    const { data: confirmations, error: confError } = await supabase
-      .from("confirmations")
-      .select(`
+    const { data: confirmations, error: confError } = await supabase.from(
+      "confirmations",
+    ).select(`
         invite_id,
         invites(
           gig_role_id
@@ -50,7 +50,9 @@ async function getStats() {
       // Extrai os gig_role_ids únicos
       const roleIds = new Set<string>();
       confirmations.forEach((conf: any) => {
-        const invite = Array.isArray(conf.invites) ? conf.invites[0] : conf.invites;
+        const invite = Array.isArray(conf.invites)
+          ? conf.invites[0]
+          : conf.invites;
         if (invite?.gig_role_id) {
           roleIds.add(invite.gig_role_id);
         }
@@ -90,11 +92,12 @@ async function getStats() {
 
 async function getRecentMusicians() {
   const supabase = await createClient();
-  
+
   try {
     const { data } = await supabase
       .from("profiles")
-      .select(`
+      .select(
+        `
         user_id,
         display_name,
         photo_url,
@@ -105,7 +108,8 @@ async function getRecentMusicians() {
           genres,
           avg_rating
         )
-      `)
+      `,
+      )
       .order("created_at", { ascending: false })
       .limit(6);
 
@@ -118,11 +122,12 @@ async function getRecentMusicians() {
 
 async function getRecentConfirmedGigs() {
   const supabase = await createClient();
-  
+
   try {
     const { data } = await supabase
       .from("confirmations")
-      .select(`
+      .select(
+        `
         created_at,
         invites!inner(
           gigs!inner(
@@ -139,7 +144,8 @@ async function getRecentConfirmedGigs() {
             cache
           )
         )
-      `)
+      `,
+      )
       .order("created_at", { ascending: false })
       .limit(6);
 
@@ -159,11 +165,11 @@ export default async function HomePage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden gradient-music text-white">
-        <div 
+        <div
           className="absolute inset-0 opacity-20"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
+            backgroundSize: "60px 60px",
           }}
         ></div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
@@ -180,10 +186,12 @@ export default async function HomePage() {
               Chama o Músico
             </h1>
             <p className="text-xl md:text-2xl mb-4 text-white/90 max-w-3xl mx-auto">
-              A plataforma que conecta músicos talentosos com oportunidades de trabalho
+              A plataforma que conecta músicos talentosos com oportunidades de
+              trabalho
             </p>
             <p className="text-lg mb-8 text-white/80 max-w-2xl mx-auto">
-              Encontre os melhores músicos para seu evento ou descubra gigs incríveis para mostrar seu talento
+              Encontre os melhores músicos para seu evento ou descubra gigs
+              incríveis para mostrar seu talento
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -234,7 +242,9 @@ export default async function HomePage() {
                 <div className="text-4xl font-bold text-gray-900 mb-2">
                   {stats.totalGigs.toLocaleString("pt-BR")}
                 </div>
-                <div className="text-lg text-gray-700">Trabalhos Publicados</div>
+                <div className="text-lg text-gray-700">
+                  Trabalhos Publicados
+                </div>
               </CardContent>
             </Card>
 
@@ -246,7 +256,11 @@ export default async function HomePage() {
                   </div>
                 </div>
                 <div className="text-4xl font-bold text-gray-900 mb-2">
-                  R$ {stats.totalCache.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  R${" "}
+                  {stats.totalCache.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
                 <div className="text-lg text-gray-700">Cachê Total Pago</div>
               </CardContent>
@@ -277,7 +291,8 @@ export default async function HomePage() {
                   Match Perfeito
                 </h3>
                 <p className="text-gray-600">
-                  Sistema inteligente que conecta músicos com as oportunidades ideais baseado em instrumento, gênero e habilidades
+                  Sistema inteligente que conecta músicos com as oportunidades
+                  ideais baseado em instrumento, gênero e habilidades
                 </p>
               </CardContent>
             </Card>
@@ -291,7 +306,8 @@ export default async function HomePage() {
                   Segurança Total
                 </h3>
                 <p className="text-gray-600">
-                  Dados protegidos e sistema de avaliações para garantir transparência e confiança em todas as transações
+                  Dados protegidos e sistema de avaliações para garantir
+                  transparência e confiança em todas as transações
                 </p>
               </CardContent>
             </Card>
@@ -305,7 +321,8 @@ export default async function HomePage() {
                   Processo Rápido
                 </h3>
                 <p className="text-gray-600">
-                  Publique trabalhos ou encontre oportunidades em minutos. Sistema intuitivo e eficiente
+                  Publique trabalhos ou encontre oportunidades em minutos.
+                  Sistema intuitivo e eficiente
                 </p>
               </CardContent>
             </Card>
@@ -319,7 +336,8 @@ export default async function HomePage() {
                   Músicos Verificados
                 </h3>
                 <p className="text-gray-600">
-                  Perfis completos com avaliações, histórico e habilidades detalhadas para você escolher com confiança
+                  Perfis completos com avaliações, histórico e habilidades
+                  detalhadas para você escolher com confiança
                 </p>
               </CardContent>
             </Card>
@@ -333,7 +351,8 @@ export default async function HomePage() {
                   Crescimento Constante
                 </h3>
                 <p className="text-gray-600">
-                  Plataforma em expansão com novos músicos e oportunidades sendo adicionados diariamente
+                  Plataforma em expansão com novos músicos e oportunidades sendo
+                  adicionados diariamente
                 </p>
               </CardContent>
             </Card>
@@ -347,7 +366,8 @@ export default async function HomePage() {
                   Todos os Gêneros
                 </h3>
                 <p className="text-gray-600">
-                  Do sertanejo ao jazz, do pagode ao rock. Encontre músicos para qualquer estilo musical
+                  Do sertanejo ao jazz, do pagode ao rock. Encontre músicos para
+                  qualquer estilo musical
                 </p>
               </CardContent>
             </Card>
@@ -379,14 +399,18 @@ export default async function HomePage() {
                   .join("")
                   .toUpperCase()
                   .slice(0, 2);
-                const location = profile.city && profile.state
-                  ? `${profile.city}, ${profile.state}`
-                  : profile.city || profile.state || "Brasil";
+                const location =
+                  profile.city && profile.state
+                    ? `${profile.city}, ${profile.state}`
+                    : profile.city || profile.state || "Brasil";
                 const instruments = mp?.instruments || [];
                 const genres = mp?.genres || [];
 
                 return (
-                  <Card key={profile.user_id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+                  <Card
+                    key={profile.user_id}
+                    className="border-0 shadow-lg hover:shadow-xl transition-shadow"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
                         <Avatar className="h-16 w-16 ring-2 ring-orange-500">
@@ -413,11 +437,17 @@ export default async function HomePage() {
                           )}
                           {instruments.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-3">
-                              {instruments.slice(0, 2).map((inst: string, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-xs">
-                                  {inst}
-                                </Badge>
-                              ))}
+                              {instruments
+                                .slice(0, 2)
+                                .map((inst: string, idx: number) => (
+                                  <Badge
+                                    key={idx}
+                                    variant="outline"
+                                    className="text-xs"
+                                  >
+                                    {inst}
+                                  </Badge>
+                                ))}
                               {instruments.length > 2 && (
                                 <Badge variant="outline" className="text-xs">
                                   +{instruments.length - 2}
@@ -469,10 +499,14 @@ export default async function HomePage() {
                       year: "numeric",
                     })
                   : "";
-                const location = gig.location_name || gig.city || "Local a definir";
+                const location =
+                  gig.location_name || gig.city || "Local a definir";
 
                 return (
-                  <Card key={idx} className="border-0 shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
+                  <Card
+                    key={idx}
+                    className="border-0 shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                  >
                     <div className="h-48 gradient-music overflow-hidden flex items-center justify-center">
                       {gig.flyer_url ? (
                         <img
@@ -496,7 +530,9 @@ export default async function HomePage() {
                         <h3 className="text-lg font-semibold text-gray-900 flex-1">
                           {gig.title || "Show"}
                         </h3>
-                        <Badge className="bg-green-500 text-white">Confirmado</Badge>
+                        <Badge className="bg-green-500 text-white">
+                          Confirmado
+                        </Badge>
                       </div>
                       <div className="space-y-2 text-sm text-gray-600">
                         {dateStr && (
@@ -518,7 +554,12 @@ export default async function HomePage() {
                         {role?.cache && (
                           <div className="flex items-center gap-2 text-green-600 font-semibold">
                             <DollarSign className="h-4 w-4" />
-                            <span>R$ {Number(role.cache).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                            <span>
+                              R${" "}
+                              {Number(role.cache).toLocaleString("pt-BR", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -542,7 +583,8 @@ export default async function HomePage() {
             Pronto para começar?
           </h2>
           <p className="text-xl mb-8 text-white/90">
-            Junte-se a centenas de músicos e contratantes que já estão usando o Chama o Músico
+            Junte-se a centenas de músicos e contratantes que já estão usando o
+            Chama o Músico
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -566,5 +608,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
-

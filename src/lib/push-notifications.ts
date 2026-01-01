@@ -31,17 +31,17 @@ export interface NotificationPayload {
  * Solicita permissão para notificações
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (!('Notification' in window)) {
-    console.warn('Este navegador não suporta notificações');
-    return 'denied';
+  if (!("Notification" in window)) {
+    console.warn("Este navegador não suporta notificações");
+    return "denied";
   }
 
-  if (Notification.permission === 'granted') {
-    return 'granted';
+  if (Notification.permission === "granted") {
+    return "granted";
   }
 
-  if (Notification.permission === 'denied') {
-    return 'denied';
+  if (Notification.permission === "denied") {
+    return "denied";
   }
 
   const permission = await Notification.requestPermission();
@@ -51,12 +51,14 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 /**
  * Converte uma PushSubscription em formato para enviar ao servidor
  */
-export function subscriptionToJson(subscription: PushSubscription): PushSubscriptionData {
-  const key = subscription.getKey('p256dh');
-  const auth = subscription.getKey('auth');
+export function subscriptionToJson(
+  subscription: PushSubscription,
+): PushSubscriptionData {
+  const key = subscription.getKey("p256dh");
+  const auth = subscription.getKey("auth");
 
   if (!key || !auth) {
-    throw new Error('Subscription keys não disponíveis');
+    throw new Error("Subscription keys não disponíveis");
   }
 
   return {
@@ -73,34 +75,37 @@ export function subscriptionToJson(subscription: PushSubscription): PushSubscrip
  */
 function base64UrlEncode(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
-  let binary = '';
+  let binary = "";
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
 /**
  * Registra Service Worker
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker não suportado');
+  if (!("serviceWorker" in navigator)) {
+    console.warn("Service Worker não suportado");
     return null;
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/',
+    const registration = await navigator.serviceWorker.register("/sw.js", {
+      scope: "/",
     });
 
-    console.log('[Push Notifications] Service Worker registrado:', registration.scope);
+    console.log(
+      "[Push Notifications] Service Worker registrado:",
+      registration.scope,
+    );
     return registration;
   } catch (error) {
-    console.error('[Push Notifications] Erro ao registrar Service Worker:', error);
+    console.error(
+      "[Push Notifications] Erro ao registrar Service Worker:",
+      error,
+    );
     return null;
   }
 }
@@ -109,7 +114,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
  * Cria uma PushSubscription
  */
 export async function createPushSubscription(
-  registration: ServiceWorkerRegistration
+  registration: ServiceWorkerRegistration,
 ): Promise<PushSubscription | null> {
   try {
     // VAPID public key - deve ser configurado no ambiente
@@ -129,10 +134,13 @@ export async function createPushSubscription(
       applicationServerKey: keyArray as any,
     });
 
-    console.log('[Push Notifications] Subscription criada:', subscription.endpoint);
+    console.log(
+      "[Push Notifications] Subscription criada:",
+      subscription.endpoint,
+    );
     return subscription;
   } catch (error) {
-    console.error('[Push Notifications] Erro ao criar subscription:', error);
+    console.error("[Push Notifications] Erro ao criar subscription:", error);
     if (error instanceof Error) {
       throw error;
     }
@@ -171,13 +179,13 @@ function normalizeVapidKey(key: string): string {
  * Obtém subscription existente
  */
 export async function getExistingSubscription(
-  registration: ServiceWorkerRegistration
+  registration: ServiceWorkerRegistration,
 ): Promise<PushSubscription | null> {
   try {
     const subscription = await registration.pushManager.getSubscription();
     return subscription;
   } catch (error) {
-    console.error('[Push Notifications] Erro ao obter subscription:', error);
+    console.error("[Push Notifications] Erro ao obter subscription:", error);
     return null;
   }
 }
@@ -186,15 +194,14 @@ export async function getExistingSubscription(
  * Cancela uma subscription
  */
 export async function unsubscribe(
-  subscription: PushSubscription
+  subscription: PushSubscription,
 ): Promise<boolean> {
   try {
     const result = await subscription.unsubscribe();
-    console.log('[Push Notifications] Subscription cancelada:', result);
+    console.log("[Push Notifications] Subscription cancelada:", result);
     return result;
   } catch (error) {
-    console.error('[Push Notifications] Erro ao cancelar subscription:', error);
+    console.error("[Push Notifications] Erro ao cancelar subscription:", error);
     return false;
   }
 }
-

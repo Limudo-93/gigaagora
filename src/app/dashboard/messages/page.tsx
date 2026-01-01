@@ -6,7 +6,14 @@ import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, ArrowLeft, Search, MessageSquare, Check, CheckCheck } from "lucide-react";
+import {
+  Send,
+  ArrowLeft,
+  Search,
+  MessageSquare,
+  Check,
+  CheckCheck,
+} from "lucide-react";
 import Link from "next/link";
 
 function formatTimeAgo(dateString: string): string {
@@ -24,10 +31,15 @@ function formatTimeAgo(dateString: string): string {
 function formatMessageTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
-  const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  const diffInDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   if (diffInDays === 0) {
-    return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } else if (diffInDays === 1) {
     return "ontem";
   } else if (diffInDays < 7) {
@@ -75,7 +87,8 @@ export default function MessagesPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [selectedConversation, setSelectedConversation] =
+    useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -88,13 +101,15 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserId(user?.id || null);
     };
     getUser();
   }, []);
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!userId) return;
 
     try {
@@ -108,7 +123,8 @@ export default function MessagesPage() {
 
       const conversationsWithDetails = await Promise.all(
         (convs || []).map(async (conv: any) => {
-          const otherUserId = conv.user1_id === userId ? conv.user2_id : conv.user1_id;
+          const otherUserId =
+            conv.user1_id === userId ? conv.user2_id : conv.user1_id;
 
           const { data: profile } = await supabase
             .from("profiles")
@@ -123,7 +139,7 @@ export default function MessagesPage() {
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          
+
           const lastMsg = lastMsgData || null;
 
           const { count: unreadCount } = await supabase
@@ -143,7 +159,7 @@ export default function MessagesPage() {
             last_message: lastMsg,
             unread_count: unreadCount || 0,
           };
-        })
+        }),
       );
 
       setConversations(conversationsWithDetails);
@@ -152,39 +168,43 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const loadMessages = async (conversationId: string) => {
-    try {
-      const { data: msgs, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      setMessages(msgs || []);
-
-      if (userId) {
-        await supabase
+  const loadMessages = useCallback(
+    async (conversationId: string) => {
+      try {
+        const { data: msgs, error } = await supabase
           .from("messages")
-          .update({ read_at: new Date().toISOString() })
+          .select("*")
           .eq("conversation_id", conversationId)
-          .eq("receiver_id", userId)
-          .is("read_at", null);
-      }
+          .order("created_at", { ascending: true });
 
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 100);
-    } catch (error: any) {
-      console.error("Error loading messages:", error);
-    }
-  };
+        if (error) throw error;
+
+        setMessages(msgs || []);
+
+        if (userId) {
+          await supabase
+            .from("messages")
+            .update({ read_at: new Date().toISOString() })
+            .eq("conversation_id", conversationId)
+            .eq("receiver_id", userId)
+            .is("read_at", null);
+        }
+
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      } catch (error: any) {
+        console.error("Error loading messages:", error);
+      }
+    },
+    [userId],
+  );
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !userId || sending) return;
+    if (!newMessage.trim() || !selectedConversation || !userId || sending)
+      return;
 
     const receiverId =
       selectedConversation.user1_id === userId
@@ -227,7 +247,7 @@ export default function MessagesPage() {
     if (userId) {
       loadConversations();
     }
-  }, [userId]);
+  }, [userId, loadConversations]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -236,7 +256,7 @@ export default function MessagesPage() {
         setShowChat(true);
       }
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, loadMessages]);
 
   useEffect(() => {
     if (!userId) return;
@@ -253,7 +273,10 @@ export default function MessagesPage() {
         },
         (payload) => {
           const newMessage = payload.new as Message;
-          if (selectedConversation && newMessage.conversation_id === selectedConversation.id) {
+          if (
+            selectedConversation &&
+            newMessage.conversation_id === selectedConversation.id
+          ) {
             setMessages((prev) => [...prev, newMessage]);
             supabase
               .from("messages")
@@ -261,18 +284,19 @@ export default function MessagesPage() {
               .eq("id", newMessage.id);
           }
           loadConversations();
-        }
+        },
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, selectedConversation]);
+  }, [userId, selectedConversation, loadConversations]);
 
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -285,28 +309,37 @@ export default function MessagesPage() {
     );
   });
 
-  const handleSelectConversation = useCallback((conv: Conversation) => {
-    setSelectedConversation(conv);
-    loadMessages(conv.id);
-    if (window.innerWidth < 1024) {
-      setShowChat(true);
-    }
-  }, []);
+  const handleSelectConversation = useCallback(
+    (conv: Conversation) => {
+      setSelectedConversation(conv);
+      loadMessages(conv.id);
+      if (window.innerWidth < 1024) {
+        setShowChat(true);
+      }
+    },
+    [loadMessages],
+  );
 
   return (
     <DashboardLayout fullWidth hideFooterOnMobile>
       <div className="flex min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-160px)] flex-col lg:flex-row bg-white/60 relative overflow-hidden rounded-3xl border border-white/70 shadow-sm">
         {/* Lista de Conversas - Mobile first */}
-        <div className={`${
-          showChat ? "hidden" : "flex"
-        } lg:flex w-full lg:w-[380px] flex-col bg-white/90 border-b lg:border-b-0 lg:border-r border-white/70 transition-all duration-300`}>
+        <div
+          className={`${
+            showChat ? "hidden" : "flex"
+          } lg:flex w-full lg:w-[380px] flex-col bg-white/90 border-b lg:border-b-0 lg:border-r border-white/70 transition-all duration-300`}
+        >
           {/* Header da Lista */}
           <div className="px-4 pt-5 pb-3 bg-white/95 sticky top-0 z-10 border-b border-white/70">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-display font-semibold text-foreground">Conversas</h1>
+              <h1 className="text-xl font-display font-semibold text-foreground">
+                Conversas
+              </h1>
               <div className="h-2 w-2 rounded-full gradient-music" />
             </div>
-            <p className="text-xs text-foreground/60 mt-1">Respostas rápidas sobem seu ranking</p>
+            <p className="text-xs text-foreground/60 mt-1">
+              Respostas rápidas sobem seu ranking
+            </p>
           </div>
 
           <div className="px-4 pt-3">
@@ -334,7 +367,9 @@ export default function MessagesPage() {
             {loading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff6b4a] mx-auto mb-4"></div>
-                <p className="text-sm text-foreground/60">Carregando conversas...</p>
+                <p className="text-sm text-foreground/60">
+                  Carregando conversas...
+                </p>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="p-6 text-center">
@@ -343,10 +378,12 @@ export default function MessagesPage() {
                     <MessageSquare className="h-10 w-10 text-[#ff6b4a]" />
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">
-                    {searchTerm ? "Nenhuma conversa encontrada" : "Ainda sem conversas"}
+                    {searchTerm
+                      ? "Nenhuma conversa encontrada"
+                      : "Ainda sem conversas"}
                   </h3>
                   <p className="text-sm text-foreground/60 leading-relaxed mb-6">
-                    {searchTerm 
+                    {searchTerm
                       ? "Tente ajustar os termos de busca."
                       : "Quando alguém entrar em contato sobre uma gig, a conversa aparecerá aqui."}
                   </p>
@@ -366,7 +403,9 @@ export default function MessagesPage() {
                     key={conv.id}
                     onClick={() => handleSelectConversation(conv)}
                     className={`px-4 py-3 cursor-pointer transition-colors hover:bg-white/70 active:bg-white ${
-                      selectedConversation?.id === conv.id ? "bg-amber-50/80" : ""
+                      selectedConversation?.id === conv.id
+                        ? "bg-amber-50/80"
+                        : ""
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -374,7 +413,9 @@ export default function MessagesPage() {
                         <Avatar className="h-12 w-12 ring-2 ring-white">
                           <AvatarImage src={conv.other_user.photo_url || ""} />
                           <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white font-semibold text-lg">
-                            {conv.other_user.display_name?.charAt(0).toUpperCase() || "U"}
+                            {conv.other_user.display_name
+                              ?.charAt(0)
+                              .toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
                         {conv.unread_count && conv.unread_count > 0 && (
@@ -398,9 +439,13 @@ export default function MessagesPage() {
                           <div className="flex items-center gap-2">
                             <p className="text-xs text-foreground/60 truncate flex-1">
                               {conv.last_message.sender_id === userId ? (
-                                <span className="text-foreground/40 mr-1">Você: </span>
+                                <span className="text-foreground/40 mr-1">
+                                  Você:{" "}
+                                </span>
                               ) : null}
-                              <span className="truncate">{conv.last_message.content}</span>
+                              <span className="truncate">
+                                {conv.last_message.content}
+                              </span>
                             </p>
                             {conv.unread_count && conv.unread_count > 0 && (
                               <div className="h-2 w-2 rounded-full bg-[#ff6b4a] shrink-0"></div>
@@ -417,9 +462,11 @@ export default function MessagesPage() {
         </div>
 
         {/* Área de Chat - Estilo WhatsApp */}
-        <div className={`${
-          !showChat && selectedConversation ? "hidden lg:flex" : "flex"
-        } flex-1 flex-col bg-white/80 min-w-0 relative`}>
+        <div
+          className={`${
+            !showChat && selectedConversation ? "hidden lg:flex" : "flex"
+          } flex-1 flex-col bg-white/80 min-w-0 relative`}
+        >
           {selectedConversation ? (
             <>
               {/* Header do Chat */}
@@ -436,9 +483,13 @@ export default function MessagesPage() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <Avatar className="h-10 w-10 ring-2 ring-white/70 shrink-0">
-                  <AvatarImage src={selectedConversation.other_user.photo_url || ""} />
+                  <AvatarImage
+                    src={selectedConversation.other_user.photo_url || ""}
+                  />
                   <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white font-semibold">
-                    {selectedConversation.other_user.display_name?.charAt(0).toUpperCase() || "U"}
+                    {selectedConversation.other_user.display_name
+                      ?.charAt(0)
+                      .toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -446,8 +497,14 @@ export default function MessagesPage() {
                     {selectedConversation.other_user.display_name}
                   </p>
                   <p className="text-xs text-foreground/60 truncate">
-                    {selectedConversation.gig?.title ? `Gig: ${selectedConversation.gig.title}` : "Conversa direta"} •
-                    <span className="text-foreground/70"> responda em até 2h para manter a sequência</span>
+                    {selectedConversation.gig?.title
+                      ? `Gig: ${selectedConversation.gig.title}`
+                      : "Conversa direta"}{" "}
+                    •
+                    <span className="text-foreground/70">
+                      {" "}
+                      responda em até 2h para manter a sequência
+                    </span>
                   </p>
                 </div>
               </div>
@@ -462,7 +519,8 @@ export default function MessagesPage() {
                     <div className="text-center max-w-sm">
                       <MessageSquare className="h-12 w-12 text-foreground/40 mx-auto mb-4" />
                       <p className="text-sm text-foreground/60">
-                        Comece a conversar! Envie uma mensagem para iniciar o diálogo.
+                        Comece a conversar! Envie uma mensagem para iniciar o
+                        diálogo.
                       </p>
                     </div>
                   </div>
@@ -470,9 +528,12 @@ export default function MessagesPage() {
                   messages.map((msg, index) => {
                     const isOwn = msg.sender_id === userId;
                     const prevMsg = index > 0 ? messages[index - 1] : null;
-                    const showTime = !prevMsg || 
-                      new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 300000; // 5 minutos
-                    
+                    const showTime =
+                      !prevMsg ||
+                      new Date(msg.created_at).getTime() -
+                        new Date(prevMsg.created_at).getTime() >
+                        300000; // 5 minutos
+
                     return (
                       <div key={msg.id}>
                         {showTime && (
@@ -482,7 +543,9 @@ export default function MessagesPage() {
                             </span>
                           </div>
                         )}
-                        <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1`}>
+                        <div
+                          className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-1`}
+                        >
                           <div
                             className={`max-w-[80%] sm:max-w-[65%] rounded-2xl px-3 py-2 shadow-sm ${
                               isOwn
@@ -490,15 +553,19 @@ export default function MessagesPage() {
                                 : "bg-white/90 border border-white/70 rounded-tl-sm"
                             }`}
                           >
-                            <p className={`text-sm whitespace-pre-wrap break-words leading-relaxed ${
-                              isOwn ? "text-white" : "text-foreground"
-                            }`}>
+                            <p
+                              className={`text-sm whitespace-pre-wrap break-words leading-relaxed ${
+                                isOwn ? "text-white" : "text-foreground"
+                              }`}
+                            >
                               {msg.content}
                             </p>
                             <div className="flex items-center justify-end gap-1 mt-1">
-                              <span className={`text-[10px] ${
-                                isOwn ? "text-white/70" : "text-foreground/50"
-                              }`}>
+                              <span
+                                className={`text-[10px] ${
+                                  isOwn ? "text-white/70" : "text-foreground/50"
+                                }`}
+                              >
                                 {formatMessageTime(msg.created_at)}
                               </span>
                               {isOwn && (
@@ -574,9 +641,7 @@ export default function MessagesPage() {
                   Escolha uma conversa na lista para começar a trocar mensagens
                 </p>
                 <Link href="/dashboard/gigs">
-                  <Button className="btn-gradient">
-                    Ver gigs disponíveis
-                  </Button>
+                  <Button className="btn-gradient">Ver gigs disponíveis</Button>
                 </Link>
               </div>
             </div>

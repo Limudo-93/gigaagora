@@ -21,7 +21,9 @@ export default function SearchRadiusSlider() {
   useEffect(() => {
     const loadRadius = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
         // Buscar perfil de músico
@@ -57,7 +59,9 @@ export default function SearchRadiusSlider() {
     setSaving(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // Buscar perfil atual
@@ -123,15 +127,16 @@ export default function SearchRadiusSlider() {
             onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
             className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-orange-500 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:border-none"
             style={{
-              background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(searchRadius / 50) * 100}%, rgb(229 231 235) ${(searchRadius / 50) * 100}%, rgb(229 231 235) 100%)`
+              background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(searchRadius / 50) * 100}%, rgb(229 231 235) ${(searchRadius / 50) * 100}%, rgb(229 231 235) 100%)`,
             }}
           />
           <p className="text-xs text-gray-600">
-            Você receberá convites para trabalhos dentro de <strong className="text-orange-600">{searchRadius} km</strong> da sua localização
+            Você receberá convites para trabalhos dentro de{" "}
+            <strong className="text-orange-600">{searchRadius} km</strong> da
+            sua localização
           </p>
         </div>
       </CardContent>
     </Card>
   );
 }
-

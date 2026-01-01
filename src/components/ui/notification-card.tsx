@@ -3,7 +3,13 @@
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from "lucide-react";
+import {
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Info,
+  AlertTriangle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NotificationType = "success" | "error" | "info" | "warning";
@@ -17,13 +23,16 @@ interface NotificationCardProps {
   className?: string;
 }
 
-const notificationConfig: Record<NotificationType, {
-  icon: React.ComponentType<{ className?: string }>;
-  bgColor: string;
-  borderColor: string;
-  iconColor: string;
-  textColor: string;
-}> = {
+const notificationConfig: Record<
+  NotificationType,
+  {
+    icon: React.ComponentType<{ className?: string }>;
+    bgColor: string;
+    borderColor: string;
+    iconColor: string;
+    textColor: string;
+  }
+> = {
   success: {
     icon: CheckCircle2,
     bgColor: "bg-green-500/10",
@@ -84,12 +93,14 @@ export function NotificationCard({
         "border-2 shadow-lg",
         config.bgColor,
         config.borderColor,
-        className
+        className,
       )}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <Icon className={cn("h-5 w-5 flex-shrink-0 mt-0.5", config.iconColor)} />
+          <Icon
+            className={cn("h-5 w-5 flex-shrink-0 mt-0.5", config.iconColor)}
+          />
           <div className="flex-1 min-w-0">
             <h4 className={cn("font-semibold text-sm mb-1", config.textColor)}>
               {title}
@@ -118,4 +129,3 @@ export function NotificationCard({
     </Card>
   );
 }
-

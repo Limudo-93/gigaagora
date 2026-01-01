@@ -47,7 +47,9 @@ export default function Header() {
 
     const fetchUnreadCount = async () => {
       if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         userId = user?.id || null;
         if (!userId) return;
       }
@@ -64,10 +66,10 @@ export default function Header() {
     };
 
     fetchUnreadCount();
-    
+
     // Atualizar a cada 30 segundos
     const interval = setInterval(fetchUnreadCount, 30000);
-    
+
     // Escutar novas mensagens em tempo real
     let channel: any = null;
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -85,7 +87,7 @@ export default function Header() {
             },
             () => {
               fetchUnreadCount();
-            }
+            },
           )
           .subscribe();
       }
@@ -104,8 +106,8 @@ export default function Header() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border shadow-sm">
         <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-2.5 md:py-4">
           <div className="flex items-center justify-between">
-            <Link 
-              href="/dashboard" 
+            <Link
+              href="/dashboard"
               className="group transition-transform hover:scale-105 shrink-0"
             >
               <Logo size="md" />
@@ -115,10 +117,13 @@ export default function Header() {
               {/* Menu Desktop */}
               <nav className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => {
-                  const isActive = pathname === link.href || 
-                    (link.href !== "/dashboard" && pathname?.startsWith(link.href));
-                  const hasNotification = link.href === "/dashboard/messages" && unreadCount > 0;
-                  
+                  const isActive =
+                    pathname === link.href ||
+                    (link.href !== "/dashboard" &&
+                      pathname?.startsWith(link.href));
+                  const hasNotification =
+                    link.href === "/dashboard/messages" && unreadCount > 0;
+
                   return (
                     <Link
                       key={link.href}
@@ -128,12 +133,20 @@ export default function Header() {
                           ? "btn-gradient-active shadow-md hover:shadow-lg hover:[filter:brightness(0.85)_saturate(1.2)_contrast(1.1)] active:[filter:brightness(0.8)]"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       }`}
-                      style={isActive ? { 
-                        background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-                        color: "white"
-                      } : undefined}
+                      style={
+                        isActive
+                          ? {
+                              background:
+                                "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
+                              color: "white",
+                            }
+                          : undefined
+                      }
                     >
-                      <span className="relative z-10 flex items-center gap-2" style={isActive ? { color: "white" } : undefined}>
+                      <span
+                        className="relative z-10 flex items-center gap-2"
+                        style={isActive ? { color: "white" } : undefined}
+                      >
                         {link.label}
                         {hasNotification && (
                           <span className="h-2 w-2 rounded-full bg-destructive"></span>
@@ -173,7 +186,7 @@ export default function Header() {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
             onClick={() => setIsMenuOpen(false)}
           />
-          
+
           {/* Menu Panel */}
           <div className="fixed inset-y-0 left-0 z-50 w-64 bg-background/95 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden">
             <div className="flex flex-col h-full">
@@ -192,10 +205,13 @@ export default function Header() {
               {/* Links de Navegação */}
               <nav className="flex-1 px-4 py-6 space-y-2">
                 {navLinks.map((link) => {
-                  const isActive = pathname === link.href || 
-                    (link.href !== "/dashboard" && pathname?.startsWith(link.href));
-                  const hasNotification = link.href === "/dashboard/messages" && unreadCount > 0;
-                  
+                  const isActive =
+                    pathname === link.href ||
+                    (link.href !== "/dashboard" &&
+                      pathname?.startsWith(link.href));
+                  const hasNotification =
+                    link.href === "/dashboard/messages" && unreadCount > 0;
+
                   return (
                     <Link
                       key={link.href}
@@ -206,12 +222,20 @@ export default function Header() {
                           ? "btn-gradient-active shadow-md hover:shadow-lg hover:[filter:brightness(0.85)_saturate(1.2)_contrast(1.1)] active:[filter:brightness(0.8)]"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
-                      style={isActive ? { 
-                        background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-                        color: "white"
-                      } : undefined}
+                      style={
+                        isActive
+                          ? {
+                              background:
+                                "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
+                              color: "white",
+                            }
+                          : undefined
+                      }
                     >
-                      <span className="flex items-center gap-2" style={isActive ? { color: "white" } : undefined}>
+                      <span
+                        className="flex items-center gap-2"
+                        style={isActive ? { color: "white" } : undefined}
+                      >
                         {link.label}
                         {hasNotification && (
                           <span className="h-2 w-2 rounded-full bg-destructive"></span>
@@ -228,4 +252,3 @@ export default function Header() {
     </>
   );
 }
-

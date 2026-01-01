@@ -2,9 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, ClipboardList, Loader2, DollarSign, User, Users } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  ClipboardList,
+  Loader2,
+  DollarSign,
+  User,
+  Users,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -92,8 +106,12 @@ export default function GigDetailsDialog({
   const [loading, setLoading] = useState(false);
   const [gig, setGig] = useState<GigDetails | null>(null);
   const [roles, setRoles] = useState<GigRole[]>([]);
-  const [confirmedMusicians, setConfirmedMusicians] = useState<ConfirmedMusician[]>([]);
-  const [contractorInfo, setContractorInfo] = useState<ContractorInfo | null>(null);
+  const [confirmedMusicians, setConfirmedMusicians] = useState<
+    ConfirmedMusician[]
+  >([]);
+  const [contractorInfo, setContractorInfo] = useState<ContractorInfo | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,7 +133,7 @@ export default function GigDetailsDialog({
         const { data: gigData, error: gigError } = await supabase
           .from("gigs")
           .select(
-            "id,title,description,location_name,address_text,city,state,timezone,start_time,end_time,show_minutes,break_minutes,status,contractor_id"
+            "id,title,description,location_name,address_text,city,state,timezone,start_time,end_time,show_minutes,break_minutes,status,contractor_id",
           )
           .eq("id", gigId)
           .single();
@@ -146,7 +164,7 @@ export default function GigDetailsDialog({
         try {
           const { data: rpcData, error: rpcError } = await supabase.rpc(
             "rpc_list_accepted_musicians_for_gig",
-            { p_gig_id: gigId }
+            { p_gig_id: gigId },
           );
 
           if (!rpcError && rpcData) {
@@ -157,8 +175,12 @@ export default function GigDetailsDialog({
               .eq("confirmed", true);
 
             if (confirmationsData) {
-              const confirmedInviteIds = new Set(confirmationsData.map((c: any) => c.invite_id));
-              const confirmed = (rpcData || []).filter((m: any) => confirmedInviteIds.has(m.invite_id));
+              const confirmedInviteIds = new Set(
+                confirmationsData.map((c: any) => c.invite_id),
+              );
+              const confirmed = (rpcData || []).filter((m: any) =>
+                confirmedInviteIds.has(m.invite_id),
+              );
               setConfirmedMusicians(confirmed);
             } else {
               // Se não houver confirmações, mostra os que aceitaram
@@ -168,7 +190,8 @@ export default function GigDetailsDialog({
             // Fallback: busca direta
             const { data: invitesData } = await supabase
               .from("invites")
-              .select(`
+              .select(
+                `
                 id,
                 musician_id,
                 gig_roles!inner(
@@ -178,7 +201,8 @@ export default function GigDetailsDialog({
                   display_name,
                   photo_url
                 )
-              `)
+              `,
+              )
               .eq("gig_id", gigId)
               .in("status", ["accepted", "confirmed"]);
 
@@ -191,7 +215,9 @@ export default function GigDetailsDialog({
                 .in("invite_id", inviteIds)
                 .eq("confirmed", true);
 
-              const confirmedInviteIds = new Set((confirmationsData || []).map((c: any) => c.invite_id));
+              const confirmedInviteIds = new Set(
+                (confirmationsData || []).map((c: any) => c.invite_id),
+              );
               const confirmed = invitesData
                 .filter((inv: any) => confirmedInviteIds.has(inv.id))
                 .map((inv: any) => ({
@@ -212,7 +238,9 @@ export default function GigDetailsDialog({
         // Busca as roles (vagas) da gig
         const { data: rolesData, error: rolesError } = await supabase
           .from("gig_roles")
-          .select("id,instrument,quantity,cache,desired_genres,desired_skills,desired_setup,notes")
+          .select(
+            "id,instrument,quantity,cache,desired_genres,desired_skills,desired_setup,notes",
+          )
           .eq("gig_id", gigId)
           .order("instrument", { ascending: true });
 
@@ -245,7 +273,9 @@ export default function GigDetailsDialog({
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-gray-700" />
-            <span className="ml-2 text-sm text-gray-700">Carregando detalhes...</span>
+            <span className="ml-2 text-sm text-gray-700">
+              Carregando detalhes...
+            </span>
           </div>
         ) : error ? (
           <div className="rounded-lg border border-red-500 bg-red-50 p-4 text-sm text-red-800">
@@ -258,9 +288,19 @@ export default function GigDetailsDialog({
           <div className="space-y-6">
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              <Badge 
-                variant={statusUI.variant === "secondary" ? "secondary" : statusUI.variant === "destructive" ? "destructive" : "default"}
-                className={statusUI.variant === "secondary" ? "bg-gray-200 text-gray-900 border border-gray-300" : ""}
+              <Badge
+                variant={
+                  statusUI.variant === "secondary"
+                    ? "secondary"
+                    : statusUI.variant === "destructive"
+                      ? "destructive"
+                      : "default"
+                }
+                className={
+                  statusUI.variant === "secondary"
+                    ? "bg-gray-200 text-gray-900 border border-gray-300"
+                    : ""
+                }
               >
                 {statusUI.label}
               </Badge>
@@ -296,7 +336,9 @@ export default function GigDetailsDialog({
                     <Clock size={18} className="text-purple-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-600 mb-0.5">Horário início</p>
+                    <p className="text-xs text-gray-600 mb-0.5">
+                      Horário início
+                    </p>
                     <p className="font-semibold text-gray-900">{time}</p>
                   </div>
                 </div>
@@ -307,7 +349,9 @@ export default function GigDetailsDialog({
                       <Clock size={18} className="text-indigo-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-600 mb-0.5">Horário fim</p>
+                      <p className="text-xs text-gray-600 mb-0.5">
+                        Horário fim
+                      </p>
                       <p className="font-semibold text-gray-900">{endTime}</p>
                     </div>
                   </div>
@@ -321,7 +365,9 @@ export default function GigDetailsDialog({
                     <p className="text-xs text-gray-600 mb-0.5">Duração</p>
                     <p className="font-semibold text-gray-900">
                       {gig.show_minutes ? `${gig.show_minutes} min` : "-"}
-                      {gig.break_minutes ? ` (+ ${gig.break_minutes} min pausa)` : ""}
+                      {gig.break_minutes
+                        ? ` (+ ${gig.break_minutes} min pausa)`
+                        : ""}
                     </p>
                   </div>
                 </div>
@@ -332,9 +378,12 @@ export default function GigDetailsDialog({
                       <MapPin size={18} className="text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-600 mb-0.5">Cidade/Estado</p>
+                      <p className="text-xs text-gray-600 mb-0.5">
+                        Cidade/Estado
+                      </p>
                       <p className="font-semibold text-gray-900">
-                        {[gig.city, gig.state].filter(Boolean).join(", ") || "-"}
+                        {[gig.city, gig.state].filter(Boolean).join(", ") ||
+                          "-"}
                       </p>
                     </div>
                   </div>
@@ -359,7 +408,9 @@ export default function GigDetailsDialog({
 
                 {gig.description && (
                   <div>
-                    <p className="text-sm font-semibold text-gray-900 mb-2">Descrição</p>
+                    <p className="text-sm font-semibold text-gray-900 mb-2">
+                      Descrição
+                    </p>
                     <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                       {gig.description}
                     </p>
@@ -375,7 +426,9 @@ export default function GigDetailsDialog({
                   <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] flex items-center justify-center">
                     <ClipboardList size={16} className="text-white" />
                   </div>
-                  <p className="text-base font-semibold text-gray-900">Vagas / Requisitos</p>
+                  <p className="text-base font-semibold text-gray-900">
+                    Vagas / Requisitos
+                  </p>
                 </div>
 
                 <div className="space-y-4">
@@ -385,8 +438,13 @@ export default function GigDetailsDialog({
                       className="rounded-lg border border-gray-200 bg-white/80 p-4 space-y-4"
                     >
                       <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                        <span className="text-base font-semibold text-gray-900">{role.instrument}</span>
-                        <Badge variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300">
+                        <span className="text-base font-semibold text-gray-900">
+                          {role.instrument}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className="bg-gray-200 text-gray-900 border border-gray-300"
+                        >
                           Qtd: {role.quantity}
                         </Badge>
                       </div>
@@ -399,70 +457,102 @@ export default function GigDetailsDialog({
                               Cachê
                             </p>
                             <p className="font-semibold text-gray-900">
-                              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(role.cache)}
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(role.cache)}
                             </p>
                           </div>
                         )}
-                        {role.desired_genres && role.desired_genres.length > 0 && (
-                          <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
-                            <p className="text-xs text-gray-600 mb-2">Gêneros desejados</p>
-                            {Array.isArray(role.desired_genres) ? (
-                              <div className="flex flex-wrap gap-2">
-                                {role.desired_genres.map((genre: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300 text-xs">
-                                    {genre}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm font-medium text-gray-900 break-words">
-                                {role.desired_genres}
+                        {role.desired_genres &&
+                          role.desired_genres.length > 0 && (
+                            <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
+                              <p className="text-xs text-gray-600 mb-2">
+                                Gêneros desejados
                               </p>
-                            )}
-                          </div>
-                        )}
+                              {Array.isArray(role.desired_genres) ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {role.desired_genres.map(
+                                    (genre: string, idx: number) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="secondary"
+                                        className="bg-gray-200 text-gray-900 border border-gray-300 text-xs"
+                                      >
+                                        {genre}
+                                      </Badge>
+                                    ),
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-sm font-medium text-gray-900 break-words">
+                                  {role.desired_genres}
+                                </p>
+                              )}
+                            </div>
+                          )}
 
-                        {role.desired_skills && role.desired_skills.length > 0 && (
-                          <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
-                            <p className="text-xs text-gray-600 mb-2">Skills desejadas</p>
-                            {Array.isArray(role.desired_skills) ? (
-                              <div className="flex flex-wrap gap-2">
-                                {role.desired_skills.map((skill: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300 text-xs">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm font-medium text-gray-900 break-words">
-                                {role.desired_skills}
+                        {role.desired_skills &&
+                          role.desired_skills.length > 0 && (
+                            <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
+                              <p className="text-xs text-gray-600 mb-2">
+                                Skills desejadas
                               </p>
-                            )}
-                          </div>
-                        )}
+                              {Array.isArray(role.desired_skills) ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {role.desired_skills.map(
+                                    (skill: string, idx: number) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="secondary"
+                                        className="bg-gray-200 text-gray-900 border border-gray-300 text-xs"
+                                      >
+                                        {skill}
+                                      </Badge>
+                                    ),
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-sm font-medium text-gray-900 break-words">
+                                  {role.desired_skills}
+                                </p>
+                              )}
+                            </div>
+                          )}
 
-                        {role.desired_setup && role.desired_setup.length > 0 && (
-                          <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
-                            <p className="text-xs text-gray-600 mb-2">Setup desejado</p>
-                            {Array.isArray(role.desired_setup) ? (
-                              <div className="flex flex-wrap gap-2">
-                                {role.desired_setup.map((setup: string, idx: number) => (
-                                  <Badge key={idx} variant="secondary" className="bg-gray-200 text-gray-900 border border-gray-300 text-xs">
-                                    {setup}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm font-medium text-gray-900 break-words">
-                                {role.desired_setup}
+                        {role.desired_setup &&
+                          role.desired_setup.length > 0 && (
+                            <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
+                              <p className="text-xs text-gray-600 mb-2">
+                                Setup desejado
                               </p>
-                            )}
-                          </div>
-                        )}
+                              {Array.isArray(role.desired_setup) ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {role.desired_setup.map(
+                                    (setup: string, idx: number) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="secondary"
+                                        className="bg-gray-200 text-gray-900 border border-gray-300 text-xs"
+                                      >
+                                        {setup}
+                                      </Badge>
+                                    ),
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-sm font-medium text-gray-900 break-words">
+                                  {role.desired_setup}
+                                </p>
+                              )}
+                            </div>
+                          )}
 
                         {role.notes && (
                           <div className="sm:col-span-2 rounded-lg bg-gray-50 p-3 border border-gray-100">
-                            <p className="text-xs text-gray-600 mb-2">Observações</p>
+                            <p className="text-xs text-gray-600 mb-2">
+                              Observações
+                            </p>
                             <p className="text-sm font-medium text-gray-900 whitespace-pre-wrap break-words">
                               {role.notes}
                             </p>
@@ -482,7 +572,9 @@ export default function GigDetailsDialog({
                   <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
                     <Users size={16} className="text-white" />
                   </div>
-                  <p className="text-base font-semibold text-gray-900">Músicos Confirmados</p>
+                  <p className="text-base font-semibold text-gray-900">
+                    Músicos Confirmados
+                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -503,7 +595,9 @@ export default function GigDetailsDialog({
                         className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white/80"
                       >
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src={musician.musician_photo_url || undefined} />
+                          <AvatarImage
+                            src={musician.musician_photo_url || undefined}
+                          />
                           <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white text-sm">
                             {initials}
                           </AvatarFallback>
@@ -512,7 +606,9 @@ export default function GigDetailsDialog({
                           <p className="text-sm font-semibold text-gray-900 truncate">
                             {musician.musician_name || "Músico"}
                           </p>
-                          <p className="text-xs text-gray-600">{musician.instrument}</p>
+                          <p className="text-xs text-gray-600">
+                            {musician.instrument}
+                          </p>
                         </div>
                       </div>
                     );
@@ -528,12 +624,16 @@ export default function GigDetailsDialog({
                   <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
                     <User size={16} className="text-white" />
                   </div>
-                  <p className="text-base font-semibold text-gray-900">Publicado por</p>
+                  <p className="text-base font-semibold text-gray-900">
+                    Publicado por
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white/80">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={contractorInfo.contractor_photo_url || undefined} />
+                    <AvatarImage
+                      src={contractorInfo.contractor_photo_url || undefined}
+                    />
                     <AvatarFallback className="bg-gradient-to-br from-[#ff6b4a] to-[#2aa6a1] text-white text-sm">
                       {/* Iniciais do contratante (corrigido para TypeScript) */}
                       {contractorInfo.contractor_name
@@ -577,4 +677,3 @@ export default function GigDetailsDialog({
     </Dialog>
   );
 }
-

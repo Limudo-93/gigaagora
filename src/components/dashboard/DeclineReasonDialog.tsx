@@ -1,16 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, DollarSign, MapPin, CalendarX, Clock, ThumbsDown, MessageSquare, Loader2 } from "lucide-react";
+import {
+  X,
+  DollarSign,
+  MapPin,
+  CalendarX,
+  Clock,
+  ThumbsDown,
+  MessageSquare,
+  Loader2,
+} from "lucide-react";
 
-export type DeclineReason = 
-  | "low_value" 
-  | "distance" 
-  | "unavailable" 
-  | "schedule_conflict" 
-  | "not_interested" 
+export type DeclineReason =
+  | "low_value"
+  | "distance"
+  | "unavailable"
+  | "schedule_conflict"
+  | "not_interested"
   | "other";
 
 interface DeclineReasonOption {
@@ -81,7 +96,9 @@ export default function DeclineReasonDialog({
   gigTitle,
   loading = false,
 }: DeclineReasonDialogProps) {
-  const [selectedReason, setSelectedReason] = useState<DeclineReason | null>(null);
+  const [selectedReason, setSelectedReason] = useState<DeclineReason | null>(
+    null,
+  );
 
   const handleConfirm = async () => {
     if (selectedReason) {
@@ -130,12 +147,16 @@ export default function DeclineReasonDialog({
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <div className="flex items-start gap-3">
-                <div className={`mt-0.5 ${selectedReason === option.value ? "scale-110" : ""} transition-transform`}>
+                <div
+                  className={`mt-0.5 ${selectedReason === option.value ? "scale-110" : ""} transition-transform`}
+                >
                   {option.icon}
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">{option.label}</p>
-                  <p className="text-xs mt-0.5 opacity-75">{option.description}</p>
+                  <p className="text-xs mt-0.5 opacity-75">
+                    {option.description}
+                  </p>
                 </div>
                 {selectedReason === option.value && (
                   <div className="mt-0.5">
@@ -180,4 +201,3 @@ export default function DeclineReasonDialog({
     </Dialog>
   );
 }
-

@@ -62,12 +62,14 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
     gigId: string;
     contractorId: string;
     musicianId: string;
-    raterType: 'musician' | 'contractor';
-    ratedType: 'musician' | 'contractor';
+    raterType: "musician" | "contractor";
+    ratedType: "musician" | "contractor";
     ratedUserId: string;
   } | null>(null);
   const [hasRated, setHasRated] = useState<Set<string>>(new Set());
-  const [userType, setUserType] = useState<'musician' | 'contractor' | null>(null);
+  const [userType, setUserType] = useState<"musician" | "contractor" | null>(
+    null,
+  );
 
   const fetchCompleted = useCallback(async () => {
     setLoading(true);
@@ -82,14 +84,15 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
         .single();
 
       if (profile) {
-        setUserType(profile.user_type as 'musician' | 'contractor');
+        setUserType(profile.user_type as "musician" | "contractor");
       }
 
       // Buscar gigs confirmadas que já passaram
       // Primeiro busca confirmações onde o usuário é músico
       const { data: musicianData, error: musicianError } = await supabase
         .from("confirmations")
-        .select(`
+        .select(
+          `
           id,
           created_at,
           invite_id,
@@ -113,14 +116,16 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
               )
             )
           )
-        `)
+        `,
+        )
         .eq("invites.musician_id", userId)
         .lt("invites.gigs.start_time", new Date().toISOString());
 
       // Depois busca confirmações onde o usuário é contratante
       const { data: contractorData, error: contractorError } = await supabase
         .from("confirmations")
-        .select(`
+        .select(
+          `
           id,
           created_at,
           invite_id,
@@ -144,14 +149,15 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
               )
             )
           )
-        `)
+        `,
+        )
         .eq("invites.contractor_id", userId)
         .lt("invites.gigs.start_time", new Date().toISOString());
 
       if (musicianError || contractorError) {
         console.error("Query error:", musicianError || contractorError);
         setErrorMsg(
-          `Erro ao carregar gigs concluídas: ${(musicianError || contractorError)?.message}`
+          `Erro ao carregar gigs concluídas: ${(musicianError || contractorError)?.message}`,
         );
         setItems([]);
         setLoading(false);
@@ -180,7 +186,9 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
       }));
 
       // Verificar quais já foram avaliadas pelo usuário atual
-      const inviteIds = transformed.map((g: CompletedGigRow) => g.invite_id).filter(Boolean);
+      const inviteIds = transformed
+        .map((g: CompletedGigRow) => g.invite_id)
+        .filter(Boolean);
       if (inviteIds.length > 0) {
         // Buscar TODAS as avaliações do usuário atual para essas gigs
         // Verificar tanto como músico quanto como contratante
@@ -194,22 +202,24 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
           // Criar um Set com os invite_ids que já foram avaliados pelo usuário atual
           // Verificar se o usuário é o avaliador (não o avaliado)
           const ratedSet = new Set<string>();
-          
+
           for (const rating of ratingsData) {
             // Se o usuário é o músico avaliador OU o contratante avaliador
             if (
-              (rating.rater_type === 'musician' && rating.musician_id === userId) ||
-              (rating.rater_type === 'contractor' && rating.contractor_id === userId)
+              (rating.rater_type === "musician" &&
+                rating.musician_id === userId) ||
+              (rating.rater_type === "contractor" &&
+                rating.contractor_id === userId)
             ) {
               ratedSet.add(rating.invite_id);
             }
           }
-          
+
           setHasRated(ratedSet);
-          
+
           // Filtrar apenas as que ainda não foram avaliadas pelo usuário atual
-          const unrated = transformed.filter((g: CompletedGigRow) => 
-            !ratedSet.has(g.invite_id)
+          const unrated = transformed.filter(
+            (g: CompletedGigRow) => !ratedSet.has(g.invite_id),
           );
           setItems(unrated);
         } else {
@@ -252,9 +262,9 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
     }
 
     // Determinar quem está sendo avaliado
-    const ratedUserId = isUserMusician 
-      ? (gig.contractor_id || '')  // Se é músico, avalia o contratante
-      : (gig.musician_id || '');  // Se é contratante, avalia o músico
+    const ratedUserId = isUserMusician
+      ? gig.contractor_id || "" // Se é músico, avalia o contratante
+      : gig.musician_id || ""; // Se é contratante, avalia o músico
 
     if (!ratedUserId) {
       setErrorMsg("Não foi possível identificar o usuário a ser avaliado.");
@@ -262,14 +272,14 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
     }
 
     // Determinar os tipos
-    const actualRaterType = isUserMusician ? 'musician' : 'contractor';
-    const actualRatedType = isUserMusician ? 'contractor' : 'musician';
+    const actualRaterType = isUserMusician ? "musician" : "contractor";
+    const actualRatedType = isUserMusician ? "contractor" : "musician";
 
     setRatingGig({
       inviteId: gig.invite_id,
       gigId: gig.gig_id,
-      contractorId: gig.contractor_id || '',
-      musicianId: gig.musician_id || '',
+      contractorId: gig.contractor_id || "",
+      musicianId: gig.musician_id || "",
       raterType: actualRaterType,
       ratedType: actualRatedType,
       ratedUserId: ratedUserId,
@@ -280,7 +290,9 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
   return (
     <section className="mt-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg md:text-xl font-semibold text-foreground">Gigs Concluídas - Avaliar</h2>
+        <h2 className="text-lg md:text-xl font-semibold text-foreground">
+          Gigs Concluídas - Avaliar
+        </h2>
       </div>
 
       {errorMsg ? (
@@ -370,12 +382,12 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
                           </div>
 
                           <div className="mt-3">
-                            <Button
-                              onClick={() => handleRate(gig)}
-                              size="sm"
-                            >
+                            <Button onClick={() => handleRate(gig)} size="sm">
                               <Star className="mr-2 h-4 w-4" />
-                              Avaliar {userType === 'musician' ? 'Contratante' : 'Músico'}
+                              Avaliar{" "}
+                              {userType === "musician"
+                                ? "Contratante"
+                                : "Músico"}
                             </Button>
                           </div>
                         </div>
@@ -404,7 +416,9 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
             // Adicionar à lista de avaliados
             setHasRated((prev) => new Set([...prev, ratingGig.inviteId]));
             // Remover o item da lista imediatamente
-            setItems((prev) => prev.filter((item) => item.invite_id !== ratingGig.inviteId));
+            setItems((prev) =>
+              prev.filter((item) => item.invite_id !== ratingGig.inviteId),
+            );
             setRatingDialogOpen(false);
             setRatingGig(null);
             // Recarregar lista para garantir sincronização
@@ -415,4 +429,3 @@ export default function CompletedGigsToRate({ userId }: { userId: string }) {
     </section>
   );
 }
-

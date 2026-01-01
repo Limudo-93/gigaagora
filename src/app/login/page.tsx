@@ -20,7 +20,9 @@ export default function LoginPage() {
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
             .from("profiles")
@@ -28,17 +30,24 @@ export default function LoginPage() {
             .eq("user_id", user.id)
             .maybeSingle();
 
-          const theme = (profile?.theme_preference as ThemeName) || 'default';
-          const validTheme: ThemeName = ['default', 'ocean', 'sunset', 'forest', 'royal', 'dark'].includes(theme) 
-            ? theme 
-            : 'default';
+          const theme = (profile?.theme_preference as ThemeName) || "default";
+          const validTheme: ThemeName = [
+            "default",
+            "ocean",
+            "sunset",
+            "forest",
+            "royal",
+            "dark",
+          ].includes(theme)
+            ? theme
+            : "default";
           applyTheme(validTheme);
         } else {
-          applyTheme('default');
+          applyTheme("default");
         }
       } catch (error) {
         console.error("Error loading theme:", error);
-        applyTheme('default');
+        applyTheme("default");
       }
     };
 
@@ -94,8 +103,12 @@ export default function LoginPage() {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             try {
-              const { updateUserLocation } = await import("@/app/actions/location");
-              await updateUserLocation(position.coords.latitude, position.coords.longitude);
+              const { updateUserLocation } =
+                await import("@/app/actions/location");
+              await updateUserLocation(
+                position.coords.latitude,
+                position.coords.longitude,
+              );
               console.log("Localização atualizada após login");
             } catch (err) {
               // Não bloqueia o login se falhar
@@ -106,7 +119,7 @@ export default function LoginPage() {
             // Se falhar, continua normalmente (pode ser negado pelo usuário)
             // O LocationUpdater no dashboard tentará novamente
           },
-          { timeout: 3000, maximumAge: 0 }
+          { timeout: 3000, maximumAge: 0 },
         );
       }
 
@@ -128,7 +141,7 @@ export default function LoginPage() {
       // Usar a origem atual (suporta ngrok e outros domínios)
       const redirectUrl = `${window.location.origin}/auth/callback`;
       console.log("OAuth redirect URL:", redirectUrl);
-      
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -138,12 +151,16 @@ export default function LoginPage() {
 
       if (error) {
         console.error(`OAuth ${provider} error:`, error);
-        setError(`Erro ao fazer login com ${provider === "google" ? "Google" : "Facebook"}. Tente novamente.`);
+        setError(
+          `Erro ao fazer login com ${provider === "google" ? "Google" : "Facebook"}. Tente novamente.`,
+        );
         setOauthLoading(null);
       }
     } catch (err: any) {
       console.error(`OAuth ${provider} exception:`, err);
-      setError(`Erro inesperado ao fazer login com ${provider === "google" ? "Google" : "Facebook"}.`);
+      setError(
+        `Erro inesperado ao fazer login com ${provider === "google" ? "Google" : "Facebook"}.`,
+      );
       setOauthLoading(null);
     }
   };
@@ -151,19 +168,26 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       {/* Background usando gradiente do tema */}
-      <div className="fixed inset-0 -z-10" style={{
-        background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-        opacity: 0.1
-      }} />
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background:
+            "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
+          opacity: 0.1,
+        }}
+      />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,165,0,0.1),transparent_50%)] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(147,51,234,0.1),transparent_50%)] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(59,130,246,0.1),transparent_50%)] -z-10" />
-      
+
       {/* Padrão de ondas musicais sutil */}
-      <div className="fixed inset-0 opacity-[0.03] -z-10" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50' stroke='%23000' fill='none' stroke-width='2'/%3E%3C/svg%3E")`,
-        backgroundSize: '200px 200px'
-      }} />
+      <div
+        className="fixed inset-0 opacity-[0.03] -z-10"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50' stroke='%23000' fill='none' stroke-width='2'/%3E%3C/svg%3E")`,
+          backgroundSize: "200px 200px",
+        }}
+      />
 
       <main className="flex-1 flex items-center justify-center p-6 relative z-10">
         <div className="w-full max-w-md space-y-8">
@@ -180,12 +204,17 @@ export default function LoginPage() {
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                 Entrar
               </h1>
-              <p className="text-sm text-muted-foreground">Acesse sua conta para continuar.</p>
+              <p className="text-sm text-muted-foreground">
+                Acesse sua conta para continuar.
+              </p>
             </header>
 
             <form className="space-y-5" onSubmit={onSubmit}>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground" htmlFor="email">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="email"
+                >
                   Email
                 </label>
                 <input
@@ -200,7 +229,10 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground" htmlFor="password">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="password"
+                >
                   Senha
                 </label>
                 <input
@@ -220,13 +252,14 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button 
-                className="w-full text-white shadow-md transition-all duration-200" 
-                type="submit" 
+              <Button
+                className="w-full text-white shadow-md transition-all duration-200"
+                type="submit"
                 disabled={loading || oauthLoading !== null}
                 style={{
-                  background: "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
-                  color: "white"
+                  background:
+                    "var(--theme-gradient, linear-gradient(135deg, #f97316 0%, #a855f7 50%, #3b82f6 100%))",
+                  color: "white",
                 }}
               >
                 {loading ? "Entrando..." : "Entrar"}
@@ -239,7 +272,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Ou continue com</span>
+                <span className="bg-card px-2 text-muted-foreground">
+                  Ou continue com
+                </span>
               </div>
             </div>
 
@@ -290,7 +325,10 @@ export default function LoginPage() {
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
                 Não tem uma conta?{" "}
-                <Link href={"/signup" as any} className="font-semibold text-primary hover:text-primary/80 transition-colors">
+                <Link
+                  href={"/signup" as any}
+                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                >
                   Criar conta
                 </Link>
               </p>

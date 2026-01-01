@@ -3,8 +3,10 @@ import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
 function getSupabaseAdmin() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE;
 
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Supabase service role env vars not configured");
@@ -19,13 +21,16 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const supabaseAdmin = getSupabaseAdmin();
-    
+
     // Verificar autenticação
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
         { success: false, error: "Não autenticado" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -35,19 +40,25 @@ export async function POST(request: NextRequest) {
     if (!userId || !notification) {
       return NextResponse.json(
         { success: false, error: "userId e notification são obrigatórios" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Buscar subscriptions do usuário
-    const { data: subscriptions, error: subError } = await supabase.rpc("get_user_push_subscriptions", {
-      p_user_id: userId,
-    });
+    const { data: subscriptions, error: subError } = await supabase.rpc(
+      "get_user_push_subscriptions",
+      {
+        p_user_id: userId,
+      },
+    );
 
     if (subError) {
       return NextResponse.json(
-        { success: false, error: `Erro ao buscar subscriptions: ${subError.message}` },
-        { status: 500 }
+        {
+          success: false,
+          error: `Erro ao buscar subscriptions: ${subError.message}`,
+        },
+        { status: 500 },
       );
     }
 
@@ -89,16 +100,22 @@ export async function POST(request: NextRequest) {
 
           // Invocar Edge Function com autenticação
           // O supabase client já tem o token de autenticação do usuário logado
-          const { data, error } = await supabase.functions.invoke("send-push-notification", {
-            body: {
-              subscription: subscriptionData,
-              payload: payload,
+          const { data, error } = await supabase.functions.invoke(
+            "send-push-notification",
+            {
+              body: {
+                subscription: subscriptionData,
+                payload: payload,
+              },
+              // Não precisamos passar headers manualmente, o cliente já faz isso
             },
-            // Não precisamos passar headers manualmente, o cliente já faz isso
-          });
+          );
 
           if (error) {
-            console.error(`[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`, error);
+            console.error(
+              `[Send Notification] Error for endpoint ${sub.endpoint.substring(0, 50)}...:`,
+              error,
+            );
             console.error(`[Send Notification] Response data:`, data);
             const errorContext = (error as any).context;
             let parsedBody: any = null;
@@ -113,8 +130,14 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            if (parsedBody?.deleteSubscription || parsedStatus === 404 || parsedStatus === 410) {
-              console.warn(`[Send Notification] Removing invalid subscription (${parsedStatus || "unknown"})`);
+            if (
+              parsedBody?.deleteSubscription ||
+              parsedStatus === 404 ||
+              parsedStatus === 410
+            ) {
+              console.warn(
+                `[Send Notification] Removing invalid subscription (${parsedStatus || "unknown"})`,
+              );
               await supabaseAdmin
                 .from("push_subscriptions")
                 .delete()
@@ -123,13 +146,21 @@ export async function POST(request: NextRequest) {
             }
 
             // Extrair mensagem de erro limpa
-            const errorMsg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
+            const errorMsg =
+              error.message ||
+              (typeof error === "string" ? error : JSON.stringify(error));
             throw new Error(errorMsg);
           }
 
-          if (data && typeof data === "object" && (data as any).deleteSubscription) {
+          if (
+            data &&
+            typeof data === "object" &&
+            (data as any).deleteSubscription
+          ) {
             const statusCode = (data as any).statusCode;
-            console.warn(`[Send Notification] Removing invalid subscription (${statusCode || "unknown"})`);
+            console.warn(
+              `[Send Notification] Removing invalid subscription (${statusCode || "unknown"})`,
+            );
             await supabaseAdmin
               .from("push_subscriptions")
               .delete()
@@ -138,9 +169,15 @@ export async function POST(request: NextRequest) {
           }
 
           // Verificar se data contém um erro (quando a função retorna erro mas invoke não marca como error)
-          if (data && typeof data === 'object' && 'error' in data) {
-            const errorMessage = (data as any).error || (data as any).message || "Erro desconhecido da Edge Function";
-            console.error(`[Send Notification] Edge Function returned error in data:`, errorMessage);
+          if (data && typeof data === "object" && "error" in data) {
+            const errorMessage =
+              (data as any).error ||
+              (data as any).message ||
+              "Erro desconhecido da Edge Function";
+            console.error(
+              `[Send Notification] Edge Function returned error in data:`,
+              errorMessage,
+            );
             throw new Error(errorMessage);
           }
 
@@ -149,7 +186,7 @@ export async function POST(request: NextRequest) {
           console.error(`[Send Notification] Failed for subscription:`, err);
           throw err;
         }
-      })
+      }),
     );
 
     const failed = sendResults.filter((r) => r.status === "rejected");
@@ -157,8 +194,9 @@ export async function POST(request: NextRequest) {
 
     // Log detalhado dos erros
     if (failed.length > 0) {
-      console.error(`[Send Notification] ${failed.length} tentativas falharam:`, 
-        failed.map((r) => r.status === "rejected" ? r.reason : null)
+      console.error(
+        `[Send Notification] ${failed.length} tentativas falharam:`,
+        failed.map((r) => (r.status === "rejected" ? r.reason : null)),
       );
     }
 
@@ -175,20 +213,25 @@ export async function POST(request: NextRequest) {
           return null;
         })
         .filter(Boolean);
-      
+
       // Verificar se é erro de função não encontrada
       const firstError = errorMessages[0] || "";
-      if (firstError.includes("Function not found") || firstError.includes("404")) {
+      if (
+        firstError.includes("Function not found") ||
+        firstError.includes("404")
+      ) {
         return NextResponse.json({
           success: false,
-          error: "Edge Function 'send-push-notification' não está deployada. Veja DEPLOY_EDGE_FUNCTION.md para instruções.",
+          error:
+            "Edge Function 'send-push-notification' não está deployada. Veja DEPLOY_EDGE_FUNCTION.md para instruções.",
           details: errorMessages,
         });
       }
 
       // Usar apenas a primeira mensagem de erro (sem duplicação)
-      const mainError = errorMessages[0] || "Erro desconhecido. Verifique os logs do servidor.";
-      
+      const mainError =
+        errorMessages[0] || "Erro desconhecido. Verifique os logs do servidor.";
+
       return NextResponse.json({
         success: false,
         error: mainError,
@@ -206,8 +249,7 @@ export async function POST(request: NextRequest) {
     console.error("Error in send notification API:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Erro desconhecido" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

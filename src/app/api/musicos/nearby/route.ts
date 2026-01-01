@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     return NextResponse.json(
       { error: "lat/lng são obrigatórios" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -51,13 +51,13 @@ export async function GET(request: NextRequest) {
     ? await supabase
         .from("musician_profiles")
         .select(
-          "user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted, latitude, longitude"
+          "user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted, latitude, longitude",
         )
         .in("user_id", ids)
     : { data: [] };
 
   const profileMap = new Map(
-    (musicianProfiles || []).map((profile) => [profile.user_id, profile])
+    (musicianProfiles || []).map((profile) => [profile.user_id, profile]),
   );
 
   let results: PublicMusician[] = profileList.map((profile) => {
@@ -83,30 +83,32 @@ export async function GET(request: NextRequest) {
 
   if (q) {
     results = results.filter((musician) =>
-      (musician.display_name || "").toLowerCase().includes(q)
+      (musician.display_name || "").toLowerCase().includes(q),
     );
   }
 
   if (city) {
     results = results.filter((musician) =>
-      (musician.city || "").toLowerCase().includes(city)
+      (musician.city || "").toLowerCase().includes(city),
     );
   }
 
   if (instrument) {
     results = results.filter((musician) =>
-      musician.instruments?.includes(instrument)
+      musician.instruments?.includes(instrument),
     );
   }
 
   results = results.map((musician) => {
-    if (
-      musician.latitude != null &&
-      musician.longitude != null
-    ) {
+    if (musician.latitude != null && musician.longitude != null) {
       return {
         ...musician,
-        distance_km: haversineKm(lat, lng, musician.latitude, musician.longitude),
+        distance_km: haversineKm(
+          lat,
+          lng,
+          musician.latitude,
+          musician.longitude,
+        ),
       };
     }
     return musician;

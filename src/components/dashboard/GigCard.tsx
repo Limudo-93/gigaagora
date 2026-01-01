@@ -6,7 +6,20 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, MapPin, DollarSign, Edit, Users, MessageSquare, X, Download, Image as ImageIcon, Eye, UserCheck } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  DollarSign,
+  Edit,
+  Users,
+  MessageSquare,
+  X,
+  Download,
+  Image as ImageIcon,
+  Eye,
+  UserCheck,
+} from "lucide-react";
 import ShareGigButton from "./ShareGigButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -82,7 +95,13 @@ function normalizeStatus(status?: string | null) {
   return { label: status ?? "Status", variant: "secondary" as const };
 }
 
-export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = false }: GigCardProps) {
+export default function GigCard({
+  gig,
+  onOpen,
+  onCancel,
+  onEdit,
+  isCancelling = false,
+}: GigCardProps) {
   const router = useRouter();
   const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
 
@@ -119,7 +138,7 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
   const handleDownloadFlyer = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!gig.flyer_url) return;
-    
+
     // Cria um link temporário para download
     const link = document.createElement("a");
     link.href = gig.flyer_url;
@@ -188,9 +207,13 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
               <div className="flex items-start gap-2.5">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm text-foreground truncate">{place}</p>
+                  <p className="font-semibold text-sm text-foreground truncate">
+                    {place}
+                  </p>
                   {address && (
-                    <p className="text-xs font-medium text-muted-foreground mt-0.5">{address}</p>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                      {address}
+                    </p>
                   )}
                 </div>
               </div>
@@ -220,7 +243,9 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
               <div className="pt-3 border-t-2 border-border/30">
                 <div className="flex items-center gap-2 mb-3">
                   <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <span className="text-sm font-semibold text-foreground">Músicos Confirmados</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    Músicos Confirmados
+                  </span>
                   <Badge variant="secondary" className="text-xs ml-auto">
                     {gig.confirmed_musicians.length}
                   </Badge>
@@ -270,7 +295,9 @@ export default function GigCard({ gig, onOpen, onCancel, onEdit, isCancelling = 
                 <Button
                   variant="outline"
                   className="border-2 hover:bg-accent/50 font-medium"
-                  onClick={() => router.push(`/dashboard/gigs/${gig.id}/matches` as any)}
+                  onClick={() =>
+                    router.push(`/dashboard/gigs/${gig.id}/matches` as any)
+                  }
                 >
                   <Users className="mr-2 h-4 w-4" />
                   Ver Matches

@@ -3,10 +3,10 @@
 import { Crown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export default function AmbassadorBadge({ 
+export default function AmbassadorBadge({
   size = "sm",
-  showText = true 
-}: { 
+  showText = true,
+}: {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
 }) {
@@ -23,7 +23,7 @@ export default function AmbassadorBadge({
   };
 
   return (
-    <Badge 
+    <Badge
       className={`bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 text-white border-2 border-white shadow-lg ${textSizes[size]} font-bold flex items-center gap-1`}
       style={{
         boxShadow: "0 2px 8px rgba(251, 191, 36, 0.4)",
@@ -34,4 +34,3 @@ export default function AmbassadorBadge({
     </Badge>
   );
 }
-

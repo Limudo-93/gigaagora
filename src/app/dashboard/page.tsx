@@ -54,7 +54,6 @@ export default async function DashboardPage() {
         <ProfileHeader />
       </div>
 
-
       {/* ✅ PRIORIDADE 1: Alertas de Cancelamento (urgente) */}
       <CancellationAlertCard userId={user.id} />
 

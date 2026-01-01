@@ -76,7 +76,10 @@ export function generateICS(events: CalendarEvent[]): string {
 /**
  * Faz o download do arquivo .ics
  */
-export function downloadICS(events: CalendarEvent[], filename: string = "agenda.ics"): void {
+export function downloadICS(
+  events: CalendarEvent[],
+  filename: string = "agenda.ics",
+): void {
   const icsContent = generateICS(events);
   const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -88,4 +91,3 @@ export function downloadICS(events: CalendarEvent[], filename: string = "agenda.
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-

@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Zap, Star, Shield, TrendingUp } from "lucide-react";
 
-type BadgeType = 'verified' | 'active' | 'top_rated' | 'reliable' | 'popular';
+type BadgeType = "verified" | "active" | "top_rated" | "reliable" | "popular";
 
 interface BadgeDisplayProps {
   badges: Array<{
@@ -11,48 +11,54 @@ interface BadgeDisplayProps {
     earned_at: string;
     expires_at?: string | null;
   }>;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
-const BADGE_CONFIG: Record<BadgeType, { label: string; icon: React.ReactNode; color: string }> = {
+const BADGE_CONFIG: Record<
+  BadgeType,
+  { label: string; icon: React.ReactNode; color: string }
+> = {
   verified: {
-    label: 'Verificado',
+    label: "Verificado",
     icon: <CheckCircle2 className="h-3 w-3" />,
-    color: 'bg-blue-500 text-white',
+    color: "bg-blue-500 text-white",
   },
   active: {
-    label: 'Ativo',
+    label: "Ativo",
     icon: <Zap className="h-3 w-3" />,
-    color: 'bg-green-500 text-white',
+    color: "bg-green-500 text-white",
   },
   top_rated: {
-    label: 'Top Avaliado',
+    label: "Top Avaliado",
     icon: <Star className="h-3 w-3" />,
-    color: 'bg-yellow-500 text-white',
+    color: "bg-yellow-500 text-white",
   },
   reliable: {
-    label: 'Confiável',
+    label: "Confiável",
     icon: <Shield className="h-3 w-3" />,
-    color: 'bg-purple-500 text-white',
+    color: "bg-purple-500 text-white",
   },
   popular: {
-    label: 'Popular',
+    label: "Popular",
     icon: <TrendingUp className="h-3 w-3" />,
-    color: 'bg-orange-500 text-white',
+    color: "bg-orange-500 text-white",
   },
 };
 
-export default function BadgeDisplay({ badges, size = 'md' }: BadgeDisplayProps) {
+export default function BadgeDisplay({
+  badges,
+  size = "md",
+}: BadgeDisplayProps) {
   const activeBadges = badges.filter(
-    (badge) => !badge.expires_at || new Date(badge.expires_at) > new Date()
+    (badge) => !badge.expires_at || new Date(badge.expires_at) > new Date(),
   );
 
   if (activeBadges.length === 0) return null;
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-2.5 py-1',
-    lg: 'text-base px-3 py-1.5',
+    sm: "text-xs px-2 py-0.5",
+    md: "text-sm px-2.5 py-1",
+    lg: "text-base px-3 py-1.5",
   };
 
   return (
@@ -75,4 +81,3 @@ export default function BadgeDisplay({ badges, size = 'md' }: BadgeDisplayProps)
     </div>
   );
 }
-

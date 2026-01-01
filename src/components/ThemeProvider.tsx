@@ -5,7 +5,11 @@ import { supabase } from "@/lib/supabase/client";
 import { applyTheme } from "@/lib/theme";
 import type { ThemeName } from "@/lib/theme-data";
 
-export default function ThemeProvider({ children }: { children: React.ReactNode }) {
+export default function ThemeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   useLayoutEffect(() => {
     const loadUserTheme = async () => {
       try {
@@ -14,11 +18,13 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
           applyTheme(cachedTheme);
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (!user) {
           // Se não estiver logado, usar tema padrão
-          applyTheme('default');
+          applyTheme("default");
           return;
         }
 
@@ -33,12 +39,19 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
         }
 
         const theme = (profile?.theme_preference as ThemeName) || "default";
-        
+
         // Validar se o tema existe
-        const validTheme: ThemeName = ["default", "ocean", "sunset", "forest", "royal", "dark"].includes(theme)
+        const validTheme: ThemeName = [
+          "default",
+          "ocean",
+          "sunset",
+          "forest",
+          "royal",
+          "dark",
+        ].includes(theme)
           ? theme
           : "default";
-        
+
         applyTheme(validTheme);
       } catch (error) {
         console.error("Error loading theme:", error);
@@ -51,4 +64,3 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
 
   return <>{children}</>;
 }
-

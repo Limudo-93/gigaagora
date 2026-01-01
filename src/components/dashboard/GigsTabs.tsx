@@ -58,7 +58,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
         let q = supabase
           .from("gigs")
           .select(
-            "id,title,location_name,address_text,timezone,start_time,end_time,show_minutes,break_minutes,status,flyer_url"
+            "id,title,location_name,address_text,timezone,start_time,end_time,show_minutes,break_minutes,status,flyer_url",
           )
           .eq("contractor_id", userId);
 
@@ -85,14 +85,22 @@ export default function GigsTabs({ userId }: { userId: string }) {
           q = q.lt("start_time", new Date().toISOString());
         }
 
-        const { data, error } = await q.order("start_time", { ascending: true, nullsFirst: true });
+        const { data, error } = await q.order("start_time", {
+          ascending: true,
+          nullsFirst: true,
+        });
 
-        console.log("GigsTabs query result:", { 
-          dataCount: data?.length || 0, 
-          error, 
-          tab, 
+        console.log("GigsTabs query result:", {
+          dataCount: data?.length || 0,
+          error,
+          tab,
           userId,
-          gigs: data?.map((g: any) => ({ id: g.id, title: g.title, status: g.status, start_time: g.start_time }))
+          gigs: data?.map((g: any) => ({
+            id: g.id,
+            title: g.title,
+            status: g.status,
+            start_time: g.start_time,
+          })),
         });
 
         if (error) {
@@ -104,7 +112,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
             code: error.code,
           });
           setErrorMsg(
-            `Erro ao carregar gigs: ${error.message}${error.hint ? ` (${error.hint})` : ""}`
+            `Erro ao carregar gigs: ${error.message}${error.hint ? ` (${error.hint})` : ""}`,
           );
           setRows([]);
           return;
@@ -121,19 +129,30 @@ export default function GigsTabs({ userId }: { userId: string }) {
             // Se tem start_time, só inclui se for futura ou hoje
             return new Date(gig.start_time) >= now;
           });
-          console.log("GigsTabs: Gigs filtradas por data futura ou sem data:", filteredData.length, "de", data?.length || 0);
+          console.log(
+            "GigsTabs: Gigs filtradas por data futura ou sem data:",
+            filteredData.length,
+            "de",
+            data?.length || 0,
+          );
         }
 
         if (!filteredData || filteredData.length === 0) {
-          console.log("GigsTabs: Nenhuma gig encontrada para:", { tab, userId });
+          console.log("GigsTabs: Nenhuma gig encontrada para:", {
+            tab,
+            userId,
+          });
           // Verificar se há gigs com outros status para debug
           const { data: allGigs } = await supabase
             .from("gigs")
             .select("id, title, status, start_time")
             .eq("contractor_id", userId)
             .order("start_time", { ascending: true, nullsFirst: true });
-          console.log("GigsTabs: Todas as gigs do contratante (para debug):", allGigs);
-          
+          console.log(
+            "GigsTabs: Todas as gigs do contratante (para debug):",
+            allGigs,
+          );
+
           // Verificar especificamente gigs publicadas
           if (tab === "upcoming") {
             const { data: publishedGigs } = await supabase
@@ -142,7 +161,10 @@ export default function GigsTabs({ userId }: { userId: string }) {
               .eq("contractor_id", userId)
               .in("status", publishedStatuses)
               .order("start_time", { ascending: true, nullsFirst: true });
-            console.log("GigsTabs: Gigs publicadas do contratante:", publishedGigs);
+            console.log(
+              "GigsTabs: Gigs publicadas do contratante:",
+              publishedGigs,
+            );
           }
         }
 
@@ -162,13 +184,15 @@ export default function GigsTabs({ userId }: { userId: string }) {
             // Busca músicos confirmados para esta gig
             const { data: confirmedData } = await supabase.rpc(
               "rpc_list_confirmed_musicians_for_gig",
-              { p_gig_id: gig.id }
+              { p_gig_id: gig.id },
             );
 
             return {
               ...gig,
-              min_cache: cacheValues.length > 0 ? Math.min(...cacheValues) : null,
-              max_cache: cacheValues.length > 0 ? Math.max(...cacheValues) : null,
+              min_cache:
+                cacheValues.length > 0 ? Math.min(...cacheValues) : null,
+              max_cache:
+                cacheValues.length > 0 ? Math.max(...cacheValues) : null,
               confirmed_musicians: (confirmedData || []).map((m: any) => ({
                 musician_id: m.musician_id,
                 musician_name: m.musician_name,
@@ -176,7 +200,7 @@ export default function GigsTabs({ userId }: { userId: string }) {
                 instrument: m.instrument,
               })),
             };
-          })
+          }),
         );
 
         console.log("GigsTabs loaded:", gigsWithCache.length, "gigs");
@@ -201,24 +225,24 @@ export default function GigsTabs({ userId }: { userId: string }) {
     const channel = supabase
       .channel(`gigs-tabs-${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'gigs',
+          event: "*",
+          schema: "public",
+          table: "gigs",
           filter: `contractor_id=eq.${userId}`,
         },
         () => {
           // Recarregar quando houver mudanças nas gigs do contratante
-          console.log('Mudança detectada em gigs, recarregando...');
+          console.log("Mudança detectada em gigs, recarregando...");
           load();
-        }
+        },
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Subscription ativa para gigs-tabs');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Erro na subscription gigs-tabs');
+        if (status === "SUBSCRIBED") {
+          console.log("Subscription ativa para gigs-tabs");
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("Erro na subscription gigs-tabs");
         }
       });
 
@@ -270,7 +294,9 @@ export default function GigsTabs({ userId }: { userId: string }) {
   return (
     <section className="mt-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg md:text-xl font-semibold text-foreground">Meus Gigs</h2>
+        <h2 className="text-lg md:text-xl font-semibold text-foreground">
+          Meus Gigs
+        </h2>
         <Button asChild>
           <Link href={"/dashboard/gigs/new" as any}>
             <Plus className="mr-2 h-4 w-4" />
@@ -307,24 +333,26 @@ export default function GigsTabs({ userId }: { userId: string }) {
           ) : filtered.length === 0 ? (
             <Card>
               <CardContent className="px-4 py-6 text-center">
-                <p className="text-sm font-medium text-foreground">Nenhuma gig encontrada</p>
+                <p className="text-sm font-medium text-foreground">
+                  Nenhuma gig encontrada
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {tab === "draft"
                     ? "Nenhuma gig em rascunho."
                     : tab === "upcoming"
-                    ? "Nenhuma gig aberta."
-                    : tab === "past"
-                    ? "Nenhuma gig concluída."
-                    : "Nenhuma gig cancelada."}
+                      ? "Nenhuma gig aberta."
+                      : tab === "past"
+                        ? "Nenhuma gig concluída."
+                        : "Nenhuma gig cancelada."}
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4">
               {filtered.slice(0, 3).map((g) => (
-                <GigCard 
-                  key={g.id} 
-                  gig={g} 
+                <GigCard
+                  key={g.id}
+                  gig={g}
                   onOpen={handleOpenGig}
                   onEdit={handleEditGig}
                   onCancel={handleCancelGig}

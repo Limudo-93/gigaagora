@@ -20,7 +20,8 @@ import {
 
 export const metadata = {
   title: "Como Funciona - Chama o Músico",
-  description: "Entenda como a plataforma Chama o Músico conecta músicos e contratantes",
+  description:
+    "Entenda como a plataforma Chama o Músico conecta músicos e contratantes",
 };
 
 export default function ComoFuncionaPage() {
@@ -30,16 +31,18 @@ export default function ComoFuncionaPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden gradient-music text-white py-20">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundSize: '60px 60px'
-        }}></div>
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundSize: "60px 60px",
+          }}
+        ></div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Como Funciona
-          </h1>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">Como Funciona</h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-            Conectando músicos talentosos com oportunidades de trabalho de forma simples e eficiente
+            Conectando músicos talentosos com oportunidades de trabalho de forma
+            simples e eficiente
           </p>
         </div>
       </section>
@@ -83,7 +86,8 @@ export default function ComoFuncionaPage() {
                   Publique seu Trabalho
                 </h3>
                 <p className="text-gray-600">
-                  Descreva o evento, defina os instrumentos necessários e o cachê oferecido
+                  Descreva o evento, defina os instrumentos necessários e o
+                  cachê oferecido
                 </p>
               </CardContent>
             </Card>
@@ -97,7 +101,8 @@ export default function ComoFuncionaPage() {
                   Receba Propostas
                 </h3>
                 <p className="text-gray-600">
-                  Músicos qualificados serão automaticamente sugeridos ou você pode convidar diretamente
+                  Músicos qualificados serão automaticamente sugeridos ou você
+                  pode convidar diretamente
                 </p>
               </CardContent>
             </Card>
@@ -111,7 +116,8 @@ export default function ComoFuncionaPage() {
                   Confirme e Contrate
                 </h3>
                 <p className="text-gray-600">
-                  Avalie os perfis, converse com os músicos e confirme os selecionados
+                  Avalie os perfis, converse com os músicos e confirme os
+                  selecionados
                 </p>
               </CardContent>
             </Card>
@@ -144,7 +150,8 @@ export default function ComoFuncionaPage() {
                   Complete seu Perfil
                 </h3>
                 <p className="text-gray-600">
-                  Adicione seus instrumentos, gêneros musicais, experiência e fotos
+                  Adicione seus instrumentos, gêneros musicais, experiência e
+                  fotos
                 </p>
               </CardContent>
             </Card>
@@ -158,7 +165,8 @@ export default function ComoFuncionaPage() {
                   Receba Convites
                 </h3>
                 <p className="text-gray-600">
-                  Seja encontrado por contratantes ou receba convites diretos para trabalhos
+                  Seja encontrado por contratantes ou receba convites diretos
+                  para trabalhos
                 </p>
               </CardContent>
             </Card>
@@ -172,7 +180,8 @@ export default function ComoFuncionaPage() {
                   Avalie Oportunidades
                 </h3>
                 <p className="text-gray-600">
-                  Veja detalhes do trabalho, data, local e cachê antes de aceitar
+                  Veja detalhes do trabalho, data, local e cachê antes de
+                  aceitar
                 </p>
               </CardContent>
             </Card>
@@ -216,7 +225,8 @@ export default function ComoFuncionaPage() {
                   Sistema de Match Inteligente
                 </h3>
                 <p className="text-gray-600">
-                  Nossa plataforma conecta automaticamente músicos com trabalhos compatíveis baseado em instrumento, gênero e localização
+                  Nossa plataforma conecta automaticamente músicos com trabalhos
+                  compatíveis baseado em instrumento, gênero e localização
                 </p>
               </CardContent>
             </Card>
@@ -230,7 +240,8 @@ export default function ComoFuncionaPage() {
                   Sistema de Avaliações
                 </h3>
                 <p className="text-gray-600">
-                  Músicos e contratantes podem avaliar uns aos outros após cada trabalho, construindo reputação e confiança
+                  Músicos e contratantes podem avaliar uns aos outros após cada
+                  trabalho, construindo reputação e confiança
                 </p>
               </CardContent>
             </Card>
@@ -244,7 +255,8 @@ export default function ComoFuncionaPage() {
                   Mensagens Integradas
                 </h3>
                 <p className="text-gray-600">
-                  Comunique-se diretamente com músicos ou contratantes através da plataforma
+                  Comunique-se diretamente com músicos ou contratantes através
+                  da plataforma
                 </p>
               </CardContent>
             </Card>
@@ -258,7 +270,8 @@ export default function ComoFuncionaPage() {
                   Agenda Integrada
                 </h3>
                 <p className="text-gray-600">
-                  Gerencie todos os seus trabalhos confirmados em uma agenda centralizada
+                  Gerencie todos os seus trabalhos confirmados em uma agenda
+                  centralizada
                 </p>
               </CardContent>
             </Card>
@@ -272,7 +285,8 @@ export default function ComoFuncionaPage() {
                   Transparência Financeira
                 </h3>
                 <p className="text-gray-600">
-                  Cachê definido claramente desde o início, sem surpresas ou negociações complicadas
+                  Cachê definido claramente desde o início, sem surpresas ou
+                  negociações complicadas
                 </p>
               </CardContent>
             </Card>
@@ -286,7 +300,8 @@ export default function ComoFuncionaPage() {
                   Segurança e Confiança
                 </h3>
                 <p className="text-gray-600">
-                  Perfis verificados, histórico de trabalhos e sistema de avaliações garantem transparência
+                  Perfis verificados, histórico de trabalhos e sistema de
+                  avaliações garantem transparência
                 </p>
               </CardContent>
             </Card>
@@ -301,7 +316,8 @@ export default function ComoFuncionaPage() {
             Pronto para começar?
           </h2>
           <p className="text-xl mb-8 text-white/90">
-            Junte-se à comunidade de músicos e contratantes que já estão usando o Chama o Músico
+            Junte-se à comunidade de músicos e contratantes que já estão usando
+            o Chama o Músico
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -330,5 +346,3 @@ export default function ComoFuncionaPage() {
     </div>
   );
 }
-
-

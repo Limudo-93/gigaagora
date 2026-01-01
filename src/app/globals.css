@@ -45,23 +45,52 @@
 
   body {
     @apply bg-background text-foreground;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
     background-image: 
       /* Gradientes radiais musicais */
-      radial-gradient(circle at 10% 20%, rgba(255, 179, 71, 0.25), transparent 45%),
-      radial-gradient(circle at 80% 0%, rgba(42, 166, 161, 0.2), transparent 50%),
-      radial-gradient(circle at 50% 80%, rgba(255, 107, 74, 0.18), transparent 48%),
-      radial-gradient(circle at 90% 60%, rgba(255, 179, 71, 0.15), transparent 42%),
-      radial-gradient(circle at 20% 50%, rgba(42, 166, 161, 0.12), transparent 40%),
+      radial-gradient(
+        circle at 10% 20%,
+        rgba(255, 179, 71, 0.25),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 80% 0%,
+        rgba(42, 166, 161, 0.2),
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 50% 80%,
+        rgba(255, 107, 74, 0.18),
+        transparent 48%
+      ),
+      radial-gradient(
+        circle at 90% 60%,
+        rgba(255, 179, 71, 0.15),
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 20% 50%,
+        rgba(42, 166, 161, 0.12),
+        transparent 40%
+      ),
       /* Gradiente linear base */
-      linear-gradient(140deg, rgba(255, 247, 237, 0.95) 0%, rgba(255, 250, 245, 0.92) 25%, rgba(250, 255, 253, 0.9) 50%, rgba(244, 251, 255, 0.92) 75%, rgba(255, 247, 237, 0.95) 100%);
+        linear-gradient(
+          140deg,
+          rgba(255, 247, 237, 0.95) 0%,
+          rgba(255, 250, 245, 0.92) 25%,
+          rgba(250, 255, 253, 0.9) 50%,
+          rgba(244, 251, 255, 0.92) 75%,
+          rgba(255, 247, 237, 0.95) 100%
+        );
     background-attachment: fixed;
     position: relative;
   }
 
   /* Padrão de notas musicais no background */
   body::before {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
@@ -72,15 +101,19 @@
       /* Notas musicais em diferentes posições */
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ctext x='10' y='40' font-size='40' fill='%23ff6b4a'%3E♪%3C/text%3E%3Ctext x='60' y='80' font-size='35' fill='%232aa6a1'%3E♫%3C/text%3E%3Ctext x='20' y='100' font-size='45' fill='%23ffb347'%3E♬%3C/text%3E%3C/svg%3E"),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Ctext x='30' y='60' font-size='50' fill='%232aa6a1'%3E♫%3C/text%3E%3Ctext x='80' y='100' font-size='40' fill='%23ff6b4a'%3E♪%3C/text%3E%3Ctext x='10' y='120' font-size='35' fill='%23ffb347'%3E♬%3C/text%3E%3C/svg%3E");
-    background-size: 200px 200px, 250px 250px;
-    background-position: 0 0, 100px 100px;
+    background-size:
+      200px 200px,
+      250px 250px;
+    background-position:
+      0 0,
+      100px 100px;
     pointer-events: none;
     z-index: -1;
   }
 
   /* Padrão de ondas sonoras */
   body::after {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
@@ -91,20 +124,31 @@
       /* Ondas sonoras */
       url("data:image/svg+xml,%3Csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50 T150 50 T200 50' stroke='%23ff6b4a' fill='none' stroke-width='2'/%3E%3Cpath d='M0 50 Q25 70, 50 50 T100 50 T150 50 T200 50' stroke='%232aa6a1' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"),
       url("data:image/svg+xml,%3Csvg width='150' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q20 20, 40 40 T80 40 T120 40 T150 40' stroke='%23ffb347' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
-    background-size: 300px 150px, 250px 120px;
-    background-position: 50px 100px, 200px 300px;
+    background-size:
+      300px 150px,
+      250px 120px;
+    background-position:
+      50px 100px,
+      200px 300px;
     pointer-events: none;
     z-index: -1;
   }
 
   /* Garantir contraste adequado em todos os temas */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply text-foreground;
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
 
-  p, span, div {
+  p,
+  span,
+  div {
     @apply text-foreground;
   }
 
@@ -117,11 +161,17 @@
 @layer components {
   /* Classes utilitárias para gradientes temáticos */
   .gradient-music {
-    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%));
+    background: var(
+      --theme-gradient,
+      linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%)
+    );
   }
 
   .gradient-text {
-    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%));
+    background: var(
+      --theme-gradient,
+      linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%)
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -134,10 +184,13 @@
 
   /* Botões com gradiente usando tema */
   .btn-gradient {
-    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%));
+    background: var(
+      --theme-gradient,
+      linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%)
+    );
     @apply text-primary-foreground shadow hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all;
   }
-  
+
   .btn-gradient:hover {
     filter: brightness(0.95) saturate(1.1);
   }
@@ -145,15 +198,18 @@
   /* Botão padrão com gradiente do tema */
   button[class*="bg-primary"],
   .btn-primary-gradient {
-    background: var(--theme-gradient, linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%)) !important;
+    background: var(
+      --theme-gradient,
+      linear-gradient(135deg, #ff6b4a 0%, #ffb347 45%, #2aa6a1 100%)
+    ) !important;
   }
-  
+
   button[class*="bg-primary"]:hover,
   .btn-primary-gradient:hover {
     filter: brightness(0.85) saturate(1.2) contrast(1.1);
     transform: scale(1.02);
   }
-  
+
   button[class*="bg-primary"]:active,
   .btn-primary-gradient:active {
     transform: scale(0.98);
@@ -171,7 +227,7 @@
     color: white !important;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   }
-  
+
   button[style*="--theme-gradient"]:hover,
   a[style*="--theme-gradient"]:hover,
   .btn-gradient-active:hover,
@@ -183,7 +239,7 @@
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     filter: brightness(0.85) saturate(1.2) contrast(1.1);
   }
-  
+
   button[style*="--theme-gradient"]:active,
   a[style*="--theme-gradient"]:active,
   .btn-gradient-active:active,
@@ -193,7 +249,7 @@
   .btn-primary-gradient:active {
     filter: brightness(0.8);
   }
-  
+
   /* Forçar texto branco em links com gradiente ativo */
   a[style*="background"][class*="btn-gradient-active"],
   a[style*="background"][class*="btn-gradient-active"] * {
@@ -236,7 +292,8 @@
 
   /* Animação de notas musicais flutuantes */
   @keyframes floatMusic {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0px) rotate(0deg);
     }
     50% {

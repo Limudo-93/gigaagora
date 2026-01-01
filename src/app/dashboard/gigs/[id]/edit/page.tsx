@@ -6,7 +6,15 @@ import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, Trash2, Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Loader2,
+  Upload,
+  X,
+  Image as ImageIcon,
+} from "lucide-react";
 import { INSTRUMENT_OPTIONS } from "@/lib/instruments";
 
 type GigRole = {
@@ -130,7 +138,7 @@ export default function EditGigPage() {
         if (gigData.show_minutes && gigData.show_minutes > 0) {
           const totalMinutos = gigData.show_minutes;
           const breakMinutos = gigData.break_minutes || 0;
-          
+
           // Se há break_minutes, estima que há pelo menos 2 entradas
           // Tenta descobrir quantas entradas baseado no break_minutes
           let estimatedEntradas = 1;
@@ -138,14 +146,18 @@ export default function EditGigPage() {
             // Assume intervalo padrão de 15-30 minutos entre entradas
             estimatedEntradas = Math.max(2, Math.floor(breakMinutos / 15) + 1);
           }
-          
+
           // Calcula duração por entrada
-          const minutosPorEntrada = Math.floor(totalMinutos / estimatedEntradas);
+          const minutosPorEntrada = Math.floor(
+            totalMinutos / estimatedEntradas,
+          );
           setDuracaoEntrada(minutosParaHorasMinutos(minutosPorEntrada || 60));
           setNumEntradas(estimatedEntradas);
-          
+
           if (estimatedEntradas > 1 && breakMinutos > 0) {
-            setIntervaloMinutos(Math.floor(breakMinutos / (estimatedEntradas - 1)));
+            setIntervaloMinutos(
+              Math.floor(breakMinutos / (estimatedEntradas - 1)),
+            );
           } else {
             setIntervaloMinutos(0);
           }
@@ -179,7 +191,7 @@ export default function EditGigPage() {
                 ? ""
                 : formatCurrency(role.cache);
             return acc;
-          }, {})
+          }, {}),
         );
       } catch (e: any) {
         console.error("Error loading gig:", e);
@@ -230,7 +242,10 @@ export default function EditGigPage() {
   };
 
   // Função para fazer upload do flyer para Supabase Storage
-  const uploadFlyer = async (gigId: string, userId: string): Promise<string | null> => {
+  const uploadFlyer = async (
+    gigId: string,
+    userId: string,
+  ): Promise<string | null> => {
     if (!flyerFile) return currentFlyerUrl;
 
     setUploadingFlyer(true);
@@ -251,12 +266,13 @@ export default function EditGigPage() {
       if (error) {
         // Se o bucket não existir, tenta usar 'public'
         if (error.message.includes("Bucket not found")) {
-          const { data: publicData, error: publicError } = await supabase.storage
-            .from("public")
-            .upload(`${userId}/${fileName}`, flyerFile, {
-              cacheControl: "3600",
-              upsert: false,
-            });
+          const { data: publicData, error: publicError } =
+            await supabase.storage
+              .from("public")
+              .upload(`${userId}/${fileName}`, flyerFile, {
+                cacheControl: "3600",
+                upsert: false,
+              });
 
           if (publicError) {
             console.error("Error uploading to public bucket:", publicError);
@@ -347,7 +363,8 @@ export default function EditGigPage() {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const duracaoMinutos = horasMinutosParaMinutos(duracaoEntrada);
     const totalShowMinutes = Number(numEntradas) * duracaoMinutos;
-    const totalIntervaloMinutos = (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
+    const totalIntervaloMinutos =
+      (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
     const totalMinutos = totalShowMinutes + totalIntervaloMinutos;
 
     return new Date(startDateTime.getTime() + totalMinutos * 60000);
@@ -361,7 +378,8 @@ export default function EditGigPage() {
 
     const duracaoMinutos = horasMinutosParaMinutos(duracaoEntrada);
     const showMinutes = Number(numEntradas) * duracaoMinutos;
-    const breakMinutes = (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
+    const breakMinutes =
+      (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
 
     return { showMinutes, breakMinutes };
   };
@@ -393,7 +411,9 @@ export default function EditGigPage() {
       // Valida formato HH:MM
       const duracaoRegex = /^\d{1,2}:\d{2}$/;
       if (!duracaoEntrada || !duracaoRegex.test(duracaoEntrada)) {
-        setError("A duração de cada entrada deve estar no formato HH:MM (ex: 1:15 para 1h15min).");
+        setError(
+          "A duração de cada entrada deve estar no formato HH:MM (ex: 1:15 para 1h15min).",
+        );
         setSaving(false);
         return;
       }
@@ -450,8 +470,10 @@ export default function EditGigPage() {
       }
 
       // Calcula show_minutes e break_minutes
-      const { showMinutes: calculatedShowMinutes, breakMinutes: calculatedBreakMinutes } =
-        calcularMinutosParaBanco();
+      const {
+        showMinutes: calculatedShowMinutes,
+        breakMinutes: calculatedBreakMinutes,
+      } = calcularMinutosParaBanco();
 
       // Faz upload do flyer se houver
       let flyerUrl: string | null = currentFlyerUrl;
@@ -499,7 +521,9 @@ export default function EditGigPage() {
         .map((r) => r.id);
 
       // Deleta roles que não estão mais na lista
-      const rolesToDelete = existingRoleIds.filter((id) => !currentRoleIds.includes(id));
+      const rolesToDelete = existingRoleIds.filter(
+        (id) => !currentRoleIds.includes(id),
+      );
       if (rolesToDelete.length > 0) {
         const { error: deleteError } = await supabase
           .from("gig_roles")
@@ -517,14 +541,22 @@ export default function EditGigPage() {
           gig_id: gigId,
           instrument: role.instrument.trim(),
           quantity: role.quantity,
-          desired_genres: role.desired_genres.length > 0 ? role.desired_genres : [],
-          desired_skills: role.desired_skills.length > 0 ? role.desired_skills : [],
-          desired_setup: role.desired_setup.length > 0 ? role.desired_setup : [],
+          desired_genres:
+            role.desired_genres.length > 0 ? role.desired_genres : [],
+          desired_skills:
+            role.desired_skills.length > 0 ? role.desired_skills : [],
+          desired_setup:
+            role.desired_setup.length > 0 ? role.desired_setup : [],
           notes: role.notes.trim() || null,
-          cache: role.cache && typeof role.cache === "number" ? role.cache : null,
+          cache:
+            role.cache && typeof role.cache === "number" ? role.cache : null,
         };
 
-        if (role.id && !role.id.startsWith("crypto") && existingRoleIds.includes(role.id)) {
+        if (
+          role.id &&
+          !role.id.startsWith("crypto") &&
+          existingRoleIds.includes(role.id)
+        ) {
           // Atualiza role existente
           const { error: updateError } = await supabase
             .from("gig_roles")
@@ -548,7 +580,7 @@ export default function EditGigPage() {
 
       // Sucesso
       console.log("Gig updated successfully:", gigId);
-      
+
       // Redireciona para o dashboard
       router.push("/dashboard");
     } catch (err: any) {
@@ -568,7 +600,9 @@ export default function EditGigPage() {
       <DashboardLayout>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-foreground/70" />
-          <span className="ml-2 text-sm text-foreground/70">Carregando gig...</span>
+          <span className="ml-2 text-sm text-foreground/70">
+            Carregando gig...
+          </span>
         </div>
       </DashboardLayout>
     );
@@ -579,15 +613,13 @@ export default function EditGigPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.back()}
-          >
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Editar Gig</h1>
+            <h1 className="text-2xl font-semibold text-foreground">
+              Editar Gig
+            </h1>
             <p className="text-sm text-foreground/70">
               Edite os dados da gig e as vagas necessárias
             </p>
@@ -604,11 +636,16 @@ export default function EditGigPage() {
           {/* Informações Básicas */}
           <Card className="bg-white border-white/70">
             <CardHeader>
-              <CardTitle className="text-foreground">Informações Básicas</CardTitle>
+              <CardTitle className="text-foreground">
+                Informações Básicas
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-foreground" htmlFor="title">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="title"
+                >
                   Título <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -623,7 +660,10 @@ export default function EditGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground" htmlFor="description">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="description"
+                >
                   Descrição
                 </label>
                 <textarea
@@ -638,7 +678,10 @@ export default function EditGigPage() {
 
               {/* Campo de Flyer */}
               <div>
-                <label className="text-sm font-medium text-foreground" htmlFor="flyer">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="flyer"
+                >
                   Flyer do Evento
                 </label>
                 <div className="mt-1 space-y-2">
@@ -650,7 +693,7 @@ export default function EditGigPage() {
                     className="hidden"
                     onChange={handleFlyerSelect}
                   />
-                  
+
                   {!flyerPreview ? (
                     <Button
                       type="button"
@@ -681,7 +724,9 @@ export default function EditGigPage() {
                               {flyerFile?.name || "Flyer atual"}
                             </p>
                             <p className="text-xs text-foreground/70">
-                              {flyerFile ? `${(flyerFile.size / 1024).toFixed(0)} KB` : "Flyer existente"}
+                              {flyerFile
+                                ? `${(flyerFile.size / 1024).toFixed(0)} KB`
+                                : "Flyer existente"}
                             </p>
                           </div>
                           <Button
@@ -721,7 +766,10 @@ export default function EditGigPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-foreground" htmlFor="locationName">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="locationName"
+                >
                   Nome do Local
                 </label>
                 <input
@@ -735,7 +783,10 @@ export default function EditGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground" htmlFor="addressText">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="addressText"
+                >
                   Endereço Completo
                 </label>
                 <input
@@ -750,7 +801,10 @@ export default function EditGigPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="city">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="city"
+                  >
                     Cidade
                   </label>
                   <input
@@ -764,7 +818,10 @@ export default function EditGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="state">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="state"
+                  >
                     Estado
                   </label>
                   <input
@@ -778,7 +835,6 @@ export default function EditGigPage() {
                   />
                 </div>
               </div>
-
             </CardContent>
           </Card>
 
@@ -790,7 +846,10 @@ export default function EditGigPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="startDate">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="startDate"
+                  >
                     Data de Início <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -804,7 +863,10 @@ export default function EditGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="startTime">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="startTime"
+                  >
                     Horário de Início <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -820,7 +882,10 @@ export default function EditGigPage() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="numEntradas">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="numEntradas"
+                  >
                     Número de Entradas <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -830,7 +895,9 @@ export default function EditGigPage() {
                     className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={numEntradas}
                     onChange={(e) =>
-                      setNumEntradas(e.target.value ? Number(e.target.value) : "")
+                      setNumEntradas(
+                        e.target.value ? Number(e.target.value) : "",
+                      )
                     }
                     placeholder="1"
                     required
@@ -841,8 +908,12 @@ export default function EditGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="duracaoEntrada">
-                    Duração de Cada Entrada <span className="text-red-500">*</span>
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="duracaoEntrada"
+                  >
+                    Duração de Cada Entrada{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="duracaoEntrada"
@@ -865,7 +936,10 @@ export default function EditGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="intervaloMinutos">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="intervaloMinutos"
+                  >
                     Intervalo entre Entradas (minutos)
                   </label>
                   <input
@@ -875,7 +949,9 @@ export default function EditGigPage() {
                     className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={intervaloMinutos}
                     onChange={(e) =>
-                      setIntervaloMinutos(e.target.value ? Number(e.target.value) : "")
+                      setIntervaloMinutos(
+                        e.target.value ? Number(e.target.value) : "",
+                      )
                     }
                     placeholder="0"
                   />
@@ -888,7 +964,9 @@ export default function EditGigPage() {
               {/* Mostra o horário de término calculado */}
               {startDate && startTime && numEntradas && duracaoEntrada && (
                 <div className="rounded-lg border border-white/70 bg-white/70 p-3">
-                  <p className="text-sm font-medium text-foreground">Horário de Término Calculado:</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Horário de Término Calculado:
+                  </p>
                   <p className="mt-1 text-sm text-foreground/70">
                     {calcularHorarioTermino()?.toLocaleString("pt-BR", {
                       day: "2-digit",
@@ -899,7 +977,8 @@ export default function EditGigPage() {
                     }) || "—"}
                   </p>
                   <p className="mt-2 text-xs text-foreground/70">
-                    Duração total: {calcularMinutosParaBanco().showMinutes} minutos
+                    Duração total: {calcularMinutosParaBanco().showMinutes}{" "}
+                    minutos
                     {calcularMinutosParaBanco().breakMinutes > 0 &&
                       ` + ${calcularMinutosParaBanco().breakMinutes} minutos de intervalo`}
                   </p>
@@ -911,7 +990,9 @@ export default function EditGigPage() {
           {/* Vagas (Roles) */}
           <Card className="bg-white border-white/70">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-foreground">Vagas Necessárias</CardTitle>
+              <CardTitle className="text-foreground">
+                Vagas Necessárias
+              </CardTitle>
               <Button
                 type="button"
                 variant="outline"
@@ -926,7 +1007,8 @@ export default function EditGigPage() {
             <CardContent className="space-y-4">
               {roles.length === 0 ? (
                 <p className="text-sm text-foreground/70">
-                  Nenhuma vaga adicionada. Clique em "Adicionar Vaga" para começar.
+                  Nenhuma vaga adicionada. Clique em &quot;Adicionar Vaga&quot;
+                  para começar.
                 </p>
               ) : (
                 roles.map((role) => (
@@ -935,7 +1017,9 @@ export default function EditGigPage() {
                     className="rounded-lg border border-white/70 bg-white/70 p-4 space-y-3"
                   >
                     <div className="flex items-start justify-between">
-                      <h4 className="font-medium text-foreground">Vaga {roles.indexOf(role) + 1}</h4>
+                      <h4 className="font-medium text-foreground">
+                        Vaga {roles.indexOf(role) + 1}
+                      </h4>
                       <Button
                         type="button"
                         variant="ghost"
@@ -963,7 +1047,11 @@ export default function EditGigPage() {
                                   e.preventDefault();
                                   e.stopPropagation();
                                   const nextInstrument = isSelected ? "" : inst;
-                                  updateRole(role.id, "instrument", nextInstrument);
+                                  updateRole(
+                                    role.id,
+                                    "instrument",
+                                    nextInstrument,
+                                  );
                                 }}
                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
                                   isSelected
@@ -988,7 +1076,11 @@ export default function EditGigPage() {
                           className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                           value={role.quantity}
                           onChange={(e) =>
-                            updateRole(role.id, "quantity", Number(e.target.value) || 1)
+                            updateRole(
+                              role.id,
+                              "quantity",
+                              Number(e.target.value) || 1,
+                            )
                           }
                           required
                         />
@@ -1012,10 +1104,19 @@ export default function EditGigPage() {
                               : "")
                         }
                         onChange={(e) => {
-                          const rawValue = normalizeCurrencyInput(e.target.value);
-                          setCacheInputs((prev) => ({ ...prev, [role.id]: rawValue }));
+                          const rawValue = normalizeCurrencyInput(
+                            e.target.value,
+                          );
+                          setCacheInputs((prev) => ({
+                            ...prev,
+                            [role.id]: rawValue,
+                          }));
                           const parsed = parseCurrencyInput(rawValue);
-                          updateRole(role.id, "cache", parsed === "" ? "" : parsed);
+                          updateRole(
+                            role.id,
+                            "cache",
+                            parsed === "" ? "" : parsed,
+                          );
                         }}
                         onBlur={(e) => {
                           const rawValue = cacheInputs[role.id] ?? "";
@@ -1034,12 +1135,16 @@ export default function EditGigPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium text-foreground">Observações</label>
+                      <label className="text-sm font-medium text-foreground">
+                        Observações
+                      </label>
                       <textarea
                         className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         rows={2}
                         value={role.notes}
-                        onChange={(e) => updateRole(role.id, "notes", e.target.value)}
+                        onChange={(e) =>
+                          updateRole(role.id, "notes", e.target.value)
+                        }
                         placeholder="Observações sobre esta vaga..."
                       />
                     </div>
@@ -1067,13 +1172,13 @@ export default function EditGigPage() {
               disabled={saving || uploadingFlyer}
               className="bg-white/70 text-foreground hover:bg-white/70"
             >
-              {saving || uploadingFlyer ? (uploadingFlyer ? "Enviando flyer..." : "Salvando...") : "Salvar como Rascunho"}
+              {saving || uploadingFlyer
+                ? uploadingFlyer
+                  ? "Enviando flyer..."
+                  : "Salvando..."
+                : "Salvar como Rascunho"}
             </Button>
-            <Button
-              type="submit"
-              disabled={saving}
-              className="btn-gradient"
-            >
+            <Button type="submit" disabled={saving} className="btn-gradient">
               {saving ? "Publicando..." : "Publicar Gig"}
             </Button>
           </div>
@@ -1082,5 +1187,3 @@ export default function EditGigPage() {
     </DashboardLayout>
   );
 }
-
-

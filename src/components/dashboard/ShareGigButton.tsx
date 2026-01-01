@@ -25,12 +25,13 @@ export default function ShareGigButton({
 
   // Gera o link compartilhável - usando a página de matches para músicos se inscreverem
   // Se o usuário não estiver logado, será redirecionado para login e depois para a gig
-  const shareUrl = typeof window !== "undefined" 
-    ? `${window.location.origin}/dashboard/gigs/${gigId}/matches`
-    : `https://chamaomusico.com/dashboard/gigs/${gigId}/matches`;
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/dashboard/gigs/${gigId}/matches`
+      : `https://chamaomusico.com/dashboard/gigs/${gigId}/matches`;
 
   // Texto para compartilhar
-  const shareText = gigTitle 
+  const shareText = gigTitle
     ? `🎵 Oportunidade de trabalho: ${gigTitle}\n\nConfira os detalhes e se candidate: ${shareUrl}`
     : `🎵 Oportunidade de trabalho disponível!\n\nConfira os detalhes e se candidate: ${shareUrl}`;
 
@@ -121,7 +122,9 @@ export default function ShareGigButton({
         <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 border border-gray-200">
           <div className="py-1">
             <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-700">Compartilhar via</span>
+              <span className="text-xs font-semibold text-gray-700">
+                Compartilhar via
+              </span>
               <button
                 onClick={() => setShowMenu(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -158,4 +161,3 @@ export default function ShareGigButton({
     </div>
   );
 }
-

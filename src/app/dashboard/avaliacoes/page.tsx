@@ -21,7 +21,6 @@ type RatingRow = {
   is_public: boolean;
 };
 
-
 export default function AvaliacoesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +39,9 @@ export default function AvaliacoesPage() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserId(user?.id || null);
     };
     getUser();
@@ -60,7 +61,8 @@ export default function AvaliacoesPage() {
       // Isso garante consistência com as estatísticas do dashboard
       const { data: ratingsData, error: ratingsError } = await supabase
         .from("ratings")
-        .select(`
+        .select(
+          `
           id,
           invite_id,
           gig_id,
@@ -98,7 +100,8 @@ export default function AvaliacoesPage() {
               photo_url
             )
           )
-        `)
+        `,
+        )
         .eq("is_public", true)
         .or(`musician_id.eq.${userId},contractor_id.eq.${userId}`)
         .order("created_at", { ascending: false });
@@ -109,9 +112,11 @@ export default function AvaliacoesPage() {
       // Para manter privacidade, só mostramos avaliações recebidas
       const userRatings = (ratingsData || []).filter((r: any) => {
         // Se o usuário é músico e foi avaliado como músico
-        if (r.rated_type === 'musician' && r.musician_id === userId) return true;
+        if (r.rated_type === "musician" && r.musician_id === userId)
+          return true;
         // Se o usuário é contratante e foi avaliado como contratante
-        if (r.rated_type === 'contractor' && r.contractor_id === userId) return true;
+        if (r.rated_type === "contractor" && r.contractor_id === userId)
+          return true;
         return false;
       });
 
@@ -125,7 +130,9 @@ export default function AvaliacoesPage() {
           rated_type: r.rated_type,
           rating: r.rating,
           comment: r.custom_comment,
-          predefined_comments: Array.isArray(r.predefined_comments) ? r.predefined_comments : null,
+          predefined_comments: Array.isArray(r.predefined_comments)
+            ? r.predefined_comments
+            : null,
           is_public: r.is_public ?? true,
         };
       });
@@ -148,42 +155,53 @@ export default function AvaliacoesPage() {
   // Função para traduzir comentários pré-fixados
   const translatePredefinedComment = (comment: string): string => {
     const translations: Record<string, string> = {
-      'canta_bem': 'Canta bem',
-      'toca_bem': 'Toca bem',
-      'pontual': 'Pontual',
-      'roupas_adequadas': 'Roupas adequadas',
-      'profissional': 'Profissional',
-      'comunicativo': 'Comunicativo',
-      'flexivel': 'Flexível',
-      'criativo': 'Criativo',
-      'energico': 'Enérgico',
-      'organizado': 'Organizado',
-      'atrasado': 'Atrasado',
-      'desorganizado': 'Desorganizado',
-      'nao_comunicativo': 'Não comunicativo',
-      'roupas_inadequadas': 'Roupas inadequadas',
-      'pouco_profissional': 'Pouco profissional',
-      'inflexivel': 'Inflexível',
-      'pouca_energia': 'Pouca energia',
-      'nao_pontual': 'Não pontual',
+      canta_bem: "Canta bem",
+      toca_bem: "Toca bem",
+      pontual: "Pontual",
+      roupas_adequadas: "Roupas adequadas",
+      profissional: "Profissional",
+      comunicativo: "Comunicativo",
+      flexivel: "Flexível",
+      criativo: "Criativo",
+      energico: "Enérgico",
+      organizado: "Organizado",
+      atrasado: "Atrasado",
+      desorganizado: "Desorganizado",
+      nao_comunicativo: "Não comunicativo",
+      roupas_inadequadas: "Roupas inadequadas",
+      pouco_profissional: "Pouco profissional",
+      inflexivel: "Inflexível",
+      pouca_energia: "Pouca energia",
+      nao_pontual: "Não pontual",
     };
     return translations[comment] || comment;
   };
 
   // Calcular estatísticas diretamente das avaliações exibidas
   // Isso garante que o resumo sempre corresponda à lista de avaliações
-  const stats = ratings.length > 0 ? {
-    total: ratings.length,
-    average: ratings.reduce((sum, r) => sum + (r.rating || 0), 0) / ratings.length,
-    predefinedCommentsCount: ratings.reduce((acc, r) => {
-      if (r.predefined_comments && Array.isArray(r.predefined_comments)) {
-        r.predefined_comments.forEach((comment: string) => {
-          acc[comment] = (acc[comment] || 0) + 1;
-        });
-      }
-      return acc;
-    }, {} as Record<string, number>),
-  } : null;
+  const stats =
+    ratings.length > 0
+      ? {
+          total: ratings.length,
+          average:
+            ratings.reduce((sum, r) => sum + (r.rating || 0), 0) /
+            ratings.length,
+          predefinedCommentsCount: ratings.reduce(
+            (acc, r) => {
+              if (
+                r.predefined_comments &&
+                Array.isArray(r.predefined_comments)
+              ) {
+                r.predefined_comments.forEach((comment: string) => {
+                  acc[comment] = (acc[comment] || 0) + 1;
+                });
+              }
+              return acc;
+            },
+            {} as Record<string, number>,
+          ),
+        }
+      : null;
 
   // Top comentários pré-fixados
   const topPredefinedComments = stats
@@ -200,10 +218,15 @@ export default function AvaliacoesPage() {
           <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
           <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
           <div className="relative z-10">
-            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Sua reputação</p>
-            <h1 className="text-xl sm:text-2xl font-display font-semibold text-foreground">Avaliações</h1>
+            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">
+              Sua reputação
+            </p>
+            <h1 className="text-xl sm:text-2xl font-display font-semibold text-foreground">
+              Avaliações
+            </h1>
             <p className="text-sm text-foreground/60 mt-2">
-              Avaliações públicas fortalecem sua confiança e aumentam sua visibilidade.
+              Avaliações públicas fortalecem sua confiança e aumentam sua
+              visibilidade.
             </p>
           </div>
         </div>
@@ -219,7 +242,9 @@ export default function AvaliacoesPage() {
         {!loading && stats && stats.total > 0 && (
           <Card className="card-glass">
             <CardHeader className="pb-3 sm:pb-6">
-              <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Resumo das Avaliações</CardTitle>
+              <CardTitle className="text-lg sm:text-xl font-bold text-foreground">
+                Resumo das Avaliações
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6">
               {/* Estatísticas principais */}
@@ -232,9 +257,12 @@ export default function AvaliacoesPage() {
                     <p className="text-2xl sm:text-3xl font-bold text-foreground">
                       {stats.average.toFixed(1)}
                     </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Média de avaliações</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Média de avaliações
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {stats.total} {stats.total === 1 ? 'avaliação' : 'avaliações'} recebidas
+                      {stats.total}{" "}
+                      {stats.total === 1 ? "avaliação" : "avaliações"} recebidas
                     </p>
                   </div>
                 </div>
@@ -243,8 +271,12 @@ export default function AvaliacoesPage() {
                     <User className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-2xl sm:text-3xl font-bold text-foreground">{stats.total}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Total de avaliações</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-foreground">
+                      {stats.total}
+                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Total de avaliações
+                    </p>
                   </div>
                 </div>
               </div>
@@ -280,7 +312,9 @@ export default function AvaliacoesPage() {
         {loading ? (
           <div className="flex items-center justify-center py-8 sm:py-12">
             <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-xs sm:text-sm text-muted-foreground">Carregando avaliações...</span>
+            <span className="ml-2 text-xs sm:text-sm text-muted-foreground">
+              Carregando avaliações...
+            </span>
           </div>
         ) : ratings.length === 0 ? (
           <Card className="card-glass">
@@ -322,19 +356,22 @@ export default function AvaliacoesPage() {
                     </div>
 
                     {/* Comentários pré-fixados */}
-                    {rating.predefined_comments && rating.predefined_comments.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {rating.predefined_comments.map((comment: string, idx: number) => (
-                          <Badge
-                            key={idx}
-                            variant="secondary"
-                            className="bg-muted text-foreground border-border text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1"
-                          >
-                            {translatePredefinedComment(comment)}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    {rating.predefined_comments &&
+                      rating.predefined_comments.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                          {rating.predefined_comments.map(
+                            (comment: string, idx: number) => (
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className="bg-muted text-foreground border-border text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1"
+                              >
+                                {translatePredefinedComment(comment)}
+                              </Badge>
+                            ),
+                          )}
+                        </div>
+                      )}
 
                     {/* Comentário customizado */}
                     {rating.comment && (
@@ -373,4 +410,3 @@ export default function AvaliacoesPage() {
     </DashboardLayout>
   );
 }
-

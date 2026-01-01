@@ -8,7 +8,11 @@ type LogoProps = {
   className?: string;
 };
 
-export default function Logo({ size = "md", showText = true, className = "" }: LogoProps) {
+export default function Logo({
+  size = "md",
+  showText = true,
+  className = "",
+}: LogoProps) {
   const sizeClasses = {
     sm: "h-8 w-8",
     md: "h-10 w-10",
@@ -23,7 +27,9 @@ export default function Logo({ size = "md", showText = true, className = "" }: L
 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`relative ${sizeClasses[size]} flex items-center justify-center`}>
+      <div
+        className={`relative ${sizeClasses[size]} flex items-center justify-center`}
+      >
         <Image
           src="/logo.png"
           alt="Logo Chama o Músico"
@@ -35,15 +41,18 @@ export default function Logo({ size = "md", showText = true, className = "" }: L
       </div>
       {showText && (
         <div>
-          <span className={`${textSizes[size]} font-semibold font-display bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent`}>
+          <span
+            className={`${textSizes[size]} font-semibold font-display bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1] bg-clip-text text-transparent`}
+          >
             Chama o Músico
           </span>
           {size !== "sm" && (
-            <p className="text-sm text-foreground/70 -mt-1">Conectando palcos e talentos</p>
+            <p className="text-sm text-foreground/70 -mt-1">
+              Conectando palcos e talentos
+            </p>
           )}
         </div>
       )}
     </div>
   );
 }
-

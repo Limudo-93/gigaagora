@@ -18,7 +18,9 @@ interface NotificationContextType {
   showNotification: (notification: Omit<Notification, "id">) => void;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined,
+);
 
 export function useNotification() {
   const context = useContext(NotificationContext);
@@ -28,13 +30,20 @@ export function useNotification() {
   return context;
 }
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
+export function NotificationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
 
-  const showNotification = React.useCallback((notification: Omit<Notification, "id">) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setNotifications((prev) => [...prev, { ...notification, id }]);
-  }, []);
+  const showNotification = React.useCallback(
+    (notification: Omit<Notification, "id">) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setNotifications((prev) => [...prev, { ...notification, id }]);
+    },
+    [],
+  );
 
   const removeNotification = React.useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -58,4 +67,3 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     </NotificationContext.Provider>
   );
 }
-

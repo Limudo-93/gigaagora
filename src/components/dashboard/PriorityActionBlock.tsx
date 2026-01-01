@@ -4,18 +4,18 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Target, 
-  UserCircle, 
-  Mail, 
-  CheckCircle2, 
+import {
+  Target,
+  UserCircle,
+  Mail,
+  CheckCircle2,
   ArrowRight,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type PriorityAction = 
+type PriorityAction =
   | { type: "complete_profile"; progress: number }
   | { type: "respond_invites"; count: number }
   | { type: "view_gigs"; count: number }
@@ -131,7 +131,8 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
         return {
           icon: <Mail className="h-6 w-6" />,
           title: `${action.count} ${action.count === 1 ? "convite aguardando" : "convites aguardando"}`,
-          description: "Responda rapidamente para não perder oportunidades. Músicos que respondem rápido recebem mais convites.",
+          description:
+            "Responda rapidamente para não perder oportunidades. Músicos que respondem rápido recebem mais convites.",
           cta: "Ver convites",
           href: "/dashboard/gigs",
           color: "from-blue-500 to-cyan-500",
@@ -141,7 +142,8 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
         return {
           icon: <CheckCircle2 className="h-6 w-6" />,
           title: `Avalie ${action.count} ${action.count === 1 ? "gig concluída" : "gigs concluídas"}`,
-          description: "Suas avaliações ajudam outros músicos e melhoram a qualidade da plataforma.",
+          description:
+            "Suas avaliações ajudam outros músicos e melhoram a qualidade da plataforma.",
           cta: "Avaliar agora",
           href: "/dashboard",
           color: "from-green-500 to-emerald-500",
@@ -151,7 +153,8 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
         return {
           icon: <Sparkles className="h-6 w-6" />,
           title: `${action.count} ${action.count === 1 ? "gig disponível" : "gigs disponíveis"}`,
-          description: "Novas oportunidades esperando por você. Explore e encontre o trabalho ideal.",
+          description:
+            "Novas oportunidades esperando por você. Explore e encontre o trabalho ideal.",
           cta: "Ver gigs",
           href: "/dashboard/gigs",
           color: "from-purple-500 to-pink-500",
@@ -163,13 +166,19 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
   const config = getActionConfig();
 
   return (
-    <Card className={`${config.bgColor} border-2 shadow-lg hover:shadow-xl transition-shadow`}>
+    <Card
+      className={`${config.bgColor} border-2 shadow-lg hover:shadow-xl transition-shadow`}
+    >
       <CardContent className="p-5 md:p-6">
         <div className="flex items-start gap-4">
           {/* Ícone com gradiente */}
           <div className={`relative shrink-0`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${config.color} rounded-xl blur-md opacity-30`} />
-            <div className={`relative h-12 w-12 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center text-white shadow-lg`}>
+            <div
+              className={`absolute inset-0 bg-gradient-to-br ${config.color} rounded-xl blur-md opacity-30`}
+            />
+            <div
+              className={`relative h-12 w-12 rounded-xl bg-gradient-to-br ${config.color} flex items-center justify-center text-white shadow-lg`}
+            >
               {config.icon}
             </div>
           </div>
@@ -210,4 +219,3 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
     </Card>
   );
 }
-

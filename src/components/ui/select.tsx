@@ -42,26 +42,37 @@ const SelectContext = React.createContext<{
   setOpen: () => {},
 });
 
-export function Select({ value, onValueChange, children, className }: SelectProps) {
+export function Select({
+  value,
+  onValueChange,
+  children,
+  className,
+}: SelectProps) {
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
 
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [open]);
 
   return (
     <SelectContext.Provider value={{ value, onValueChange, open, setOpen }}>
-      <div ref={containerRef} className={cn("relative", className)}>{children}</div>
+      <div ref={containerRef} className={cn("relative", className)}>
+        {children}
+      </div>
     </SelectContext.Provider>
   );
 }
@@ -79,7 +90,7 @@ export function SelectTrigger({
       onClick={() => setOpen(!open)}
       className={cn(
         "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        className,
       )}
       {...props}
     >
@@ -108,7 +119,7 @@ export function SelectContent({ children, className }: SelectContentProps) {
     <div
       className={cn(
         "absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md",
-        className
+        className,
       )}
     >
       {children}
@@ -122,7 +133,11 @@ export function SelectItem({
   className,
   ...props
 }: SelectItemProps) {
-  const { onValueChange, setOpen, value: selectedValue } = React.useContext(SelectContext);
+  const {
+    onValueChange,
+    setOpen,
+    value: selectedValue,
+  } = React.useContext(SelectContext);
 
   return (
     <div
@@ -133,7 +148,7 @@ export function SelectItem({
       className={cn(
         "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
         selectedValue === value && "bg-accent",
-        className
+        className,
       )}
       {...props}
     >
@@ -141,4 +156,3 @@ export function SelectItem({
     </div>
   );
 }
-

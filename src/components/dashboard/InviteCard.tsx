@@ -4,7 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, DollarSign } from "lucide-react";
 
-export default function InviteCard({ invite, onAccept, onDecline, onDetails }: any) {
+export default function InviteCard({
+  invite,
+  onAccept,
+  onDecline,
+  onDetails,
+}: any) {
   const gig = invite.gig;
 
   return (
@@ -15,9 +20,7 @@ export default function InviteCard({ invite, onAccept, onDecline, onDetails }: a
           <Badge variant="secondary">{gig.type}</Badge>
         </div>
 
-        <Badge className="bg-amber-500 text-white">
-          48h
-        </Badge>
+        <Badge className="bg-amber-500 text-white">48h</Badge>
       </div>
 
       <p className="mt-3 text-base font-semibold">

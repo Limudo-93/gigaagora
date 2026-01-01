@@ -17,8 +17,12 @@ interface EnablePushNotificationsCardProps {
   userId: string;
 }
 
-export default function EnablePushNotificationsCard({ userId }: EnablePushNotificationsCardProps) {
-  const [status, setStatus] = useState<"idle" | "registering" | "success" | "error">("idle");
+export default function EnablePushNotificationsCard({
+  userId,
+}: EnablePushNotificationsCardProps) {
+  const [status, setStatus] = useState<
+    "idle" | "registering" | "success" | "error"
+  >("idle");
   const [message, setMessage] = useState<string>("");
   const [isSupported, setIsSupported] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -28,7 +32,8 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
     const supported = "serviceWorker" in navigator && "PushManager" in window;
     setIsSupported(supported);
 
-    const standalone = window.matchMedia("(display-mode: standalone)").matches ||
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
       // iOS standalone flag
       (navigator as any).standalone === true;
     setIsStandalone(standalone);
@@ -111,7 +116,8 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
     return null;
   }
 
-  const showPwaHint = !isStandalone && /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const showPwaHint =
+    !isStandalone && /iphone|ipad|ipod/i.test(navigator.userAgent);
 
   return (
     <Card className="border-amber-200 bg-amber-50/60">
@@ -123,7 +129,8 @@ export default function EnablePushNotificationsCard({ userId }: EnablePushNotifi
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-gray-700">
-          Receba alertas de convites, mensagens e atualizações importantes em tempo real.
+          Receba alertas de convites, mensagens e atualizações importantes em
+          tempo real.
         </p>
 
         {showPwaHint && (

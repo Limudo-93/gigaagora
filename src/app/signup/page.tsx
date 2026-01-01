@@ -37,11 +37,15 @@ function SignupForm({ referralCode }: { referralCode: string | null }) {
       });
 
       if (error) {
-        setError(`Erro ao fazer cadastro com ${provider === "google" ? "Google" : "Facebook"}.`);
+        setError(
+          `Erro ao fazer cadastro com ${provider === "google" ? "Google" : "Facebook"}.`,
+        );
         setOauthLoading(null);
       }
     } catch (err: any) {
-      setError(`Erro inesperado ao fazer cadastro com ${provider === "google" ? "Google" : "Facebook"}.`);
+      setError(
+        `Erro inesperado ao fazer cadastro com ${provider === "google" ? "Google" : "Facebook"}.`,
+      );
       setOauthLoading(null);
     }
   };
@@ -53,12 +57,15 @@ function SignupForm({ referralCode }: { referralCode: string | null }) {
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,179,71,0.16),transparent_50%)] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(42,166,161,0.12),transparent_50%)] -z-10" />
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,107,74,0.12),transparent_50%)] -z-10" />
-      
+
       {/* Padrão de ondas musicais sutil */}
-      <div className="fixed inset-0 opacity-[0.03] -z-10" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50' stroke='%23000' fill='none' stroke-width='2'/%3E%3C/svg%3E")`,
-        backgroundSize: '200px 200px'
-      }} />
+      <div
+        className="fixed inset-0 opacity-[0.03] -z-10"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50' stroke='%23000' fill='none' stroke-width='2'/%3E%3C/svg%3E")`,
+          backgroundSize: "200px 200px",
+        }}
+      />
 
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 relative z-10">
         <div className="w-full max-w-4xl space-y-6">
@@ -118,7 +125,9 @@ function SignupForm({ referralCode }: { referralCode: string | null }) {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white/80 px-2 text-gray-500">Ou cadastre-se com email</span>
+              <span className="bg-white/80 px-2 text-gray-500">
+                Ou cadastre-se com email
+              </span>
             </div>
           </div>
 
@@ -129,7 +138,10 @@ function SignupForm({ referralCode }: { referralCode: string | null }) {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Já tem uma conta?{" "}
-              <Link href={"/login" as any} className="font-semibold text-orange-600 hover:text-orange-700 transition-colors">
+              <Link
+                href={"/login" as any}
+                className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
+              >
                 Entrar
               </Link>
             </p>
@@ -143,20 +155,22 @@ function SignupForm({ referralCode }: { referralCode: string | null }) {
 function SignupPageContent() {
   const searchParams = useSearchParams();
   const referralCode = searchParams.get("ref");
-  
+
   return <SignupForm referralCode={referralCode} />;
 }
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600">Carregando...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-sm text-gray-600">Carregando...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <SignupPageContent />
     </Suspense>
   );

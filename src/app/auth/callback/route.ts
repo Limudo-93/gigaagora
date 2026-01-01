@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
-  
+
   // O código de indicação pode vir no state do OAuth
   let referralCode: string | null = null;
   if (state) {
@@ -20,23 +20,23 @@ export async function GET(request: Request) {
       referralCode = params.get("referral_code");
     }
   }
-  
+
   // Fallback: tenta pegar direto da URL
   if (!referralCode) {
     referralCode = requestUrl.searchParams.get("referral_code");
   }
-  
+
   // Usar a origem da requisição (suporta ngrok e outros proxies)
   // Verificar headers para obter a origem real se estiver atrás de um proxy
   const forwardedHost = request.headers.get("x-forwarded-host");
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-  const origin = forwardedHost 
+  const origin = forwardedHost
     ? `${forwardedProto}://${forwardedHost}`
     : requestUrl.origin;
 
   if (code) {
     const supabase = await createClient();
-    
+
     // Trocar código por sessão
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -49,30 +49,32 @@ export async function GET(request: Request) {
       // Extrair informações do OAuth
       const metadata = data.user.user_metadata || {};
       const provider = data.user.app_metadata?.provider || "email";
-      
+
       // Log para debug (remover em produção se necessário)
       console.log("OAuth user metadata:", JSON.stringify(metadata, null, 2));
       console.log("Provider:", provider);
-      
+
       // Tentar obter foto de diferentes campos (Google e Facebook usam campos diferentes)
       // Google geralmente usa 'avatar_url' ou 'picture'
       // Facebook geralmente usa 'picture' ou 'avatar_url'
-      const photoUrl = metadata.avatar_url || 
-                      metadata.picture || 
-                      metadata.photo_url ||
-                      (metadata.raw_user_meta_data?.avatar_url) ||
-                      (metadata.raw_user_meta_data?.picture) ||
-                      null;
-      
+      const photoUrl =
+        metadata.avatar_url ||
+        metadata.picture ||
+        metadata.photo_url ||
+        metadata.raw_user_meta_data?.avatar_url ||
+        metadata.raw_user_meta_data?.picture ||
+        null;
+
       console.log("Photo URL extracted:", photoUrl);
 
       // Extrair nome de diferentes campos
-      const displayName = metadata.full_name || 
-                         metadata.name ||
-                         metadata.display_name ||
-                         `${metadata.first_name || ""} ${metadata.last_name || ""}`.trim() ||
-                         data.user.email?.split("@")[0] ||
-                         "Usuário";
+      const displayName =
+        metadata.full_name ||
+        metadata.name ||
+        metadata.display_name ||
+        `${metadata.first_name || ""} ${metadata.last_name || ""}`.trim() ||
+        data.user.email?.split("@")[0] ||
+        "Usuário";
 
       // Verificar se perfil já existe
       const { data: existingProfile } = await supabase
@@ -83,16 +85,14 @@ export async function GET(request: Request) {
 
       if (!existingProfile) {
         // Criar perfil básico
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            user_id: data.user.id,
-            user_type: "musician",
-            display_name: displayName,
-            photo_url: photoUrl,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+        const { error: profileError } = await supabase.from("profiles").insert({
+          user_id: data.user.id,
+          user_type: "musician",
+          display_name: displayName,
+          photo_url: photoUrl,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
 
         if (profileError) {
           console.error("Error creating profile:", profileError);
@@ -166,4 +166,3 @@ export async function GET(request: Request) {
   // Se não houver código, redirecionar para login
   return NextResponse.redirect(`${origin}/login`);
 }
-

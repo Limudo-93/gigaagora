@@ -80,7 +80,10 @@ export default async function DashboardMusicoProfilePage({
   const userId = extractUserIdFromSlug(slugId);
 
   if (!userId) {
-    console.error("[DashboardMusicoProfile] Failed to extract userId from slug:", slugId);
+    console.error(
+      "[DashboardMusicoProfile] Failed to extract userId from slug:",
+      slugId,
+    );
     return notFound();
   }
 
@@ -88,22 +91,33 @@ export default async function DashboardMusicoProfilePage({
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, photo_url, city, state, user_type, cpf, is_ambassador")
+    .select(
+      "user_id, display_name, photo_url, city, state, user_type, cpf, is_ambassador",
+    )
     .eq("user_id", userId)
     .maybeSingle();
 
   if (profileError) {
-    console.error("[DashboardMusicoProfile] Error fetching profile:", profileError);
+    console.error(
+      "[DashboardMusicoProfile] Error fetching profile:",
+      profileError,
+    );
     return notFound();
   }
 
   if (!profile) {
-    console.error("[DashboardMusicoProfile] Profile not found for userId:", userId);
+    console.error(
+      "[DashboardMusicoProfile] Profile not found for userId:",
+      userId,
+    );
     return notFound();
   }
 
   if (profile.user_type !== "musician") {
-    console.error("[DashboardMusicoProfile] Profile is not a musician:", { userId, user_type: profile.user_type });
+    console.error("[DashboardMusicoProfile] Profile is not a musician:", {
+      userId,
+      user_type: profile.user_type,
+    });
     return notFound();
   }
 
@@ -112,7 +126,7 @@ export default async function DashboardMusicoProfilePage({
   const { data: musicianProfile } = await supabase
     .from("musician_profiles")
     .select(
-      "user_id, bio, instruments, genres, skills, setup, avg_rating, rating_count, is_trusted, attendance_rate, response_time_seconds_avg"
+      "user_id, bio, instruments, genres, skills, setup, avg_rating, rating_count, is_trusted, attendance_rate, response_time_seconds_avg",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -150,7 +164,8 @@ export default async function DashboardMusicoProfilePage({
     rating_count: musicianProfile?.rating_count ?? null,
     is_trusted: musicianProfile?.is_trusted ?? null,
     attendance_rate: musicianProfile?.attendance_rate ?? null,
-    response_time_seconds_avg: musicianProfile?.response_time_seconds_avg ?? null,
+    response_time_seconds_avg:
+      musicianProfile?.response_time_seconds_avg ?? null,
   };
 
   return (
@@ -179,7 +194,9 @@ export default async function DashboardMusicoProfilePage({
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-2">
-                    {isAmbassador && <AmbassadorBadge size="sm" showText={true} />}
+                    {isAmbassador && (
+                      <AmbassadorBadge size="sm" showText={true} />
+                    )}
                     {isVerified && (
                       <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
                         <ShieldCheck className="h-3 w-3 mr-1" />
@@ -187,32 +204,40 @@ export default async function DashboardMusicoProfilePage({
                       </Badge>
                     )}
                     {ranking?.current_tier && (
-                      <RankingBadge tier={ranking.current_tier as any} size="sm" showText={true} />
+                      <RankingBadge
+                        tier={ranking.current_tier as any}
+                        size="sm"
+                        showText={true}
+                      />
                     )}
                     {badges && badges.length > 0 && (
-                      <BadgeDisplay 
+                      <BadgeDisplay
                         badges={badges.filter((b: any) => {
                           // Se já estamos mostrando o badge "Verificado" baseado em isVerified,
                           // não mostrar o badge "verified" do sistema de badges para evitar duplicação
-                          if (isVerified && b.badge_type === 'verified') {
+                          if (isVerified && b.badge_type === "verified") {
                             return false;
                           }
                           return true;
-                        })} 
-                        size="sm" 
+                        })}
+                        size="sm"
                       />
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-foreground/60 mt-2">
                     <MapPin className="h-4 w-4" />
                     <span>
-                      {[musician.city, musician.state].filter(Boolean).join(", ") || "Brasil"}
+                      {[musician.city, musician.state]
+                        .filter(Boolean)
+                        .join(", ") || "Brasil"}
                     </span>
                   </div>
                   {musician.avg_rating && (
                     <div className="flex items-center gap-2 text-sm text-foreground/70 mt-2">
                       <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      <span className="font-semibold">{musician.avg_rating.toFixed(1)}</span>
+                      <span className="font-semibold">
+                        {musician.avg_rating.toFixed(1)}
+                      </span>
                       <span className="text-foreground/50">
                         ({musician.rating_count || 0} avaliações)
                       </span>
@@ -224,7 +249,11 @@ export default async function DashboardMusicoProfilePage({
                 <Button asChild className="btn-gradient">
                   <Link href="/dashboard/gigs/new">Convidar músico</Link>
                 </Button>
-                <Button variant="outline" asChild className="bg-white/80 border-white/70">
+                <Button
+                  variant="outline"
+                  asChild
+                  className="bg-white/80 border-white/70"
+                >
                   <Link href="/dashboard/musicos">Voltar</Link>
                 </Button>
               </div>
@@ -262,7 +291,9 @@ export default async function DashboardMusicoProfilePage({
                 Status
               </div>
               <p className="text-lg font-semibold text-foreground">
-                {musician.is_trusted ? "Verificado pela plataforma" : "Disponível para convites"}
+                {musician.is_trusted
+                  ? "Verificado pela plataforma"
+                  : "Disponível para convites"}
               </p>
             </CardContent>
           </Card>
@@ -273,14 +304,21 @@ export default async function DashboardMusicoProfilePage({
             <CardContent className="p-6 space-y-4">
               <h2 className="text-lg font-semibold text-foreground">Sobre</h2>
               <p className="text-sm text-foreground/70 leading-relaxed">
-                {musician.bio || "Este músico ainda não adicionou uma biografia pública."}
+                {musician.bio ||
+                  "Este músico ainda não adicionou uma biografia pública."}
               </p>
               {musician.instruments && musician.instruments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Instrumentos</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-2">
+                    Instrumentos
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {musician.instruments.map((item) => (
-                      <Badge key={item} variant="secondary" className="bg-white/70 border-white/70">
+                      <Badge
+                        key={item}
+                        variant="secondary"
+                        className="bg-white/70 border-white/70"
+                      >
                         {item}
                       </Badge>
                     ))}
@@ -289,10 +327,16 @@ export default async function DashboardMusicoProfilePage({
               )}
               {musician.genres && musician.genres.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Gêneros</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-2">
+                    Gêneros
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {musician.genres.map((item) => (
-                      <Badge key={item} variant="secondary" className="bg-amber-50 text-amber-800 border-amber-200">
+                      <Badge
+                        key={item}
+                        variant="secondary"
+                        className="bg-amber-50 text-amber-800 border-amber-200"
+                      >
                         {item}
                       </Badge>
                     ))}
@@ -301,10 +345,16 @@ export default async function DashboardMusicoProfilePage({
               )}
               {musician.skills && musician.skills.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Habilidades</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-2">
+                    Habilidades
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {musician.skills.map((item) => (
-                      <Badge key={item} variant="secondary" className="bg-teal-50 text-teal-800 border-teal-200">
+                      <Badge
+                        key={item}
+                        variant="secondary"
+                        className="bg-teal-50 text-teal-800 border-teal-200"
+                      >
                         {item}
                       </Badge>
                     ))}
@@ -315,11 +365,17 @@ export default async function DashboardMusicoProfilePage({
           </Card>
           <Card className="card-glass">
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-foreground">Setup e recursos</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                Setup e recursos
+              </h2>
               {musician.setup && musician.setup.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {musician.setup.map((item) => (
-                    <Badge key={item} variant="secondary" className="bg-white/70 border-white/70">
+                    <Badge
+                      key={item}
+                      variant="secondary"
+                      className="bg-white/70 border-white/70"
+                    >
                       {item}
                     </Badge>
                   ))}
@@ -330,7 +386,8 @@ export default async function DashboardMusicoProfilePage({
                 </p>
               )}
               <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-sm text-amber-900">
-                Perfil público para facilitar a escolha de músicos. Convide direto pelo dashboard.
+                Perfil público para facilitar a escolha de músicos. Convide
+                direto pelo dashboard.
               </div>
             </CardContent>
           </Card>

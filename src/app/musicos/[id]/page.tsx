@@ -62,11 +62,11 @@ export default async function MusicoProfilePage({
   params: Promise<{ id: string }> | { id: string };
 }) {
   const supabase = await createClient();
-  
+
   // Next.js 15+ pode passar params como Promise
   const resolvedParams = params instanceof Promise ? await params : params;
   const slugId = resolvedParams.id;
-  
+
   const userId = extractUserIdFromSlug(slugId);
 
   if (!userId) {
@@ -86,7 +86,7 @@ export default async function MusicoProfilePage({
   const { data: musicianProfile } = await supabase
     .from("musician_profiles")
     .select(
-      "user_id, bio, instruments, genres, skills, setup, avg_rating, rating_count, is_trusted, attendance_rate, response_time_seconds_avg"
+      "user_id, bio, instruments, genres, skills, setup, avg_rating, rating_count, is_trusted, attendance_rate, response_time_seconds_avg",
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -106,7 +106,8 @@ export default async function MusicoProfilePage({
     rating_count: musicianProfile?.rating_count ?? null,
     is_trusted: musicianProfile?.is_trusted ?? null,
     attendance_rate: musicianProfile?.attendance_rate ?? null,
-    response_time_seconds_avg: musicianProfile?.response_time_seconds_avg ?? null,
+    response_time_seconds_avg:
+      musicianProfile?.response_time_seconds_avg ?? null,
   };
 
   return (
@@ -139,13 +140,17 @@ export default async function MusicoProfilePage({
                     <div className="flex items-center gap-2 text-sm text-foreground/60 mt-2">
                       <MapPin className="h-4 w-4" />
                       <span>
-                        {[musician.city, musician.state].filter(Boolean).join(", ") || "Brasil"}
+                        {[musician.city, musician.state]
+                          .filter(Boolean)
+                          .join(", ") || "Brasil"}
                       </span>
                     </div>
                     {musician.avg_rating && (
                       <div className="flex items-center gap-2 text-sm text-foreground/70 mt-2">
                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        <span className="font-semibold">{musician.avg_rating.toFixed(1)}</span>
+                        <span className="font-semibold">
+                          {musician.avg_rating.toFixed(1)}
+                        </span>
                         <span className="text-foreground/50">
                           ({musician.rating_count || 0} avaliações)
                         </span>
@@ -157,7 +162,11 @@ export default async function MusicoProfilePage({
                   <Button asChild className="btn-gradient">
                     <Link href="/signup">Convidar músico</Link>
                   </Button>
-                  <Button variant="outline" asChild className="bg-white/80 border-white/70">
+                  <Button
+                    variant="outline"
+                    asChild
+                    className="bg-white/80 border-white/70"
+                  >
                     <Link href="/login">Entrar</Link>
                   </Button>
                 </div>
@@ -195,7 +204,9 @@ export default async function MusicoProfilePage({
                   Status
                 </div>
                 <p className="text-lg font-semibold text-foreground">
-                  {musician.is_trusted ? "Verificado pela plataforma" : "Disponível para convites"}
+                  {musician.is_trusted
+                    ? "Verificado pela plataforma"
+                    : "Disponível para convites"}
                 </p>
               </CardContent>
             </Card>
@@ -206,14 +217,21 @@ export default async function MusicoProfilePage({
               <CardContent className="p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-foreground">Sobre</h2>
                 <p className="text-sm text-foreground/70 leading-relaxed">
-                  {musician.bio || "Este músico ainda não adicionou uma biografia pública."}
+                  {musician.bio ||
+                    "Este músico ainda não adicionou uma biografia pública."}
                 </p>
                 {musician.instruments && musician.instruments.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Instrumentos</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-2">
+                      Instrumentos
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {musician.instruments.map((item) => (
-                        <Badge key={item} variant="secondary" className="bg-white/70 border-white/70">
+                        <Badge
+                          key={item}
+                          variant="secondary"
+                          className="bg-white/70 border-white/70"
+                        >
                           {item}
                         </Badge>
                       ))}
@@ -222,10 +240,16 @@ export default async function MusicoProfilePage({
                 )}
                 {musician.genres && musician.genres.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Gêneros</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-2">
+                      Gêneros
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {musician.genres.map((item) => (
-                        <Badge key={item} variant="secondary" className="bg-amber-50 text-amber-800 border-amber-200">
+                        <Badge
+                          key={item}
+                          variant="secondary"
+                          className="bg-amber-50 text-amber-800 border-amber-200"
+                        >
                           {item}
                         </Badge>
                       ))}
@@ -234,10 +258,16 @@ export default async function MusicoProfilePage({
                 )}
                 {musician.skills && musician.skills.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Habilidades</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-2">
+                      Habilidades
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {musician.skills.map((item) => (
-                        <Badge key={item} variant="secondary" className="bg-teal-50 text-teal-800 border-teal-200">
+                        <Badge
+                          key={item}
+                          variant="secondary"
+                          className="bg-teal-50 text-teal-800 border-teal-200"
+                        >
                           {item}
                         </Badge>
                       ))}
@@ -248,11 +278,17 @@ export default async function MusicoProfilePage({
             </Card>
             <Card className="card-glass">
               <CardContent className="p-6 space-y-4">
-                <h2 className="text-lg font-semibold text-foreground">Setup e recursos</h2>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Setup e recursos
+                </h2>
                 {musician.setup && musician.setup.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {musician.setup.map((item) => (
-                      <Badge key={item} variant="secondary" className="bg-white/70 border-white/70">
+                      <Badge
+                        key={item}
+                        variant="secondary"
+                        className="bg-white/70 border-white/70"
+                      >
                         {item}
                       </Badge>
                     ))}
@@ -263,7 +299,8 @@ export default async function MusicoProfilePage({
                   </p>
                 )}
                 <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-sm text-amber-900">
-                  Perfil público para facilitar a escolha de músicos. Faça login para convidar e confirmar disponibilidade.
+                  Perfil público para facilitar a escolha de músicos. Faça login
+                  para convidar e confirmar disponibilidade.
                 </div>
               </CardContent>
             </Card>

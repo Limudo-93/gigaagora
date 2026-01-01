@@ -18,8 +18,13 @@ interface ForcePushRegisterButtonProps {
   onSuccess?: () => void;
 }
 
-export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePushRegisterButtonProps) {
-  const [status, setStatus] = useState<"idle" | "registering" | "success" | "error">("idle");
+export default function ForcePushRegisterButton({
+  userId,
+  onSuccess,
+}: ForcePushRegisterButtonProps) {
+  const [status, setStatus] = useState<
+    "idle" | "registering" | "success" | "error"
+  >("idle");
   const [message, setMessage] = useState<string>("");
   const [isSupported, setIsSupported] = useState(false);
   const [debugInfo, setDebugInfo] = useState<{
@@ -43,7 +48,9 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
   const handleForceRegister = async () => {
     if (!isSupported) {
       setStatus("error");
-      setMessage("Seu navegador não suporta notificações push. Use Chrome, Firefox, Edge ou Safari no iOS 16.4+");
+      setMessage(
+        "Seu navegador não suporta notificações push. Use Chrome, Firefox, Edge ou Safari no iOS 16.4+",
+      );
       return;
     }
 
@@ -63,14 +70,18 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
 
       if (currentPermission !== "granted") {
         setStatus("error");
-        setMessage("Permissão de notificações negada. Por favor, permita notificações nas configurações do navegador.");
+        setMessage(
+          "Permissão de notificações negada. Por favor, permita notificações nas configurações do navegador.",
+        );
         setDebugInfo({
           hasServiceWorker: "serviceWorker" in navigator,
           hasPushManager: "PushManager" in window,
           permission: currentPermission,
           vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-          vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
-          vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+          vapidPublicKeyLength:
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+          vapidPublicKeyPrefix:
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
           registrationScope: getRegistrationScope(registration),
         });
         return;
@@ -81,14 +92,18 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       registration = await registerServiceWorker();
       if (!registration) {
         setStatus("error");
-        setMessage("Erro ao registrar Service Worker. Verifique se o arquivo sw.js existe.");
+        setMessage(
+          "Erro ao registrar Service Worker. Verifique se o arquivo sw.js existe.",
+        );
         setDebugInfo({
           hasServiceWorker: "serviceWorker" in navigator,
           hasPushManager: "PushManager" in window,
           permission: currentPermission,
           vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-          vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
-          vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+          vapidPublicKeyLength:
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+          vapidPublicKeyPrefix:
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
           registrationScope: "",
         });
         return;
@@ -98,7 +113,9 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {
         setStatus("error");
-        setMessage("Erro: NEXT_PUBLIC_VAPID_PUBLIC_KEY não está configurado. Por favor, configure a chave VAPID pública nas variáveis de ambiente.");
+        setMessage(
+          "Erro: NEXT_PUBLIC_VAPID_PUBLIC_KEY não está configurado. Por favor, configure a chave VAPID pública nas variáveis de ambiente.",
+        );
         setDebugInfo({
           hasServiceWorker: "serviceWorker" in navigator,
           hasPushManager: "PushManager" in window,
@@ -121,14 +138,18 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
 
       if (!subscription) {
         setStatus("error");
-        setMessage("Erro ao criar subscription. Verifique se NEXT_PUBLIC_VAPID_PUBLIC_KEY está configurado corretamente e se o Service Worker está registrado.");
+        setMessage(
+          "Erro ao criar subscription. Verifique se NEXT_PUBLIC_VAPID_PUBLIC_KEY está configurado corretamente e se o Service Worker está registrado.",
+        );
         setDebugInfo({
           hasServiceWorker: "serviceWorker" in navigator,
           hasPushManager: "PushManager" in window,
           permission: currentPermission,
           vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-          vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
-          vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+          vapidPublicKeyLength:
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+          vapidPublicKeyPrefix:
+            process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
           registrationScope: getRegistrationScope(registration),
         });
         return;
@@ -158,7 +179,9 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       }
 
       setStatus("success");
-      setMessage("Subscription registrada com sucesso! Agora você pode receber notificações push.");
+      setMessage(
+        "Subscription registrada com sucesso! Agora você pode receber notificações push.",
+      );
 
       if (onSuccess) {
         setTimeout(() => {
@@ -168,14 +191,18 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
     } catch (error: any) {
       console.error("Error forcing push register:", error);
       setStatus("error");
-      setMessage(error.message || "Erro ao registrar subscription. Tente novamente.");
+      setMessage(
+        error.message || "Erro ao registrar subscription. Tente novamente.",
+      );
       setDebugInfo({
         hasServiceWorker: "serviceWorker" in navigator,
         hasPushManager: "PushManager" in window,
         permission: currentPermission,
         vapidPublicKeyPresent: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        vapidPublicKeyLength: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
-        vapidPublicKeyPrefix: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
+        vapidPublicKeyLength:
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.length || 0,
+        vapidPublicKeyPrefix:
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.slice(0, 10) || "",
         registrationScope: getRegistrationScope(registration),
       });
     }
@@ -189,7 +216,8 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
             <AlertCircle className="h-5 w-5 text-orange-600 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-orange-800">
-                Seu navegador não suporta notificações push. Use Chrome, Firefox, Edge ou Safari no iOS 16.4+.
+                Seu navegador não suporta notificações push. Use Chrome,
+                Firefox, Edge ou Safari no iOS 16.4+.
               </p>
             </div>
           </div>
@@ -208,7 +236,8 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-700">
-          Use este botão para forçar o registro de notificações push. Isso é útil especialmente em dispositivos iOS.
+          Use este botão para forçar o registro de notificações push. Isso é
+          útil especialmente em dispositivos iOS.
         </p>
 
         {status === "idle" && (
@@ -253,9 +282,14 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
               {debugInfo && (
                 <div className="mt-2 text-xs text-red-800 space-y-1">
                   <p>Permissão: {debugInfo.permission}</p>
-                  <p>Service Worker: {debugInfo.hasServiceWorker ? "sim" : "não"}</p>
+                  <p>
+                    Service Worker: {debugInfo.hasServiceWorker ? "sim" : "não"}
+                  </p>
                   <p>PushManager: {debugInfo.hasPushManager ? "sim" : "não"}</p>
-                  <p>VAPID public: {debugInfo.vapidPublicKeyPresent ? "sim" : "não"}</p>
+                  <p>
+                    VAPID public:{" "}
+                    {debugInfo.vapidPublicKeyPresent ? "sim" : "não"}
+                  </p>
                   <p>VAPID length: {debugInfo.vapidPublicKeyLength}</p>
                   <p>VAPID prefix: {debugInfo.vapidPublicKeyPrefix || "-"}</p>
                   <p>SW scope: {debugInfo.registrationScope || "-"}</p>
@@ -275,9 +309,11 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
 
         <div className="pt-4 border-t">
           <p className="text-xs text-gray-600">
-            <strong>Nota para iOS:</strong> No Safari iOS 16.4+, certifique-se de que:
+            <strong>Nota para iOS:</strong> No Safari iOS 16.4+, certifique-se
+            de que:
             <br />• Você adicionou o site à tela inicial (Add to Home Screen)
-            <br />• As notificações estão habilitadas nas configurações do Safari
+            <br />• As notificações estão habilitadas nas configurações do
+            Safari
             <br />• Você está usando HTTPS
           </p>
         </div>
@@ -285,4 +321,3 @@ export default function ForcePushRegisterButton({ userId, onSuccess }: ForcePush
     </Card>
   );
 }
-

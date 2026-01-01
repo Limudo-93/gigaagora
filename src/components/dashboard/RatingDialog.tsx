@@ -1,39 +1,59 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Star, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
-type RatingCommentType = 
-  | 'canta_bem' | 'toca_bem' | 'pontual' | 'roupas_adequadas' | 'profissional' 
-  | 'comunicativo' | 'flexivel' | 'criativo' | 'energico' | 'organizado'
-  | 'atrasado' | 'desorganizado' | 'nao_comunicativo' | 'roupas_inadequadas' 
-  | 'pouco_profissional' | 'inflexivel' | 'pouca_energia' | 'nao_pontual';
+type RatingCommentType =
+  | "canta_bem"
+  | "toca_bem"
+  | "pontual"
+  | "roupas_adequadas"
+  | "profissional"
+  | "comunicativo"
+  | "flexivel"
+  | "criativo"
+  | "energico"
+  | "organizado"
+  | "atrasado"
+  | "desorganizado"
+  | "nao_comunicativo"
+  | "roupas_inadequadas"
+  | "pouco_profissional"
+  | "inflexivel"
+  | "pouca_energia"
+  | "nao_pontual";
 
 const POSITIVE_COMMENTS: { value: RatingCommentType; label: string }[] = [
-  { value: 'canta_bem', label: 'Canta bem' },
-  { value: 'toca_bem', label: 'Toca bem' },
-  { value: 'pontual', label: 'Pontual' },
-  { value: 'roupas_adequadas', label: 'Roupas adequadas' },
-  { value: 'profissional', label: 'Profissional' },
-  { value: 'comunicativo', label: 'Comunicativo' },
-  { value: 'flexivel', label: 'Flexível' },
-  { value: 'criativo', label: 'Criativo' },
-  { value: 'energico', label: 'Energético' },
-  { value: 'organizado', label: 'Organizado' },
+  { value: "canta_bem", label: "Canta bem" },
+  { value: "toca_bem", label: "Toca bem" },
+  { value: "pontual", label: "Pontual" },
+  { value: "roupas_adequadas", label: "Roupas adequadas" },
+  { value: "profissional", label: "Profissional" },
+  { value: "comunicativo", label: "Comunicativo" },
+  { value: "flexivel", label: "Flexível" },
+  { value: "criativo", label: "Criativo" },
+  { value: "energico", label: "Energético" },
+  { value: "organizado", label: "Organizado" },
 ];
 
 const NEGATIVE_COMMENTS: { value: RatingCommentType; label: string }[] = [
-  { value: 'atrasado', label: 'Atrasado' },
-  { value: 'desorganizado', label: 'Desorganizado' },
-  { value: 'nao_comunicativo', label: 'Não comunicativo' },
-  { value: 'roupas_inadequadas', label: 'Roupas inadequadas' },
-  { value: 'pouco_profissional', label: 'Pouco profissional' },
-  { value: 'inflexivel', label: 'Inflexível' },
-  { value: 'pouca_energia', label: 'Pouca energia' },
-  { value: 'nao_pontual', label: 'Não pontual' },
+  { value: "atrasado", label: "Atrasado" },
+  { value: "desorganizado", label: "Desorganizado" },
+  { value: "nao_comunicativo", label: "Não comunicativo" },
+  { value: "roupas_inadequadas", label: "Roupas inadequadas" },
+  { value: "pouco_profissional", label: "Pouco profissional" },
+  { value: "inflexivel", label: "Inflexível" },
+  { value: "pouca_energia", label: "Pouca energia" },
+  { value: "nao_pontual", label: "Não pontual" },
 ];
 
 interface RatingDialogProps {
@@ -43,8 +63,8 @@ interface RatingDialogProps {
   inviteId: string;
   raterId: string;
   ratedUserId: string;
-  raterType: 'contractor' | 'musician';
-  ratedType: 'contractor' | 'musician';
+  raterType: "contractor" | "musician";
+  ratedType: "contractor" | "musician";
   onSuccess?: () => void;
 }
 
@@ -61,7 +81,9 @@ export default function RatingDialog({
 }: RatingDialogProps) {
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
-  const [selectedComments, setSelectedComments] = useState<RatingCommentType[]>([]);
+  const [selectedComments, setSelectedComments] = useState<RatingCommentType[]>(
+    [],
+  );
   const [customComment, setCustomComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +103,7 @@ export default function RatingDialog({
     setSelectedComments((prev) =>
       prev.includes(comment)
         ? prev.filter((c) => c !== comment)
-        : [...prev, comment]
+        : [...prev, comment],
     );
   };
 
@@ -96,7 +118,9 @@ export default function RatingDialog({
 
     try {
       // Buscar o usuário autenticado atual
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
@@ -109,7 +133,7 @@ export default function RatingDialog({
 
       // Verificar se já existe uma avaliação para este invite e tipo de avaliador
       let existingRating = null;
-      if (raterType === 'musician') {
+      if (raterType === "musician") {
         const { data } = await supabase
           .from("ratings")
           .select("id")
@@ -136,12 +160,14 @@ export default function RatingDialog({
       // Se o avaliador é um contratante, então:
       //   - contractor_id = avaliador (quem está avaliando)
       //   - musician_id = avaliado (quem está sendo avaliado)
-      
+
       const ratingData = {
         gig_id: gigId,
         invite_id: inviteId,
-        contractor_id: raterType === 'contractor' ? actualRaterId : actualRatedUserId,
-        musician_id: raterType === 'musician' ? actualRaterId : actualRatedUserId,
+        contractor_id:
+          raterType === "contractor" ? actualRaterId : actualRatedUserId,
+        musician_id:
+          raterType === "musician" ? actualRaterId : actualRatedUserId,
         rating: rating,
         rater_type: raterType,
         rated_type: ratedType,
@@ -152,7 +178,9 @@ export default function RatingDialog({
 
       // Validação: garantir que não estamos avaliando a nós mesmos
       if (actualRaterId === actualRatedUserId) {
-        throw new Error("Você não pode se avaliar. Por favor, verifique os dados.");
+        throw new Error(
+          "Você não pode se avaliar. Por favor, verifique os dados.",
+        );
       }
 
       let error;
@@ -190,10 +218,11 @@ export default function RatingDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
-            Avaliar {ratedType === 'musician' ? 'Músico' : 'Contratante'}
+            Avaliar {ratedType === "musician" ? "Músico" : "Contratante"}
           </DialogTitle>
           <DialogDescription>
-            Compartilhe sua experiência para ajudar outros usuários da plataforma.
+            Compartilhe sua experiência para ajudar outros usuários da
+            plataforma.
           </DialogDescription>
         </DialogHeader>
 
@@ -338,4 +367,3 @@ export default function RatingDialog({
     </Dialog>
   );
 }
-

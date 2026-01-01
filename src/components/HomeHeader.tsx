@@ -27,13 +27,13 @@ export default function HomeHeader() {
               novo
             </span>
           </Link>
-          
+
           {/* Menu de navegação desktop - Links institucionais */}
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
-              <Link 
+              <Link
                 key={link.href}
-                href={link.href} 
+                href={link.href}
                 className="text-base font-medium text-foreground/90 hover:text-foreground transition-colors"
               >
                 {link.label}
@@ -58,11 +58,15 @@ export default function HomeHeader() {
 
             {/* Botões de ação - desktop */}
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" className="text-foreground hover:bg-white/60" asChild>
+              <Button
+                variant="ghost"
+                className="text-foreground hover:bg-white/60"
+                asChild
+              >
                 <Link href={"/login" as any}>Entrar</Link>
               </Button>
-              <Button 
-                className="btn-gradient text-white shadow-md transition-all duration-200" 
+              <Button
+                className="btn-gradient text-white shadow-md transition-all duration-200"
                 asChild
               >
                 <Link href={"/signup" as any}>Começar missão</Link>
@@ -76,24 +80,38 @@ export default function HomeHeader() {
           <div className="md:hidden mt-4 pb-4 border-t border-white/60">
             <nav className="flex flex-col gap-4 pt-4">
               {navLinks.map((link) => (
-                <Link 
+                <Link
                   key={link.href}
                   href={link.href}
-                className="text-base font-medium text-foreground/90 hover:text-foreground transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.label}
+                  className="text-base font-medium text-foreground/90 hover:text-foreground transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
                 </Link>
               ))}
               <div className="flex flex-col gap-2 pt-2 border-t border-white/60">
-                <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-white/60" asChild>
-                  <Link href={"/login" as any} onClick={() => setMobileMenuOpen(false)}>Entrar</Link>
-                </Button>
-                <Button 
-                  className="w-full btn-gradient text-white shadow-md transition-all duration-200" 
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-foreground hover:bg-white/60"
                   asChild
                 >
-                  <Link href={"/signup" as any} onClick={() => setMobileMenuOpen(false)}>Começar missão</Link>
+                  <Link
+                    href={"/login" as any}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Entrar
+                  </Link>
+                </Button>
+                <Button
+                  className="w-full btn-gradient text-white shadow-md transition-all duration-200"
+                  asChild
+                >
+                  <Link
+                    href={"/signup" as any}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Começar missão
+                  </Link>
                 </Button>
               </div>
             </nav>
@@ -103,4 +121,3 @@ export default function HomeHeader() {
     </header>
   );
 }
-

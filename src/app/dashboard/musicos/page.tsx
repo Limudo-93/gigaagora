@@ -72,12 +72,14 @@ export default async function DashboardMusicosPage({
   const { data: musicianProfiles } = ids.length
     ? await supabase
         .from("musician_profiles")
-        .select("user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted")
+        .select(
+          "user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted",
+        )
         .in("user_id", ids)
     : { data: [] };
 
   const profileMap = new Map(
-    (musicianProfiles || []).map((profile) => [profile.user_id, profile])
+    (musicianProfiles || []).map((profile) => [profile.user_id, profile]),
   );
 
   // Montar lista completa de resultados
@@ -102,7 +104,7 @@ export default async function DashboardMusicosPage({
   // Aplicar filtro de instrumento se necessário
   if (instrument) {
     allResults = allResults.filter((musician) =>
-      musician.instruments?.includes(instrument)
+      musician.instruments?.includes(instrument),
     );
   }
 
@@ -111,7 +113,7 @@ export default async function DashboardMusicosPage({
   const totalPages = Math.ceil(totalCount / itemsPerPage);
   const currentPage = Math.max(1, Math.min(page, totalPages || 1));
   const offset = (currentPage - 1) * itemsPerPage;
-  
+
   // Aplicar paginação
   const results = allResults.slice(offset, offset + itemsPerPage);
 
@@ -132,14 +134,20 @@ export default async function DashboardMusicosPage({
           <div className="absolute -top-20 -right-16 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
           <div className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-teal-200/40 blur-3xl" />
           <div className="relative z-10">
-            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Explorar músicos</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">
+              Explorar músicos
+            </p>
             <h1 className="text-2xl sm:text-3xl font-display font-semibold text-foreground">
               Encontre músicos prontos para sua gig
             </h1>
             <p className="text-sm text-foreground/60 mt-2 max-w-2xl">
-              Perfis públicos com repertório, avaliações e disponibilidade. Salve seus favoritos e convide quando precisar.
+              Perfis públicos com repertório, avaliações e disponibilidade.
+              Salve seus favoritos e convide quando precisar.
             </p>
-            <form className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]" method="get">
+            <form
+              className="mt-6 grid gap-3 lg:grid-cols-[1.6fr_1fr_1fr_auto]"
+              method="get"
+            >
               <input type="hidden" name="page" value="1" />
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
@@ -209,7 +217,7 @@ export default async function DashboardMusicosPage({
                 </Link>
               </Button>
             )}
-            
+
             <div className="flex items-center gap-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 let pageNum: number;
@@ -222,7 +230,7 @@ export default async function DashboardMusicosPage({
                 } else {
                   pageNum = currentPage - 2 + i;
                 }
-                
+
                 return (
                   <Button
                     key={pageNum}

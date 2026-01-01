@@ -15,7 +15,9 @@ function ForcePushRegisterContent() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserId(user?.id || null);
 
       // Verificar se o usuário está autorizado (pode ser o próprio usuário ou um admin)
@@ -41,9 +43,12 @@ function ForcePushRegisterContent() {
       <DashboardLayout>
         <div className="max-w-2xl mx-auto">
           <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
-            <h2 className="text-xl font-bold text-red-900 mb-2">Não Autorizado</h2>
+            <h2 className="text-xl font-bold text-red-900 mb-2">
+              Não Autorizado
+            </h2>
             <p className="text-red-700">
-              Você só pode forçar o registro de notificações para sua própria conta.
+              Você só pode forçar o registro de notificações para sua própria
+              conta.
             </p>
           </div>
         </div>
@@ -67,18 +72,19 @@ function ForcePushRegisterContent() {
 
 export default function ForcePushRegisterPage() {
   return (
-    <Suspense fallback={
-      <DashboardLayout>
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white border-2 border-gray-200 rounded-lg p-6 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Carregando...</p>
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando...</p>
+            </div>
           </div>
-        </div>
-      </DashboardLayout>
-    }>
+        </DashboardLayout>
+      }
+    >
       <ForcePushRegisterContent />
     </Suspense>
   );
 }
-

@@ -9,7 +9,7 @@ import { applyTheme } from "@/lib/theme";
 import { themes, getTheme, type ThemeName } from "@/lib/theme-data";
 
 export default function ThemeSelector() {
-  const [currentTheme, setCurrentTheme] = useState<ThemeName>('default');
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>("default");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -19,7 +19,9 @@ export default function ThemeSelector() {
 
   const loadTheme = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: profile, error: profileError } = await supabase
@@ -32,13 +34,20 @@ export default function ThemeSelector() {
         console.warn("Error loading theme preference:", profileError);
       }
 
-      const theme = (profile?.theme_preference as ThemeName) || 'default';
-      
+      const theme = (profile?.theme_preference as ThemeName) || "default";
+
       // Validar se o tema existe
-      const validTheme: ThemeName = ['default', 'ocean', 'sunset', 'forest', 'royal', 'dark'].includes(theme) 
-        ? theme 
-        : 'default';
-      
+      const validTheme: ThemeName = [
+        "default",
+        "ocean",
+        "sunset",
+        "forest",
+        "royal",
+        "dark",
+      ].includes(theme)
+        ? theme
+        : "default";
+
       setCurrentTheme(validTheme);
       applyTheme(validTheme);
     } catch (error) {
@@ -53,14 +62,16 @@ export default function ThemeSelector() {
 
     setSaving(true);
     const previousTheme = currentTheme;
-    
+
     try {
       // Aplicar tema imediatamente (antes de salvar)
       applyTheme(themeName);
       setCurrentTheme(themeName);
 
       // Tentar salvar no banco (mas não reverter se falhar)
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         const { error } = await supabase
           .from("profiles")
@@ -112,9 +123,9 @@ export default function ThemeSelector() {
                 disabled={saving}
                 className={`relative p-4 rounded-xl border-2 transition-all bg-card ${
                   isSelected
-                    ? 'border-primary shadow-lg scale-105'
-                    : 'border-border hover:border-primary/50 hover:shadow-md'
-                } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    ? "border-primary shadow-lg scale-105"
+                    : "border-border hover:border-primary/50 hover:shadow-md"
+                } ${saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               >
                 {isSelected && (
                   <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg z-50">
@@ -124,17 +135,27 @@ export default function ThemeSelector() {
 
                 <div className="space-y-3 relative z-10">
                   {/* Preview do tema */}
-                  <div className={`h-20 rounded-lg ${themeData.preview.bg} relative overflow-hidden`}>
+                  <div
+                    className={`h-20 rounded-lg ${themeData.preview.bg} relative overflow-hidden`}
+                  >
                     <div className="absolute inset-0 flex items-center justify-center gap-2 p-2">
-                      <div className={`h-8 flex-1 rounded ${themeData.preview.primary}`} />
-                      <div className={`h-8 flex-1 rounded ${themeData.preview.secondary}`} />
+                      <div
+                        className={`h-8 flex-1 rounded ${themeData.preview.primary}`}
+                      />
+                      <div
+                        className={`h-8 flex-1 rounded ${themeData.preview.secondary}`}
+                      />
                     </div>
                   </div>
 
                   {/* Informações */}
                   <div className="text-left">
-                    <h3 className="font-semibold text-foreground">{theme.label}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">{theme.description}</p>
+                    <h3 className="font-semibold text-foreground">
+                      {theme.label}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {theme.description}
+                    </p>
                   </div>
                 </div>
               </button>
@@ -151,4 +172,3 @@ export default function ThemeSelector() {
     </Card>
   );
 }
-

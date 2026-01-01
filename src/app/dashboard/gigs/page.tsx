@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Plus, 
-  Search, 
-  Calendar, 
-  Clock, 
-  MapPin, 
+import {
+  Plus,
+  Search,
+  Calendar,
+  Clock,
+  MapPin,
   Eye,
   Trash2,
   Check,
@@ -29,7 +29,7 @@ import {
   Megaphone,
   FileText,
   Users,
-  Ban
+  Ban,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,7 +38,9 @@ import ShareGigButton from "@/components/dashboard/ShareGigButton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useNotification } from "@/components/ui/notification-provider";
 import { haversineKm, estimateTravelMin, computeRegionLabel } from "@/lib/geo";
-import DeclineReasonDialog, { DeclineReason } from "@/components/dashboard/DeclineReasonDialog";
+import DeclineReasonDialog, {
+  DeclineReason,
+} from "@/components/dashboard/DeclineReasonDialog";
 
 type GigRow = {
   id: string;
@@ -104,35 +106,52 @@ export default function GigsPage() {
   const [gigs, setGigs] = useState<GigRow[]>([]);
   const [filteredGigs, setFilteredGigs] = useState<GigRow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "upcoming" | "past">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "upcoming" | "past">(
+    "all",
+  );
   const [selectedGigId, setSelectedGigId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userType, setUserType] = useState<"musician" | "contractor" | null>(null);
+  const [userType, setUserType] = useState<"musician" | "contractor" | null>(
+    null,
+  );
   const [deletingGigId, setDeletingGigId] = useState<string | null>(null);
-  const [processingInviteId, setProcessingInviteId] = useState<string | null>(null);
+  const [processingInviteId, setProcessingInviteId] = useState<string | null>(
+    null,
+  );
   const [showDeclineReasonDialog, setShowDeclineReasonDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [pendingDeclineInviteId, setPendingDeclineInviteId] = useState<string | null>(null);
-  const [pendingDeclineGigId, setPendingDeclineGigId] = useState<string | null>(null);
-  const [pendingDeleteGigId, setPendingDeleteGigId] = useState<string | null>(null);
+  const [pendingDeclineInviteId, setPendingDeclineInviteId] = useState<
+    string | null
+  >(null);
+  const [pendingDeclineGigId, setPendingDeclineGigId] = useState<string | null>(
+    null,
+  );
+  const [pendingDeleteGigId, setPendingDeleteGigId] = useState<string | null>(
+    null,
+  );
   const notification = useNotification();
-  const [musicianLocation, setMusicianLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [musicianLocation, setMusicianLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [maxRadiusKm, setMaxRadiusKm] = useState<number | null>(null);
 
   // Busca o usuário atual e seu tipo
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserId(user?.id || null);
-      
+
       if (user?.id) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("user_type")
           .eq("user_id", user.id)
           .single();
-        
+
         setUserType((profile?.user_type as "musician" | "contractor") || null);
       }
     };
@@ -159,15 +178,19 @@ export default function GigsPage() {
         // Busca os instrumentos, localização e raio do músico
         const { data: musicianProfile } = await supabase
           .from("musician_profiles")
-          .select("instruments, latitude, longitude, max_radius_km, strengths_counts")
+          .select(
+            "instruments, latitude, longitude, max_radius_km, strengths_counts",
+          )
           .eq("user_id", userId)
           .single();
 
         const instruments = (musicianProfile?.instruments as string[]) || [];
-        
-        musicianLat = (musicianProfile?.latitude as number | null | undefined) ?? null;
-        musicianLng = (musicianProfile?.longitude as number | null | undefined) ?? null;
-        
+
+        musicianLat =
+          (musicianProfile?.latitude as number | null | undefined) ?? null;
+        musicianLng =
+          (musicianProfile?.longitude as number | null | undefined) ?? null;
+
         // Buscar raio de busca (priorizar strengths_counts.searchRadius onde o slider salva)
         if (musicianProfile?.strengths_counts) {
           const metadata = musicianProfile.strengths_counts as any;
@@ -177,28 +200,33 @@ export default function GigsPage() {
         }
         // Fallback para max_radius_km se não encontrou em strengths_counts
         if (radius == null) {
-          const maxRadius = musicianProfile?.max_radius_km as number | null | undefined;
+          const maxRadius = musicianProfile?.max_radius_km as
+            | number
+            | null
+            | undefined;
           if (maxRadius != null) {
             radius = Number(maxRadius);
           }
         }
         // Default final se ainda não tem
         if (radius == null) radius = 50;
-        
+
         console.log(`[GigsPage] Raio de busca configurado: ${radius} km`, {
-          fromStrengthsCounts: musicianProfile?.strengths_counts ? (musicianProfile.strengths_counts as any)?.searchRadius : null,
+          fromStrengthsCounts: musicianProfile?.strengths_counts
+            ? (musicianProfile.strengths_counts as any)?.searchRadius
+            : null,
           fromMaxRadiusKm: musicianProfile?.max_radius_km,
-          finalRadius: radius
+          finalRadius: radius,
         });
-        
+
         setMaxRadiusKm(radius);
-        
+
         if (musicianLat && musicianLng) {
           setMusicianLocation({ lat: musicianLat, lng: musicianLng });
         } else {
           setMusicianLocation(null);
         }
-        
+
         if (instruments.length === 0) {
           setGigs([]);
           setFilteredGigs([]);
@@ -212,7 +240,9 @@ export default function GigsPage() {
           .select("gig_id, instrument")
           .in("instrument", instruments);
 
-        const compatibleGigIds = [...new Set((rolesData || []).map((r: any) => r.gig_id))];
+        const compatibleGigIds = [
+          ...new Set((rolesData || []).map((r: any) => r.gig_id)),
+        ];
 
         if (compatibleGigIds.length === 0) {
           setGigs([]);
@@ -225,7 +255,8 @@ export default function GigsPage() {
         const publishedStatuses = ["published"];
         const { data: gigsData, error: gigsError } = await supabase
           .from("gigs")
-          .select(`
+          .select(
+            `
             id,
             title,
             description,
@@ -244,7 +275,8 @@ export default function GigsPage() {
             flyer_url,
             contractor_id,
             gig_roles(id, instrument, cache)
-          `)
+          `,
+          )
           .in("status", publishedStatuses)
           .neq("contractor_id", userId)
           .in("id", compatibleGigIds)
@@ -267,18 +299,26 @@ export default function GigsPage() {
           .in("gig_id", gigIds);
 
         const invitesMap = new Map(
-          (allInvites || []).map((inv: any) => [inv.gig_id, { id: inv.id, status: inv.status }])
+          (allInvites || []).map((inv: any) => [
+            inv.gig_id,
+            { id: inv.id, status: inv.status },
+          ]),
         );
 
         // Busca informações dos contractors
-        const contractorIds = [...new Set((gigsData || []).map((g: any) => g.contractor_id))];
+        const contractorIds = [
+          ...new Set((gigsData || []).map((g: any) => g.contractor_id)),
+        ];
         const { data: contractorsData } = await supabase
           .from("profiles")
           .select("user_id, display_name, photo_url")
           .in("user_id", contractorIds);
 
         const contractorsMap = new Map(
-          (contractorsData || []).map((c: any) => [c.user_id, { name: c.display_name, photo: c.photo_url }])
+          (contractorsData || []).map((c: any) => [
+            c.user_id,
+            { name: c.display_name, photo: c.photo_url },
+          ]),
         );
 
         // Processa os dados
@@ -293,17 +333,24 @@ export default function GigsPage() {
           const compatibleInstruments = (gig.gig_roles || [])
             .map((gr: any) => gr.instrument)
             .filter((inst: string) => instruments.includes(inst));
-          const compatibleRole = (gig.gig_roles || []).find((gr: any) => instruments.includes(gr.instrument));
+          const compatibleRole = (gig.gig_roles || []).find((gr: any) =>
+            instruments.includes(gr.instrument),
+          );
           const contractorInfo = contractorsMap.get(gig.contractor_id);
 
           // Calcular distância e tempo de viagem se temos coordenadas
           let distanceKm: number | null = null;
           let estimatedTravelTimeMinutes: number | null = null;
-          
+
           const gigLat = gig.latitude as number | null | undefined;
           const gigLng = gig.longitude as number | null | undefined;
-          
-          if (musicianLat != null && musicianLng != null && gigLat != null && gigLng != null) {
+
+          if (
+            musicianLat != null &&
+            musicianLng != null &&
+            gigLat != null &&
+            gigLng != null
+          ) {
             distanceKm = haversineKm(musicianLat, musicianLng, gigLat, gigLng);
             estimatedTravelTimeMinutes = estimateTravelMin(distanceKm);
           }
@@ -338,11 +385,14 @@ export default function GigsPage() {
                   gig.state ?? null,
                   gig.city ?? null,
                   gigLat,
-                  gigLng
+                  gigLng,
                 );
                 // Se o computed for mais específico (contém "Zona" ou cidade específica), usar ele
                 // Caso contrário, usar o do banco se existir
-                if (computed && (computed.includes("Zona") || computed.includes("—"))) {
+                if (
+                  computed &&
+                  (computed.includes("Zona") || computed.includes("—"))
+                ) {
                   return computed;
                 }
               }
@@ -357,23 +407,29 @@ export default function GigsPage() {
         let finalGigs = processedGigs;
         if (musicianLat != null && musicianLng != null && radius != null) {
           const radiusValue = radius; // Garantir que radius não é null neste escopo
-          console.log(`[GigsPage] Filtrando gigs por raio: ${radiusValue} km. Total antes: ${processedGigs.length}`);
+          console.log(
+            `[GigsPage] Filtrando gigs por raio: ${radiusValue} km. Total antes: ${processedGigs.length}`,
+          );
           finalGigs = processedGigs.filter((gig) => {
             // Se não tem distância calculada, exclui (não podemos filtrar sem distância)
             if (gig.distance_km == null) {
-              console.log(`[GigsPage] Excluindo gig ${gig.id} - sem distância calculada`);
+              console.log(
+                `[GigsPage] Excluindo gig ${gig.id} - sem distância calculada`,
+              );
               return false;
             }
             // Filtra pelo raio configurado - só inclui se estiver dentro do raio
             const isWithinRadius = gig.distance_km <= radiusValue;
             if (!isWithinRadius) {
-              console.log(`[GigsPage] Excluindo gig ${gig.id} - distância ${gig.distance_km.toFixed(1)} km > raio ${radiusValue} km`);
+              console.log(
+                `[GigsPage] Excluindo gig ${gig.id} - distância ${gig.distance_km.toFixed(1)} km > raio ${radiusValue} km`,
+              );
             }
             return isWithinRadius;
           });
-          
+
           console.log(`[GigsPage] Total após filtro: ${finalGigs.length}`);
-          
+
           // Ordenar por distância (menor primeiro)
           finalGigs.sort((a, b) => {
             if (a.distance_km != null && b.distance_km != null) {
@@ -384,7 +440,9 @@ export default function GigsPage() {
             return 0;
           });
         } else {
-          console.log(`[GigsPage] Não filtrando por raio - musicianLat: ${musicianLat}, musicianLng: ${musicianLng}, radius: ${radius}`);
+          console.log(
+            `[GigsPage] Não filtrando por raio - musicianLat: ${musicianLat}, musicianLng: ${musicianLng}, radius: ${radius}`,
+          );
         }
 
         setGigs(finalGigs);
@@ -394,7 +452,7 @@ export default function GigsPage() {
         const { data, error: gigsError } = await supabase
           .from("gigs")
           .select(
-            "id,title,description,location_name,address_text,city,state,latitude,longitude,region_label,start_time,end_time,show_minutes,break_minutes,status,flyer_url,contractor_id"
+            "id,title,description,location_name,address_text,city,state,latitude,longitude,region_label,start_time,end_time,show_minutes,break_minutes,status,flyer_url,contractor_id",
           )
           .eq("contractor_id", userId)
           .order("start_time", { ascending: true });
@@ -410,25 +468,31 @@ export default function GigsPage() {
         // Busca músicos confirmados para todas as gigs de uma vez
         const gigIds = (data || []).map((g: any) => g.id);
         const confirmedMusiciansMap = new Map<string, any[]>();
-        
+
         if (gigIds.length > 0) {
           // Buscar confirmados para todas as gigs
           for (const gigId of gigIds) {
             try {
               const { data: confirmedData } = await supabase.rpc(
                 "rpc_list_confirmed_musicians_for_gig",
-                { p_gig_id: gigId }
+                { p_gig_id: gigId },
               );
               if (confirmedData && confirmedData.length > 0) {
-                confirmedMusiciansMap.set(gigId, confirmedData.map((m: any) => ({
-                  musician_id: m.musician_id,
-                  musician_name: m.musician_name,
-                  musician_photo_url: m.musician_photo_url,
-                  instrument: m.instrument,
-                })));
+                confirmedMusiciansMap.set(
+                  gigId,
+                  confirmedData.map((m: any) => ({
+                    musician_id: m.musician_id,
+                    musician_name: m.musician_name,
+                    musician_photo_url: m.musician_photo_url,
+                    instrument: m.instrument,
+                  })),
+                );
               }
             } catch (err) {
-              console.error(`Error loading confirmed musicians for gig ${gigId}:`, err);
+              console.error(
+                `Error loading confirmed musicians for gig ${gigId}:`,
+                err,
+              );
             }
           }
         }
@@ -468,70 +532,79 @@ export default function GigsPage() {
     const channel = supabase
       .channel(`gigs-page-${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'gigs',
-          filter: userType === 'contractor' 
-            ? `contractor_id=eq.${userId}`
-            : undefined,
+          event: "*",
+          schema: "public",
+          table: "gigs",
+          filter:
+            userType === "contractor"
+              ? `contractor_id=eq.${userId}`
+              : undefined,
         },
         () => {
-          console.log('Mudança detectada em gigs, recarregando...');
+          console.log("Mudança detectada em gigs, recarregando...");
           loadGigs();
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'invites',
-          filter: userType === 'musician' 
-            ? `musician_id=eq.${userId}`
-            : undefined,
+          event: "*",
+          schema: "public",
+          table: "invites",
+          filter:
+            userType === "musician" ? `musician_id=eq.${userId}` : undefined,
         },
         () => {
-          console.log('Mudança detectada em invites, recarregando...');
+          console.log("Mudança detectada em invites, recarregando...");
           loadGigs();
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'musician_profiles',
-          filter: userType === 'musician' 
-            ? `user_id=eq.${userId}`
-            : undefined,
+          event: "UPDATE",
+          schema: "public",
+          table: "musician_profiles",
+          filter: userType === "musician" ? `user_id=eq.${userId}` : undefined,
         },
         (payload) => {
           // Recarregar se o raio de busca ou localização mudou
           const oldData = payload.old as any;
           const newData = payload.new as any;
-          
-          const oldRadius = oldData?.max_radius_km || (oldData?.strengths_counts as any)?.searchRadius;
-          const newRadius = newData?.max_radius_km || (newData?.strengths_counts as any)?.searchRadius;
-          
+
+          const oldRadius =
+            oldData?.max_radius_km ||
+            (oldData?.strengths_counts as any)?.searchRadius;
+          const newRadius =
+            newData?.max_radius_km ||
+            (newData?.strengths_counts as any)?.searchRadius;
+
           const oldLat = oldData?.latitude;
           const newLat = newData?.latitude;
           const oldLng = oldData?.longitude;
           const newLng = newData?.longitude;
-          
-          if (oldRadius !== newRadius || oldLat !== newLat || oldLng !== newLng) {
-            console.log('Mudança detectada em musician_profiles (raio ou localização), recarregando gigs...', {
-              oldRadius,
-              newRadius,
-              oldLat,
-              newLat,
-              oldLng,
-              newLng
-            });
+
+          if (
+            oldRadius !== newRadius ||
+            oldLat !== newLat ||
+            oldLng !== newLng
+          ) {
+            console.log(
+              "Mudança detectada em musician_profiles (raio ou localização), recarregando gigs...",
+              {
+                oldRadius,
+                newRadius,
+                oldLat,
+                newLat,
+                oldLng,
+                newLng,
+              },
+            );
             loadGigs();
           }
-        }
+        },
       )
       .subscribe();
 
@@ -591,17 +664,25 @@ export default function GigsPage() {
     setDialogOpen(true);
   };
 
-  const handleAcceptInvite = async (gigId: string, inviteId: string | null, e: React.MouseEvent) => {
+  const handleAcceptInvite = async (
+    gigId: string,
+    inviteId: string | null,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation();
 
     if (!inviteId) {
-      setError("Convite não encontrado. Aguarde o sistema criar o convite automaticamente.");
+      setError(
+        "Convite não encontrado. Aguarde o sistema criar o convite automaticamente.",
+      );
       return;
     }
 
-    const gig = gigs.find(g => g.id === gigId);
-    if (gig && gig.invite_status && gig.invite_status !== 'pending') {
-      setError(`Este convite já foi ${gig.invite_status === 'accepted' ? 'aceito' : 'recusado'}.`);
+    const gig = gigs.find((g) => g.id === gigId);
+    if (gig && gig.invite_status && gig.invite_status !== "pending") {
+      setError(
+        `Este convite já foi ${gig.invite_status === "accepted" ? "aceito" : "recusado"}.`,
+      );
       return;
     }
 
@@ -609,9 +690,12 @@ export default function GigsPage() {
     setError(null);
 
     try {
-      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_accept_invite", {
-        p_invite_id: inviteId,
-      });
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "rpc_accept_invite",
+        {
+          p_invite_id: inviteId,
+        },
+      );
 
       if (rpcError) {
         console.error("RPC acceptInvite error:", rpcError);
@@ -620,7 +704,12 @@ export default function GigsPage() {
         return;
       }
 
-      if (rpcData && typeof rpcData === 'object' && 'ok' in rpcData && !rpcData.ok) {
+      if (
+        rpcData &&
+        typeof rpcData === "object" &&
+        "ok" in rpcData &&
+        !rpcData.ok
+      ) {
         const message = (rpcData as any)?.message || "Erro ao aceitar convite";
         setError(message);
         setProcessingInviteId(null);
@@ -630,13 +719,17 @@ export default function GigsPage() {
       // Atualiza o estado local
       setGigs((prev) =>
         prev.map((g) =>
-          g.id === gigId ? { ...g, invite_status: "accepted", invite_id: inviteId } : g
-        )
+          g.id === gigId
+            ? { ...g, invite_status: "accepted", invite_id: inviteId }
+            : g,
+        ),
       );
       setFilteredGigs((prev) =>
         prev.map((g) =>
-          g.id === gigId ? { ...g, invite_status: "accepted", invite_id: inviteId } : g
-        )
+          g.id === gigId
+            ? { ...g, invite_status: "accepted", invite_id: inviteId }
+            : g,
+        ),
       );
       setProcessingInviteId(null);
     } catch (err: any) {
@@ -646,7 +739,11 @@ export default function GigsPage() {
     }
   };
 
-  const handleDeclineInvite = async (gigId: string, inviteId: string | null, e: React.MouseEvent) => {
+  const handleDeclineInvite = async (
+    gigId: string,
+    inviteId: string | null,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation();
 
     if (!inviteId) {
@@ -654,9 +751,11 @@ export default function GigsPage() {
       return;
     }
 
-    const gig = gigs.find(g => g.id === gigId);
-    if (gig && gig.invite_status && gig.invite_status !== 'pending') {
-      setError(`Este convite já foi ${gig.invite_status === 'accepted' ? 'aceito' : 'recusado'}.`);
+    const gig = gigs.find((g) => g.id === gigId);
+    if (gig && gig.invite_status && gig.invite_status !== "pending") {
+      setError(
+        `Este convite já foi ${gig.invite_status === "accepted" ? "aceito" : "recusado"}.`,
+      );
       return;
     }
 
@@ -674,10 +773,13 @@ export default function GigsPage() {
     setError(null);
 
     try {
-      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_decline_invite", {
-        p_invite_id: inviteId,
-        p_decline_reason: reason,
-      });
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "rpc_decline_invite",
+        {
+          p_invite_id: inviteId,
+          p_decline_reason: reason,
+        },
+      );
 
       if (rpcError) {
         console.error("RPC declineInvite error:", rpcError);
@@ -686,7 +788,12 @@ export default function GigsPage() {
         return;
       }
 
-      if (rpcData && typeof rpcData === 'object' && 'ok' in rpcData && !rpcData.ok) {
+      if (
+        rpcData &&
+        typeof rpcData === "object" &&
+        "ok" in rpcData &&
+        !rpcData.ok
+      ) {
         const message = (rpcData as any)?.message || "Erro ao recusar convite";
         setError(message);
         setProcessingInviteId(null);
@@ -695,13 +802,13 @@ export default function GigsPage() {
 
       setGigs((prev) =>
         prev.map((g) =>
-          g.id === gigId ? { ...g, invite_status: "declined" } : g
-        )
+          g.id === gigId ? { ...g, invite_status: "declined" } : g,
+        ),
       );
       setFilteredGigs((prev) =>
         prev.map((g) =>
-          g.id === gigId ? { ...g, invite_status: "declined" } : g
-        )
+          g.id === gigId ? { ...g, invite_status: "declined" } : g,
+        ),
       );
       setProcessingInviteId(null);
       setShowDeclineReasonDialog(false);
@@ -792,81 +899,100 @@ export default function GigsPage() {
   };
 
   const totalInvites = gigs.filter((gig) => gig.invite_id).length;
-  const invitesAccepted = gigs.filter((gig) => gig.invite_status === "accepted").length;
-  const invitesDeclined = gigs.filter((gig) => gig.invite_status === "declined").length;
-  const invitesPending = gigs.filter((gig) => gig.invite_id && !gig.invite_status).length;
+  const invitesAccepted = gigs.filter(
+    (gig) => gig.invite_status === "accepted",
+  ).length;
+  const invitesDeclined = gigs.filter(
+    (gig) => gig.invite_status === "declined",
+  ).length;
+  const invitesPending = gigs.filter(
+    (gig) => gig.invite_id && !gig.invite_status,
+  ).length;
   const respondedInvites = invitesAccepted + invitesDeclined;
-  const responseRate = totalInvites > 0 ? Math.round((respondedInvites / totalInvites) * 100) : 0;
+  const responseRate =
+    totalInvites > 0 ? Math.round((respondedInvites / totalInvites) * 100) : 0;
 
-  const publishedCount = gigs.filter((gig) => gig.status === "published").length;
+  const publishedCount = gigs.filter(
+    (gig) => gig.status === "published",
+  ).length;
   const draftCount = gigs.filter((gig) => gig.status === "draft").length;
-  const cancelledCount = gigs.filter((gig) => gig.status === "cancelled").length;
-  const confirmedTotal = gigs.reduce((sum, gig) => sum + (gig.confirmed_musicians?.length ?? 0), 0);
+  const cancelledCount = gigs.filter(
+    (gig) => gig.status === "cancelled",
+  ).length;
+  const confirmedTotal = gigs.reduce(
+    (sum, gig) => sum + (gig.confirmed_musicians?.length ?? 0),
+    0,
+  );
 
-  const stats = userType === "musician"
-    ? [
-        {
-          label: "Oportunidades no raio",
-          value: gigs.length,
-          hint: maxRadiusKm ? `Raio de ${maxRadiusKm} km` : "Raio padrão ativo",
-          icon: Sparkles,
-          tone: "bg-amber-100 text-amber-700",
-        },
-        {
-          label: "Respostas concluídas",
-          value: totalInvites ? `${respondedInvites}/${totalInvites}` : "0",
-          hint: totalInvites ? `${responseRate}% de resposta` : "Sem convites ainda",
-          icon: Flame,
-          tone: "bg-teal-100 text-teal-700",
-          progress: totalInvites ? responseRate : 0,
-        },
-        {
-          label: "Convites aceitos",
-          value: invitesAccepted,
-          hint: "Seu histórico de confirmações",
-          icon: CheckCircle2,
-          tone: "bg-emerald-100 text-emerald-700",
-        },
-        {
-          label: "Pendentes",
-          value: invitesPending,
-          hint: "Responda para ganhar pontos",
-          icon: Clock,
-          tone: "bg-rose-100 text-rose-700",
-        },
-      ]
-    : userType === "contractor"
-    ? [
-        {
-          label: "Gigs publicadas",
-          value: publishedCount,
-          hint: "Visíveis para músicos",
-          icon: Megaphone,
-          tone: "bg-amber-100 text-amber-700",
-        },
-        {
-          label: "Rascunhos",
-          value: draftCount,
-          hint: "Prontas para publicar",
-          icon: FileText,
-          tone: "bg-slate-100 text-slate-700",
-        },
-        {
-          label: "Músicos confirmados",
-          value: confirmedTotal,
-          hint: "Escala em construção",
-          icon: Users,
-          tone: "bg-emerald-100 text-emerald-700",
-        },
-        {
-          label: "Canceladas",
-          value: cancelledCount,
-          hint: "Evite cancelamentos",
-          icon: Ban,
-          tone: "bg-rose-100 text-rose-700",
-        },
-      ]
-    : [];
+  const stats =
+    userType === "musician"
+      ? [
+          {
+            label: "Oportunidades no raio",
+            value: gigs.length,
+            hint: maxRadiusKm
+              ? `Raio de ${maxRadiusKm} km`
+              : "Raio padrão ativo",
+            icon: Sparkles,
+            tone: "bg-amber-100 text-amber-700",
+          },
+          {
+            label: "Respostas concluídas",
+            value: totalInvites ? `${respondedInvites}/${totalInvites}` : "0",
+            hint: totalInvites
+              ? `${responseRate}% de resposta`
+              : "Sem convites ainda",
+            icon: Flame,
+            tone: "bg-teal-100 text-teal-700",
+            progress: totalInvites ? responseRate : 0,
+          },
+          {
+            label: "Convites aceitos",
+            value: invitesAccepted,
+            hint: "Seu histórico de confirmações",
+            icon: CheckCircle2,
+            tone: "bg-emerald-100 text-emerald-700",
+          },
+          {
+            label: "Pendentes",
+            value: invitesPending,
+            hint: "Responda para ganhar pontos",
+            icon: Clock,
+            tone: "bg-rose-100 text-rose-700",
+          },
+        ]
+      : userType === "contractor"
+        ? [
+            {
+              label: "Gigs publicadas",
+              value: publishedCount,
+              hint: "Visíveis para músicos",
+              icon: Megaphone,
+              tone: "bg-amber-100 text-amber-700",
+            },
+            {
+              label: "Rascunhos",
+              value: draftCount,
+              hint: "Prontas para publicar",
+              icon: FileText,
+              tone: "bg-slate-100 text-slate-700",
+            },
+            {
+              label: "Músicos confirmados",
+              value: confirmedTotal,
+              hint: "Escala em construção",
+              icon: Users,
+              tone: "bg-emerald-100 text-emerald-700",
+            },
+            {
+              label: "Canceladas",
+              value: cancelledCount,
+              hint: "Evite cancelamentos",
+              icon: Ban,
+              tone: "bg-rose-100 text-rose-700",
+            },
+          ]
+        : [];
 
   return (
     <DashboardLayout fullWidth>
@@ -877,7 +1003,9 @@ export default function GigsPage() {
           <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
           <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Central de gigs</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">
+                Central de gigs
+              </p>
               <h1 className="text-2xl md:text-3xl font-display font-semibold text-foreground">
                 {userType === "contractor" ? "Minhas Gigs" : "Gigs Disponíveis"}
               </h1>
@@ -914,9 +1042,13 @@ export default function GigsPage() {
                         <p className="text-2xl font-semibold text-foreground mt-1">
                           {stat.value}
                         </p>
-                        <p className="text-xs text-foreground/60 mt-1">{stat.hint}</p>
+                        <p className="text-xs text-foreground/60 mt-1">
+                          {stat.hint}
+                        </p>
                       </div>
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.tone}`}>
+                      <div
+                        className={`h-10 w-10 rounded-full flex items-center justify-center ${stat.tone}`}
+                      >
                         <Icon className="h-5 w-5" />
                       </div>
                     </div>
@@ -924,7 +1056,9 @@ export default function GigsPage() {
                       <div className="mt-3 h-1.5 w-full rounded-full bg-amber-100/70">
                         <div
                           className="h-full rounded-full gradient-music transition-all"
-                          style={{ width: `${Math.min(100, Math.max(0, stat.progress))}%` }}
+                          style={{
+                            width: `${Math.min(100, Math.max(0, stat.progress))}%`,
+                          }}
                         />
                       </div>
                     )}
@@ -952,15 +1086,27 @@ export default function GigsPage() {
               </div>
 
               {/* Filtros por status */}
-              <Tabs value={filterStatus} onValueChange={(v) => setFilterStatus(v as typeof filterStatus)}>
+              <Tabs
+                value={filterStatus}
+                onValueChange={(v) => setFilterStatus(v as typeof filterStatus)}
+              >
                 <TabsList className="w-full sm:w-auto bg-white/70 border border-white/80 rounded-full p-1">
-                  <TabsTrigger value="all" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  <TabsTrigger
+                    value="all"
+                    className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
                     Todas
                   </TabsTrigger>
-                  <TabsTrigger value="upcoming" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  <TabsTrigger
+                    value="upcoming"
+                    className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
                     Futuras
                   </TabsTrigger>
-                  <TabsTrigger value="past" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                  <TabsTrigger
+                    value="past"
+                    className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
                     Passadas
                   </TabsTrigger>
                 </TabsList>
@@ -993,21 +1139,25 @@ export default function GigsPage() {
           <Card className="card-glass">
             <CardContent className="px-4 py-12 text-center">
               <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Carregando gigs...</p>
+              <p className="text-sm text-muted-foreground">
+                Carregando gigs...
+              </p>
             </CardContent>
           </Card>
         ) : filteredGigs.length === 0 ? (
           <Card className="card-glass">
             <CardContent className="px-4 py-12 text-center">
               <p className="text-sm font-medium text-foreground">
-                {searchTerm ? "Nenhuma gig encontrada" : "Nenhuma gig disponível"}
+                {searchTerm
+                  ? "Nenhuma gig encontrada"
+                  : "Nenhuma gig disponível"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {searchTerm
                   ? "Tente ajustar os filtros de busca."
                   : userType === "contractor"
-                  ? "Você ainda não criou nenhuma gig."
-                  : "Não há gigs publicadas no momento."}
+                    ? "Você ainda não criou nenhuma gig."
+                    : "Não há gigs publicadas no momento."}
               </p>
             </CardContent>
           </Card>
@@ -1017,14 +1167,15 @@ export default function GigsPage() {
               const date = formatDateBR(gig.start_time);
               const time = formatTimeBR(gig.start_time);
               const location = gig.location_name || "Local a definir";
-              const cityState = [gig.city, gig.state].filter(Boolean).join(", ") || "";
+              const cityState =
+                [gig.city, gig.state].filter(Boolean).join(", ") || "";
 
               return (
                 <Card
                   key={gig.id}
                   className={`border border-white/80 bg-white/90 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-3xl overflow-hidden ${
-                    userType === "musician" && gig.invite_status === "declined" 
-                      ? "opacity-75" 
+                    userType === "musician" && gig.invite_status === "declined"
+                      ? "opacity-75"
                       : ""
                   }`}
                 >
@@ -1055,9 +1206,15 @@ export default function GigsPage() {
                         <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-4 text-white shadow-md">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-xs font-medium opacity-90 mb-1">Cachê</p>
+                              <p className="text-xs font-medium opacity-90 mb-1">
+                                Cachê
+                              </p>
                               <p className="text-2xl md:text-3xl font-bold">
-                                R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gig.cache)}
+                                R${" "}
+                                {new Intl.NumberFormat("pt-BR", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }).format(gig.cache)}
                               </p>
                             </div>
                             <DollarSign className="h-8 w-8 opacity-80" />
@@ -1076,21 +1233,31 @@ export default function GigsPage() {
                           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                             <User className="h-4 w-4 shrink-0" />
                             <span>
-                              Publicado por <span className="font-medium text-foreground">{gig.contractor_name}</span>
+                              Publicado por{" "}
+                              <span className="font-medium text-foreground">
+                                {gig.contractor_name}
+                              </span>
                             </span>
                           </div>
                         )}
 
                         {/* Instrumentos compatíveis */}
-                        {userType === "musician" && gig.compatible_instruments.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mb-3">
-                            {gig.compatible_instruments.map((instrument, idx) => (
-                              <Badge key={idx} variant="secondary" className="text-xs px-2 py-0.5">
-                                {instrument}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
+                        {userType === "musician" &&
+                          gig.compatible_instruments.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-3">
+                              {gig.compatible_instruments.map(
+                                (instrument, idx) => (
+                                  <Badge
+                                    key={idx}
+                                    variant="secondary"
+                                    className="text-xs px-2 py-0.5"
+                                  >
+                                    {instrument}
+                                  </Badge>
+                                ),
+                              )}
+                            </div>
+                          )}
                       </div>
 
                       {/* Informações principais - Reorganizadas para escaneabilidade */}
@@ -1101,16 +1268,24 @@ export default function GigsPage() {
                           <div className="min-w-0 flex-1">
                             {gig.region_label ? (
                               <div>
-                                <p className="font-semibold text-sm text-foreground">{gig.region_label}</p>
+                                <p className="font-semibold text-sm text-foreground">
+                                  {gig.region_label}
+                                </p>
                                 {location && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{location}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                    {location}
+                                  </p>
                                 )}
                               </div>
                             ) : (
                               <div>
-                                <p className="font-semibold text-sm text-foreground truncate">{location}</p>
+                                <p className="font-semibold text-sm text-foreground truncate">
+                                  {location}
+                                </p>
                                 {cityState && (
-                                  <p className="text-xs font-medium text-muted-foreground mt-0.5">{cityState}</p>
+                                  <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                                    {cityState}
+                                  </p>
                                 )}
                               </div>
                             )}
@@ -1118,69 +1293,80 @@ export default function GigsPage() {
                         </div>
 
                         {/* Distância e Tempo de Viagem - DESTAQUE MUITO VISÍVEL */}
-                        {userType === "musician" && (gig.distance_km != null || gig.estimated_travel_time_minutes != null) ? (
+                        {userType === "musician" &&
+                        (gig.distance_km != null ||
+                          gig.estimated_travel_time_minutes != null) ? (
                           <div className="space-y-2">
                             {/* Card de Distância e Tempo - DESTAQUE */}
-                            <div className={`rounded-xl border-2 p-4 shadow-md ${
-                              gig.distance_km != null
-                                ? gig.distance_km <= 7
-                                  ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30"
-                                  : gig.distance_km <= 15
-                                  ? "border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30"
-                                  : "border-orange-500 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30"
-                                : "border-amber-200 bg-gradient-to-br from-amber-50 to-teal-50"
-                            }`}>
+                            <div
+                              className={`rounded-xl border-2 p-4 shadow-md ${
+                                gig.distance_km != null
+                                  ? gig.distance_km <= 7
+                                    ? "border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30"
+                                    : gig.distance_km <= 15
+                                      ? "border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30"
+                                      : "border-orange-500 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30"
+                                  : "border-amber-200 bg-gradient-to-br from-amber-50 to-teal-50"
+                              }`}
+                            >
                               <div className="grid grid-cols-2 gap-4">
                                 {/* Distância - Grande e Destacada */}
                                 {gig.distance_km != null && (
                                   <div className="flex items-start gap-3">
-                                    <div className={`p-2 rounded-lg ${
-                                      gig.distance_km <= 7
-                                        ? "bg-green-500/20"
-                                        : gig.distance_km <= 15
-                                        ? "bg-blue-500/20"
-                                        : "bg-orange-500/20"
-                                    }`}>
-                                      <Navigation className={`h-5 w-5 ${
+                                    <div
+                                      className={`p-2 rounded-lg ${
                                         gig.distance_km <= 7
-                                          ? "text-green-600 dark:text-green-400"
+                                          ? "bg-green-500/20"
                                           : gig.distance_km <= 15
-                                          ? "text-blue-600 dark:text-blue-400"
-                                          : "text-orange-600 dark:text-orange-400"
-                                      }`} />
+                                            ? "bg-blue-500/20"
+                                            : "bg-orange-500/20"
+                                      }`}
+                                    >
+                                      <Navigation
+                                        className={`h-5 w-5 ${
+                                          gig.distance_km <= 7
+                                            ? "text-green-600 dark:text-green-400"
+                                            : gig.distance_km <= 15
+                                              ? "text-blue-600 dark:text-blue-400"
+                                              : "text-orange-600 dark:text-orange-400"
+                                        }`}
+                                      />
                                     </div>
                                     <div className="flex-1">
-                                      <p className="text-xs font-medium text-muted-foreground mb-1">Distância</p>
-                                      <p className={`text-2xl font-bold ${
-                                        gig.distance_km <= 7
-                                          ? "text-green-700 dark:text-green-300"
-                                          : gig.distance_km <= 15
-                                          ? "text-blue-700 dark:text-blue-300"
-                                          : "text-orange-700 dark:text-orange-300"
-                                      }`}>
+                                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                                        Distância
+                                      </p>
+                                      <p
+                                        className={`text-2xl font-bold ${
+                                          gig.distance_km <= 7
+                                            ? "text-green-700 dark:text-green-300"
+                                            : gig.distance_km <= 15
+                                              ? "text-blue-700 dark:text-blue-300"
+                                              : "text-orange-700 dark:text-orange-300"
+                                        }`}
+                                      >
                                         {gig.distance_km.toFixed(1)} km
                                       </p>
                                       {/* Status Perto/Normal/Longe */}
-                                      <Badge 
+                                      <Badge
                                         className={`mt-1.5 text-xs font-semibold ${
                                           gig.distance_km <= 7
                                             ? "bg-green-500 text-white"
                                             : gig.distance_km <= 15
-                                            ? "bg-blue-500 text-white"
-                                            : "bg-orange-500 text-white"
+                                              ? "bg-blue-500 text-white"
+                                              : "bg-orange-500 text-white"
                                         }`}
                                       >
-                                        {gig.distance_km <= 7 
+                                        {gig.distance_km <= 7
                                           ? "✓ Próximo"
                                           : gig.distance_km <= 15
-                                          ? "• Normal"
-                                          : "⚠ Longe"
-                                        }
+                                            ? "• Normal"
+                                            : "⚠ Longe"}
                                       </Badge>
                                     </div>
                                   </div>
                                 )}
-                                
+
                                 {/* Tempo de Viagem de Carro - Grande e Destacado */}
                                 {gig.estimated_travel_time_minutes != null && (
                                   <div className="flex items-start gap-3">
@@ -1188,32 +1374,42 @@ export default function GigsPage() {
                                       <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                     </div>
                                     <div className="flex-1">
-                                      <p className="text-xs font-medium text-muted-foreground mb-1">Tempo de carro</p>
+                                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                                        Tempo de carro
+                                      </p>
                                       <p className="text-2xl font-bold text-foreground">
                                         ~{gig.estimated_travel_time_minutes} min
                                       </p>
-                                      <p className="text-xs text-muted-foreground mt-1">Tempo estimado</p>
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        Tempo estimado
+                                      </p>
                                     </div>
                                   </div>
                                 )}
                               </div>
                             </div>
-                            
+
                             {/* Aviso se está fora do raio configurado */}
-                            {maxRadiusKm != null && gig.distance_km != null && gig.distance_km > maxRadiusKm && (
-                              <div className="rounded-lg border border-amber-300/70 bg-amber-50/80 p-3">
-                                <p className="text-xs font-medium text-amber-900">
-                                  ⚠️ Este convite está fora do seu raio de busca configurado ({maxRadiusKm} km)
-                                </p>
-                              </div>
-                            )}
+                            {maxRadiusKm != null &&
+                              gig.distance_km != null &&
+                              gig.distance_km > maxRadiusKm && (
+                                <div className="rounded-lg border border-amber-300/70 bg-amber-50/80 p-3">
+                                  <p className="text-xs font-medium text-amber-900">
+                                    ⚠️ Este convite está fora do seu raio de
+                                    busca configurado ({maxRadiusKm} km)
+                                  </p>
+                                </div>
+                              )}
                           </div>
-                        ) : userType === "musician" && musicianLocation && (
-                          <div className="rounded-lg border border-white/60 bg-white/70 p-3">
-                            <p className="text-xs text-foreground/60">
-                              Distância não disponível (gig sem coordenadas)
-                            </p>
-                          </div>
+                        ) : (
+                          userType === "musician" &&
+                          musicianLocation && (
+                            <div className="rounded-lg border border-white/60 bg-white/70 p-3">
+                              <p className="text-xs text-foreground/60">
+                                Distância não disponível (gig sem coordenadas)
+                              </p>
+                            </div>
+                          )
                         )}
 
                         {/* Data e Hora - Em linha única para escaneabilidade */}
@@ -1238,24 +1434,36 @@ export default function GigsPage() {
 
                       {/* Badges de status */}
                       <div className="flex flex-wrap gap-2 pt-1">
-                        <Badge variant="secondary" className="text-xs font-medium">
-                          {gig.status === "draft" ? "Rascunho" : gig.status === "cancelled" ? "Cancelada" : "Publicada"}
+                        <Badge
+                          variant="secondary"
+                          className="text-xs font-medium"
+                        >
+                          {gig.status === "draft"
+                            ? "Rascunho"
+                            : gig.status === "cancelled"
+                              ? "Cancelada"
+                              : "Publicada"}
                         </Badge>
                         {gig.show_minutes && (
-                          <Badge variant="secondary" className="text-xs font-medium">
+                          <Badge
+                            variant="secondary"
+                            className="text-xs font-medium"
+                          >
                             {Math.floor(gig.show_minutes / 60)}h
                           </Badge>
                         )}
-                        {userType === "musician" && gig.invite_status === "accepted" && (
-                          <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
-                            ✓ Aceito
-                          </Badge>
-                        )}
-                        {userType === "musician" && gig.invite_status === "declined" && (
-                          <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
-                            ✗ Recusado
-                          </Badge>
-                        )}
+                        {userType === "musician" &&
+                          gig.invite_status === "accepted" && (
+                            <Badge className="text-xs bg-green-500 text-white border-0 font-medium">
+                              ✓ Aceito
+                            </Badge>
+                          )}
+                        {userType === "musician" &&
+                          gig.invite_status === "declined" && (
+                            <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
+                              ✗ Recusado
+                            </Badge>
+                          )}
                         {/* Badges de distância */}
                         {userType === "musician" && gig.distance_km != null && (
                           <>
@@ -1277,50 +1485,60 @@ export default function GigsPage() {
                           </>
                         )}
                         {/* Badge de fora do raio se configurado */}
-                        {userType === "musician" && gig.distance_km != null && maxRadiusKm != null && gig.distance_km > maxRadiusKm && (
-                          <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
-                            Fora do Raio
-                          </Badge>
-                        )}
+                        {userType === "musician" &&
+                          gig.distance_km != null &&
+                          maxRadiusKm != null &&
+                          gig.distance_km > maxRadiusKm && (
+                            <Badge className="text-xs bg-red-500 text-white border-0 font-medium">
+                              Fora do Raio
+                            </Badge>
+                          )}
                       </div>
 
                       {/* Músicos Confirmados - apenas para contractors */}
-                      {userType === "contractor" && gig.confirmed_musicians && gig.confirmed_musicians.length > 0 && (
-                        <div className="pt-3 border-t-2 border-border/30">
-                          <div className="flex items-center gap-2 mb-3">
-                            <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
-                            <span className="text-sm font-semibold text-foreground">Músicos Confirmados</span>
-                            <Badge variant="secondary" className="text-xs ml-auto">
-                              {gig.confirmed_musicians.length}
-                            </Badge>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {gig.confirmed_musicians.map((musician, idx) => (
-                              <div
-                                key={musician.musician_id || idx}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border-2 border-green-500/30 hover:bg-green-500/15 transition-colors"
+                      {userType === "contractor" &&
+                        gig.confirmed_musicians &&
+                        gig.confirmed_musicians.length > 0 && (
+                          <div className="pt-3 border-t-2 border-border/30">
+                            <div className="flex items-center gap-2 mb-3">
+                              <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" />
+                              <span className="text-sm font-semibold text-foreground">
+                                Músicos Confirmados
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className="text-xs ml-auto"
                               >
-                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                                  {musician.musician_name
-                                    ?.split(" ")
-                                    .map((n: string) => n[0])
-                                    .join("")
-                                    .toUpperCase()
-                                    .slice(0, 2) || "?"}
+                                {gig.confirmed_musicians.length}
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {gig.confirmed_musicians.map((musician, idx) => (
+                                <div
+                                  key={musician.musician_id || idx}
+                                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border-2 border-green-500/30 hover:bg-green-500/15 transition-colors"
+                                >
+                                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                    {musician.musician_name
+                                      ?.split(" ")
+                                      .map((n: string) => n[0])
+                                      .join("")
+                                      .toUpperCase()
+                                      .slice(0, 2) || "?"}
+                                  </div>
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-xs font-semibold text-foreground truncate">
+                                      {musician.musician_name || "Músico"}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {musician.instrument}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-xs font-semibold text-foreground truncate">
-                                    {musician.musician_name || "Músico"}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {musician.instrument}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
                       {/* Botões de ação */}
                       <div className="flex flex-col gap-2.5 pt-4 border-t-2 border-border/30">
@@ -1336,7 +1554,7 @@ export default function GigsPage() {
                           <Eye className="mr-2 h-4 w-4" />
                           Ver Detalhes
                         </Button>
-                         
+
                         {/* Botões para músicos */}
                         {userType === "musician" && (
                           <>
@@ -1344,33 +1562,44 @@ export default function GigsPage() {
                               <div className="w-full px-4 py-3 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
                                 <div className="flex items-center justify-center gap-2 text-green-600 dark:text-green-400">
                                   <Check className="h-5 w-5" />
-                                  <span className="font-semibold text-sm">Convite Aceito</span>
+                                  <span className="font-semibold text-sm">
+                                    Convite Aceito
+                                  </span>
                                 </div>
                                 <p className="text-xs text-green-600/80 dark:text-green-400/80 mt-1">
                                   Você confirmou sua participação neste trabalho
                                 </p>
                               </div>
                             )}
-                             
+
                             {gig.invite_status === "declined" && (
                               <div className="w-full px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
                                 <div className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400">
                                   <X className="h-5 w-5" />
-                                  <span className="font-semibold text-sm">Convite Recusado</span>
+                                  <span className="font-semibold text-sm">
+                                    Convite Recusado
+                                  </span>
                                 </div>
                                 <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-1">
                                   Você recusou este convite
                                 </p>
                               </div>
                             )}
-                             
-                            {(!gig.invite_status || (gig.invite_status !== "accepted" && gig.invite_status !== "declined")) && (
+
+                            {(!gig.invite_status ||
+                              (gig.invite_status !== "accepted" &&
+                                gig.invite_status !== "declined")) && (
                               <div className="space-y-2.5">
                                 <Button
                                   variant="default"
                                   className="w-full font-semibold text-base py-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all"
-                                  onClick={(e) => handleAcceptInvite(gig.id, gig.invite_id, e)}
-                                  disabled={processingInviteId === gig.invite_id || !gig.invite_id}
+                                  onClick={(e) =>
+                                    handleAcceptInvite(gig.id, gig.invite_id, e)
+                                  }
+                                  disabled={
+                                    processingInviteId === gig.invite_id ||
+                                    !gig.invite_id
+                                  }
                                 >
                                   {processingInviteId === gig.invite_id ? (
                                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -1382,8 +1611,17 @@ export default function GigsPage() {
                                 <Button
                                   variant="ghost"
                                   className="w-full text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5"
-                                  onClick={(e) => handleDeclineInvite(gig.id, gig.invite_id, e)}
-                                  disabled={processingInviteId === gig.invite_id || !gig.invite_id}
+                                  onClick={(e) =>
+                                    handleDeclineInvite(
+                                      gig.id,
+                                      gig.invite_id,
+                                      e,
+                                    )
+                                  }
+                                  disabled={
+                                    processingInviteId === gig.invite_id ||
+                                    !gig.invite_id
+                                  }
                                   title="Recusar remove este convite da sua lista"
                                 >
                                   {processingInviteId === gig.invite_id ? (
@@ -1402,29 +1640,31 @@ export default function GigsPage() {
                         )}
 
                         {/* Botões para contractors */}
-                        {userType === "contractor" && userId && gig.contractor_id === userId && (
-                          <div className="grid grid-cols-2 gap-2.5">
-                            <ShareGigButton 
-                              gigId={gig.id} 
-                              gigTitle={gig.title}
-                              variant="outline"
-                              className="w-full border border-white/80 bg-white/80"
-                            />
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="w-full border border-destructive text-destructive hover:bg-destructive/10"
-                              onClick={(e) => handleDeleteGig(gig.id, e)}
-                              disabled={deletingGigId === gig.id}
-                            >
-                              {deletingGigId === gig.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        )}
+                        {userType === "contractor" &&
+                          userId &&
+                          gig.contractor_id === userId && (
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <ShareGigButton
+                                gigId={gig.id}
+                                gigTitle={gig.title}
+                                variant="outline"
+                                className="w-full border border-white/80 bg-white/80"
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="w-full border border-destructive text-destructive hover:bg-destructive/10"
+                                onClick={(e) => handleDeleteGig(gig.id, e)}
+                                disabled={deletingGigId === gig.id}
+                              >
+                                {deletingGigId === gig.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </CardContent>
@@ -1447,7 +1687,9 @@ export default function GigsPage() {
             open={showDeclineReasonDialog}
             onOpenChange={setShowDeclineReasonDialog}
             onConfirm={handleDeclineConfirm}
-            gigTitle={gigs.find((g) => g.id === pendingDeclineGigId)?.title ?? null}
+            gigTitle={
+              gigs.find((g) => g.id === pendingDeclineGigId)?.title ?? null
+            }
             loading={processingInviteId === pendingDeclineInviteId}
           />
         )}

@@ -1,4 +1,10 @@
-export type ThemeName = "default" | "ocean" | "sunset" | "forest" | "royal" | "dark";
+export type ThemeName =
+  | "default"
+  | "ocean"
+  | "sunset"
+  | "forest"
+  | "royal"
+  | "dark";
 
 export interface Theme {
   name: ThemeName;

@@ -52,7 +52,7 @@ export function useInvitesRealtime(params: {
           if (p.eventType === "INSERT") onInsert?.(p.new);
           if (p.eventType === "UPDATE") onUpdate?.(p.new);
           if (p.eventType === "DELETE") onDelete?.(p.old);
-        }
+        },
       )
       .subscribe();
 
@@ -71,7 +71,7 @@ export function useInvitesRealtime(params: {
           if (p.eventType === "INSERT") onInsert?.(p.new);
           if (p.eventType === "UPDATE") onUpdate?.(p.new);
           if (p.eventType === "DELETE") onDelete?.(p.old);
-        }
+        },
       )
       .subscribe();
 

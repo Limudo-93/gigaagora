@@ -5,11 +5,6 @@ export const metadata: Metadata = {
   description: "Perguntas frequentes sobre a plataforma Chama o Músico",
 };
 
-export default function FAQLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FAQLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
-

@@ -13,18 +13,23 @@ export default function DownloadICSButton() {
     setLoading(true);
     try {
       // Busca shows confirmados
-      const { data: rpcData, error: rpcError } = await supabase.rpc("rpc_list_upcoming_confirmed_gigs");
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "rpc_list_upcoming_confirmed_gigs",
+      );
 
       let confirmedGigs: any[] = [];
 
       if (rpcError) {
         // Fallback: busca direta
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) return;
 
         const { data: directData, error: directError } = await supabase
           .from("confirmations")
-          .select(`
+          .select(
+            `
             invites!inner(
               musician_id,
               gigs!inner(
@@ -38,7 +43,8 @@ export default function DownloadICSButton() {
                 state
               )
             )
-          `)
+          `,
+          )
           .eq("invites.musician_id", user.id)
           .gte("invites.gigs.start_time", new Date().toISOString());
 
@@ -108,4 +114,3 @@ export default function DownloadICSButton() {
     </Button>
   );
 }
-

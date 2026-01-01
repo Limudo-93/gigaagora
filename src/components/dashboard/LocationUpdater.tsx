@@ -26,8 +26,11 @@ export default function LocationUpdater() {
       }
 
       // Verificar se o usuário está autenticado
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
       if (userError || !user) {
         return;
       }
@@ -44,11 +47,18 @@ export default function LocationUpdater() {
         if (musicianProfile?.updated_at) {
           const lastUpdate = new Date(musicianProfile.updated_at);
           const now = new Date();
-          const hoursSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
-          
+          const hoursSinceUpdate =
+            (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
+
           // Se foi atualizado há menos de 24 horas, não atualiza novamente (evita atualizações muito frequentes)
-          if (hoursSinceUpdate < 24 && musicianProfile.latitude && musicianProfile.longitude) {
-            console.log("Localização atualizada recentemente, pulando atualização");
+          if (
+            hoursSinceUpdate < 24 &&
+            musicianProfile.latitude &&
+            musicianProfile.longitude
+          ) {
+            console.log(
+              "Localização atualizada recentemente, pulando atualização",
+            );
             hasUpdatedRef.current = true;
             return;
           }
@@ -91,7 +101,7 @@ export default function LocationUpdater() {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0, // Sempre obter localização atual
-        }
+        },
       );
     };
 
@@ -108,4 +118,3 @@ export default function LocationUpdater() {
   // Este componente não renderiza nada
   return null;
 }
-

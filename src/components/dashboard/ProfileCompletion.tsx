@@ -5,7 +5,7 @@ import Link from "next/link";
 
 function calculateProfileCompletion(
   profile: any,
-  musicianProfile: any
+  musicianProfile: any,
 ): number {
   if (!profile) return 0;
 
@@ -39,35 +39,50 @@ function calculateProfileCompletion(
 
   // Campos do perfil de músico (sempre contam, mesmo se não houver perfil de músico)
   const musicianFields = [
-    { 
-      value: musicianProfile?.bio, 
+    {
+      value: musicianProfile?.bio,
       weight: 2,
-      check: (v: any) => v && typeof v === "string" && v.trim() !== ""
+      check: (v: any) => v && typeof v === "string" && v.trim() !== "",
     },
-    { 
-      value: musicianProfile?.instruments, 
+    {
+      value: musicianProfile?.instruments,
       weight: 2,
-      check: (v: any) => Array.isArray(v) && v.length > 0 && v.some((item: any) => item && String(item).trim() !== "")
+      check: (v: any) =>
+        Array.isArray(v) &&
+        v.length > 0 &&
+        v.some((item: any) => item && String(item).trim() !== ""),
     },
-    { 
-      value: musicianProfile?.genres, 
+    {
+      value: musicianProfile?.genres,
       weight: 1,
-      check: (v: any) => Array.isArray(v) && v.length > 0 && v.some((item: any) => item && String(item).trim() !== "")
+      check: (v: any) =>
+        Array.isArray(v) &&
+        v.length > 0 &&
+        v.some((item: any) => item && String(item).trim() !== ""),
     },
-    { 
-      value: musicianProfile?.skills, 
+    {
+      value: musicianProfile?.skills,
       weight: 1,
-      check: (v: any) => Array.isArray(v) && v.length > 0 && v.some((item: any) => item && String(item).trim() !== "")
+      check: (v: any) =>
+        Array.isArray(v) &&
+        v.length > 0 &&
+        v.some((item: any) => item && String(item).trim() !== ""),
     },
-    { 
-      value: musicianProfile?.setup, 
+    {
+      value: musicianProfile?.setup,
       weight: 1,
-      check: (v: any) => Array.isArray(v) && v.length > 0 && v.some((item: any) => item && String(item).trim() !== "")
+      check: (v: any) =>
+        Array.isArray(v) &&
+        v.length > 0 &&
+        v.some((item: any) => item && String(item).trim() !== ""),
     },
-    { 
-      value: musicianProfile?.portfolio_links, 
+    {
+      value: musicianProfile?.portfolio_links,
       weight: 1,
-      check: (v: any) => Array.isArray(v) && v.length > 0 && v.some((item: any) => item && String(item).trim() !== "")
+      check: (v: any) =>
+        Array.isArray(v) &&
+        v.length > 0 &&
+        v.some((item: any) => item && String(item).trim() !== ""),
     },
   ];
 
@@ -112,12 +127,14 @@ export default async function ProfileCompletion() {
             </p>
             <div className="mt-2">
               <div className="w-full h-2.5 bg-orange-200 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500 ease-out"
                   style={{ width: "0%" }}
                 />
               </div>
-              <p className="mt-1.5 text-xs font-semibold text-orange-900">0% completo</p>
+              <p className="mt-1.5 text-xs font-semibold text-orange-900">
+                0% completo
+              </p>
             </div>
           </div>
         </div>
@@ -155,7 +172,7 @@ export default async function ProfileCompletion() {
           </p>
           <div className="mt-2">
             <div className="w-full h-2.5 bg-orange-200 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />

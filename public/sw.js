@@ -1,57 +1,55 @@
 // Service Worker para PWA - Chama o Músico
-const CACHE_NAME = 'chama-o-musico-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/dashboard',
-  '/logo.png',
-  '/manifest.json',
-];
+const CACHE_NAME = "chama-o-musico-v1";
+const STATIC_ASSETS = ["/", "/dashboard", "/logo.png", "/manifest.json"];
 
 // Instalação do Service Worker
-self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Instalando...');
+self.addEventListener("install", (event) => {
+  console.log("[Service Worker] Instalando...");
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    caches
+      .open(CACHE_NAME)
       .then((cache) => {
-        console.log('[Service Worker] Cache aberto');
+        console.log("[Service Worker] Cache aberto");
         return cache.addAll(STATIC_ASSETS);
       })
       .catch((err) => {
-        console.error('[Service Worker] Erro ao fazer cache:', err);
-      })
+        console.error("[Service Worker] Erro ao fazer cache:", err);
+      }),
   );
   self.skipWaiting();
 });
 
 // Ativação do Service Worker
-self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Ativando...');
+self.addEventListener("activate", (event) => {
+  console.log("[Service Worker] Ativando...");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Removendo cache antigo:', cacheName);
+            console.log("[Service Worker] Removendo cache antigo:", cacheName);
             return caches.delete(cacheName);
           }
-        })
+        }),
       );
-    })
+    }),
   );
   return self.clients.claim();
 });
 
 // Interceptar requisições para cache
-self.addEventListener('fetch', (event) => {
+self.addEventListener("fetch", (event) => {
   // Para PWA, não vamos fazer cache agressivo
   // Apenas servir do cache em caso de offline
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         // Cache apenas para assets estáticos
-        if (event.request.destination === 'image' || 
-            event.request.destination === 'script' ||
-            event.request.destination === 'style') {
+        if (
+          event.request.destination === "image" ||
+          event.request.destination === "script" ||
+          event.request.destination === "style"
+        ) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
@@ -62,22 +60,22 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         // Fallback para cache em caso de offline
         return caches.match(event.request);
-      })
+      }),
   );
 });
 
 // Listener para notificações push
-self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push recebido:', event);
-  
+self.addEventListener("push", (event) => {
+  console.log("[Service Worker] Push recebido:", event);
+
   let notificationData = {
-    title: 'Chama o Músico',
-    body: 'Você tem uma nova notificação',
-    icon: '/logo.png',
-    badge: '/logo.png',
-    tag: 'default',
+    title: "Chama o Músico",
+    body: "Você tem uma nova notificação",
+    icon: "/logo.png",
+    badge: "/logo.png",
+    tag: "default",
     requireInteraction: false,
-    data: {}
+    data: {},
   };
 
   if (event.data) {
@@ -96,7 +94,7 @@ self.addEventListener('push', (event) => {
         timestamp: Date.now(),
       };
     } catch (err) {
-      console.error('[Service Worker] Erro ao parsear payload:', err);
+      console.error("[Service Worker] Erro ao parsear payload:", err);
       notificationData.body = event.data.text() || notificationData.body;
     }
   }
@@ -113,27 +111,28 @@ self.addEventListener('push', (event) => {
       actions: notificationData.actions,
       vibrate: notificationData.vibrate,
       timestamp: notificationData.timestamp,
-    }
+    },
   );
 
   event.waitUntil(notificationPromise);
 });
 
 // Listener para clique em notificações
-self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notificação clicada:', event);
-  
+self.addEventListener("notificationclick", (event) => {
+  console.log("[Service Worker] Notificação clicada:", event);
+
   event.notification.close();
 
   const notificationData = event.notification.data || {};
-  const urlToOpen = notificationData.url || '/dashboard';
+  const urlToOpen = notificationData.url || "/dashboard";
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
         // Se já tem uma janela aberta, focar nela
         for (const client of clientList) {
-          if (client.url === urlToOpen && 'focus' in client) {
+          if (client.url === urlToOpen && "focus" in client) {
             return client.focus();
           }
         }
@@ -141,12 +140,11 @@ self.addEventListener('notificationclick', (event) => {
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
-      })
+      }),
   );
 });
 
 // Listener para ações de notificação (botões)
-self.addEventListener('notificationclose', (event) => {
-  console.log('[Service Worker] Notificação fechada:', event);
+self.addEventListener("notificationclose", (event) => {
+  console.log("[Service Worker] Notificação fechada:", event);
 });
-

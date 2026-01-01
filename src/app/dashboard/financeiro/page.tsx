@@ -48,7 +48,9 @@ export default function FinanceiroPage() {
       setError(null);
 
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (!user) {
           setError("Usuário não autenticado.");
           setLoading(false);
@@ -57,7 +59,8 @@ export default function FinanceiroPage() {
 
         const { data: confirmations, error: confError } = await supabase
           .from("confirmations")
-          .select(`
+          .select(
+            `
             id,
             confirmed_at,
             invite_id,
@@ -81,32 +84,41 @@ export default function FinanceiroPage() {
                 cache
               )
             )
-          `)
+          `,
+          )
           .eq("musician_id", user.id)
           .order("confirmed_at", { ascending: false });
 
         if (confError) throw confError;
 
-        const transformed: FinancialGig[] = (confirmations || []).map((conf: any) => {
-          const invite = Array.isArray(conf.invites) ? conf.invites[0] : conf.invites;
-          const gig = Array.isArray(invite?.gigs) ? invite?.gigs[0] : invite?.gigs;
-          const role = Array.isArray(invite?.gig_roles) ? invite?.gig_roles[0] : invite?.gig_roles;
+        const transformed: FinancialGig[] = (confirmations || [])
+          .map((conf: any) => {
+            const invite = Array.isArray(conf.invites)
+              ? conf.invites[0]
+              : conf.invites;
+            const gig = Array.isArray(invite?.gigs)
+              ? invite?.gigs[0]
+              : invite?.gigs;
+            const role = Array.isArray(invite?.gig_roles)
+              ? invite?.gig_roles[0]
+              : invite?.gig_roles;
 
-          return {
-            id: conf.id,
-            title: gig?.title || null,
-            start_time: gig?.start_time || null,
-            end_time: gig?.end_time || null,
-            show_minutes: gig?.show_minutes || null,
-            break_minutes: gig?.break_minutes || null,
-            location_name: gig?.location_name || null,
-            city: gig?.city || null,
-            state: gig?.state || null,
-            cache: role?.cache || null,
-            instrument: role?.instrument || null,
-            confirmed_at: conf.confirmed_at || null,
-          };
-        }).filter(gig => gig.title !== null);
+            return {
+              id: conf.id,
+              title: gig?.title || null,
+              start_time: gig?.start_time || null,
+              end_time: gig?.end_time || null,
+              show_minutes: gig?.show_minutes || null,
+              break_minutes: gig?.break_minutes || null,
+              location_name: gig?.location_name || null,
+              city: gig?.city || null,
+              state: gig?.state || null,
+              cache: role?.cache || null,
+              instrument: role?.instrument || null,
+              confirmed_at: conf.confirmed_at || null,
+            };
+          })
+          .filter((gig) => gig.title !== null);
 
         setGigs(transformed);
       } catch (err: any) {
@@ -142,34 +154,46 @@ export default function FinanceiroPage() {
   const now = new Date();
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
   // Gigs passados (já ganhou)
-  const pastGigs = gigs.filter(gig => {
+  const pastGigs = gigs.filter((gig) => {
     if (!gig.start_time) return false;
     return new Date(gig.start_time) < now;
   });
 
   // Gigs futuros (vai receber)
-  const futureGigs = gigs.filter(gig => {
+  const futureGigs = gigs.filter((gig) => {
     if (!gig.start_time) return false;
     return new Date(gig.start_time) >= now;
   });
 
   // Total já ganho
-  const totalEarnings = pastGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
+  const totalEarnings = pastGigs.reduce(
+    (sum, gig) => sum + (gig.cache || 0),
+    0,
+  );
 
   // Este mês
-  const thisMonthGigs = pastGigs.filter(gig => {
+  const thisMonthGigs = pastGigs.filter((gig) => {
     if (!gig.confirmed_at) return false;
     return new Date(gig.confirmed_at) >= thirtyDaysAgo;
   });
-  const thisMonthEarnings = thisMonthGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
+  const thisMonthEarnings = thisMonthGigs.reduce(
+    (sum, gig) => sum + (gig.cache || 0),
+    0,
+  );
 
   // Você vai receber
-  const futureEarnings = futureGigs.reduce((sum, gig) => sum + (gig.cache || 0), 0);
+  const futureEarnings = futureGigs.reduce(
+    (sum, gig) => sum + (gig.cache || 0),
+    0,
+  );
 
   // Horas tocadas
-  const totalMinutes = pastGigs.reduce((sum, gig) => sum + (gig.show_minutes || 0), 0);
+  const totalMinutes = pastGigs.reduce(
+    (sum, gig) => sum + (gig.show_minutes || 0),
+    0,
+  );
   const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
 
   // Quanto ganha por hora
@@ -181,14 +205,16 @@ export default function FinanceiroPage() {
 
     // Instrumento mais rentável
     const instrumentEarnings: Record<string, number> = {};
-    pastGigs.forEach(gig => {
+    pastGigs.forEach((gig) => {
       const instrument = gig.instrument || "Outro";
-      instrumentEarnings[instrument] = (instrumentEarnings[instrument] || 0) + (gig.cache || 0);
+      instrumentEarnings[instrument] =
+        (instrumentEarnings[instrument] || 0) + (gig.cache || 0);
     });
-    
-    const topInstrument = Object.entries(instrumentEarnings)
-      .sort((a, b) => b[1] - a[1])[0];
-    
+
+    const topInstrument = Object.entries(instrumentEarnings).sort(
+      (a, b) => b[1] - a[1],
+    )[0];
+
     if (topInstrument && topInstrument[1] > 0) {
       insights.push({
         type: "instrument",
@@ -199,16 +225,17 @@ export default function FinanceiroPage() {
 
     // Dia da semana mais rentável
     const dayEarnings: Record<string, number> = {};
-    pastGigs.forEach(gig => {
+    pastGigs.forEach((gig) => {
       if (gig.start_time) {
-        const day = new Date(gig.start_time).toLocaleDateString("pt-BR", { weekday: "long" });
+        const day = new Date(gig.start_time).toLocaleDateString("pt-BR", {
+          weekday: "long",
+        });
         dayEarnings[day] = (dayEarnings[day] || 0) + (gig.cache || 0);
       }
     });
 
-    const topDay = Object.entries(dayEarnings)
-      .sort((a, b) => b[1] - a[1])[0];
-    
+    const topDay = Object.entries(dayEarnings).sort((a, b) => b[1] - a[1])[0];
+
     if (topDay && topDay[1] > 0 && pastGigs.length >= 3) {
       insights.push({
         type: "day",
@@ -218,13 +245,18 @@ export default function FinanceiroPage() {
     }
 
     // Shows acima de 2h rendem melhor
-    const longGigs = pastGigs.filter(gig => (gig.show_minutes || 0) >= 120);
-    const shortGigs = pastGigs.filter(gig => (gig.show_minutes || 0) < 120 && (gig.show_minutes || 0) > 0);
-    
+    const longGigs = pastGigs.filter((gig) => (gig.show_minutes || 0) >= 120);
+    const shortGigs = pastGigs.filter(
+      (gig) => (gig.show_minutes || 0) < 120 && (gig.show_minutes || 0) > 0,
+    );
+
     if (longGigs.length > 0 && shortGigs.length > 0) {
-      const avgLong = longGigs.reduce((sum, g) => sum + (g.cache || 0), 0) / longGigs.length;
-      const avgShort = shortGigs.reduce((sum, g) => sum + (g.cache || 0), 0) / shortGigs.length;
-      
+      const avgLong =
+        longGigs.reduce((sum, g) => sum + (g.cache || 0), 0) / longGigs.length;
+      const avgShort =
+        shortGigs.reduce((sum, g) => sum + (g.cache || 0), 0) /
+        shortGigs.length;
+
       if (avgLong > avgShort * 1.1) {
         insights.push({
           type: "duration",
@@ -251,11 +283,11 @@ export default function FinanceiroPage() {
     };
   });
 
-  pastGigs.forEach(gig => {
+  pastGigs.forEach((gig) => {
     if (gig.confirmed_at) {
       const date = new Date(gig.confirmed_at);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      const monthData = last6Months.find(m => m.monthKey === monthKey);
+      const monthData = last6Months.find((m) => m.monthKey === monthKey);
       if (monthData) {
         monthData.earnings += gig.cache || 0;
         monthData.gigs += 1;
@@ -263,11 +295,14 @@ export default function FinanceiroPage() {
     }
   });
 
-  const maxEarnings = Math.max(...last6Months.map(m => m.earnings), 1);
+  const maxEarnings = Math.max(...last6Months.map((m) => m.earnings), 1);
 
   // Instrumentos mais rentáveis (ranking)
-  const instrumentDistribution: Record<string, { count: number; earnings: number }> = {};
-  pastGigs.forEach(gig => {
+  const instrumentDistribution: Record<
+    string,
+    { count: number; earnings: number }
+  > = {};
+  pastGigs.forEach((gig) => {
     const instrument = gig.instrument || "Outro";
     if (!instrumentDistribution[instrument]) {
       instrumentDistribution[instrument] = { count: 0, earnings: 0 };
@@ -280,7 +315,10 @@ export default function FinanceiroPage() {
     .map(([instrument, data]) => ({ instrument, ...data }))
     .sort((a, b) => b.earnings - a.earnings);
 
-  const maxInstrumentEarnings = Math.max(...topInstruments.map(i => i.earnings), 1);
+  const maxInstrumentEarnings = Math.max(
+    ...topInstruments.map((i) => i.earnings),
+    1,
+  );
 
   // Emojis para instrumentos
   const instrumentEmojis: Record<string, string> = {
@@ -333,15 +371,18 @@ export default function FinanceiroPage() {
           <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">Painel financeiro</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">
+                Painel financeiro
+              </p>
               <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground flex items-center gap-2">
                 💰 Seus ganhos com música
               </h1>
               <p className="text-base text-foreground/60 mt-2">
-                Acompanhe quanto você já ganhou, quanto vai receber e como evoluir
+                Acompanhe quanto você já ganhou, quanto vai receber e como
+                evoluir
               </p>
             </div>
-            
+
             {/* Toggle Básico/Avançado */}
             <div className="flex items-center gap-2 bg-white/80 rounded-full border border-white/70 p-1 shadow-sm">
               <button
@@ -377,11 +418,18 @@ export default function FinanceiroPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-5xl">💰</div>
                 </div>
-                <h2 className="text-xl md:text-2xl font-semibold mb-2 text-white">Total já ganho</h2>
-                <p className="text-4xl md:text-5xl font-bold mb-4 text-white">{formatCurrency(totalEarnings)}</p>
+                <h2 className="text-xl md:text-2xl font-semibold mb-2 text-white">
+                  Total já ganho
+                </h2>
+                <p className="text-4xl md:text-5xl font-bold mb-4 text-white">
+                  {formatCurrency(totalEarnings)}
+                </p>
                 <div className="flex items-center gap-2 text-white">
                   <span className="text-lg font-medium text-white">
-                    {pastGigs.length} {pastGigs.length === 1 ? "show confirmado" : "shows confirmados"}
+                    {pastGigs.length}{" "}
+                    {pastGigs.length === 1
+                      ? "show confirmado"
+                      : "shows confirmados"}
                   </span>
                 </div>
                 {totalEarnings > 0 && (
@@ -398,11 +446,18 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="text-3xl">📅</div>
-                    <h3 className="text-lg font-semibold text-foreground">Este mês</h3>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Este mês
+                    </h3>
                   </div>
-                  <p className="text-3xl font-bold text-foreground mb-2">{formatCurrency(thisMonthEarnings)}</p>
+                  <p className="text-3xl font-bold text-foreground mb-2">
+                    {formatCurrency(thisMonthEarnings)}
+                  </p>
                   <p className="text-sm text-foreground/60">
-                    {thisMonthGigs.length} {thisMonthGigs.length === 1 ? "show confirmado" : "shows confirmados"}
+                    {thisMonthGigs.length}{" "}
+                    {thisMonthGigs.length === 1
+                      ? "show confirmado"
+                      : "shows confirmados"}
                   </p>
                 </CardContent>
               </Card>
@@ -411,12 +466,14 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="text-3xl">🔮</div>
-                    <h3 className="text-lg font-semibold text-foreground">Você vai receber</h3>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Você vai receber
+                    </h3>
                   </div>
-                  <p className="text-3xl font-bold text-foreground mb-2">{formatCurrency(futureEarnings)}</p>
-                  <p className="text-sm text-foreground/60">
-                    Próximas semanas
+                  <p className="text-3xl font-bold text-foreground mb-2">
+                    {formatCurrency(futureEarnings)}
                   </p>
+                  <p className="text-sm text-foreground/60">Próximas semanas</p>
                 </CardContent>
               </Card>
             </div>
@@ -429,7 +486,9 @@ export default function FinanceiroPage() {
             {futureGigs.length > 0 && (
               <Card className="card-glass">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Próximos shows</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Próximos shows
+                  </h3>
                   <div className="space-y-3">
                     {futureGigs.slice(0, 10).map((gig) => (
                       <div
@@ -437,14 +496,19 @@ export default function FinanceiroPage() {
                         className="flex items-center justify-between py-3 border-b border-white/70 last:border-0"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{getInstrumentEmoji(gig.instrument || "Outro")}</span>
+                          <span className="text-2xl">
+                            {getInstrumentEmoji(gig.instrument || "Outro")}
+                          </span>
                           <div>
                             <p className="text-sm font-medium text-foreground">
-                              {formatDate(gig.start_time)} · {gig.location_name || gig.city || "Local"}
+                              {formatDate(gig.start_time)} ·{" "}
+                              {gig.location_name || gig.city || "Local"}
                             </p>
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-foreground">{formatCurrency(gig.cache || 0)}</p>
+                        <p className="text-lg font-bold text-foreground">
+                          {formatCurrency(gig.cache || 0)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -478,9 +542,13 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <DollarSign className="h-5 w-5 text-green-600" />
-                    <h3 className="text-sm font-semibold text-foreground/70">💰 Total já ganho</h3>
+                    <h3 className="text-sm font-semibold text-foreground/70">
+                      💰 Total já ganho
+                    </h3>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(totalEarnings)}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCurrency(totalEarnings)}
+                  </p>
                   <p className="text-xs text-foreground/50 mt-1">
                     {pastGigs.length} {pastGigs.length === 1 ? "show" : "shows"}
                   </p>
@@ -491,11 +559,16 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Calendar className="h-5 w-5 text-amber-600" />
-                    <h3 className="text-sm font-semibold text-foreground/70">📅 Este mês</h3>
+                    <h3 className="text-sm font-semibold text-foreground/70">
+                      📅 Este mês
+                    </h3>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(thisMonthEarnings)}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCurrency(thisMonthEarnings)}
+                  </p>
                   <p className="text-xs text-foreground/50 mt-1">
-                    {thisMonthGigs.length} {thisMonthGigs.length === 1 ? "show" : "shows"}
+                    {thisMonthGigs.length}{" "}
+                    {thisMonthGigs.length === 1 ? "show" : "shows"}
                   </p>
                 </CardContent>
               </Card>
@@ -504,10 +577,16 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Clock className="h-5 w-5 text-teal-600" />
-                    <h3 className="text-sm font-semibold text-foreground/70">⏱ Horas tocadas</h3>
+                    <h3 className="text-sm font-semibold text-foreground/70">
+                      ⏱ Horas tocadas
+                    </h3>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{totalHours}</p>
-                  <p className="text-xs text-foreground/50 mt-1">Total acumulado</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {totalHours}
+                  </p>
+                  <p className="text-xs text-foreground/50 mt-1">
+                    Total acumulado
+                  </p>
                 </CardContent>
               </Card>
 
@@ -515,9 +594,13 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp className="h-5 w-5 text-[#ff6b4a]" />
-                    <h3 className="text-sm font-semibold text-foreground/70">💸 Quanto você ganha por hora</h3>
+                    <h3 className="text-sm font-semibold text-foreground/70">
+                      💸 Quanto você ganha por hora
+                    </h3>
                   </div>
-                  <p className="text-2xl font-bold text-foreground">{formatCurrency(earningsPerHour)}</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCurrency(earningsPerHour)}
+                  </p>
                   <p className="text-xs text-foreground/50 mt-1">Média geral</p>
                 </CardContent>
               </Card>
@@ -529,13 +612,20 @@ export default function FinanceiroPage() {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="h-5 w-5 text-amber-600" />
-                    <h3 className="text-lg font-semibold text-foreground">Insights automáticos</h3>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Insights automáticos
+                    </h3>
                   </div>
                   <div className="space-y-3">
                     {insights.map((insight, idx) => (
-                      <div key={idx} className="flex items-center gap-3 bg-white/60 rounded-lg p-3 border border-amber-100">
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 bg-white/60 rounded-lg p-3 border border-amber-100"
+                      >
                         <span className="text-2xl">{insight.emoji}</span>
-                        <p className="text-base text-foreground font-medium">{insight.message}</p>
+                        <p className="text-base text-foreground font-medium">
+                          {insight.message}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -546,14 +636,20 @@ export default function FinanceiroPage() {
             {/* BLOCO 3 — EVOLUÇÃO DE GANHOS */}
             <Card className="card-glass">
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-6">Evolução de ganhos</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-6">
+                  Evolução de ganhos
+                </h3>
                 <div className="space-y-4">
                   {last6Months.map((month, idx) => (
                     <div key={idx} className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-foreground/70 font-medium capitalize">{month.month}</span>
+                        <span className="text-foreground/70 font-medium capitalize">
+                          {month.month}
+                        </span>
                         <div className="flex items-center gap-4">
-                          <span className="text-foreground font-semibold">{formatCurrency(month.earnings)}</span>
+                          <span className="text-foreground font-semibold">
+                            {formatCurrency(month.earnings)}
+                          </span>
                           <span className="text-foreground/50 text-xs">
                             {month.gigs} {month.gigs === 1 ? "show" : "shows"}
                           </span>
@@ -562,7 +658,9 @@ export default function FinanceiroPage() {
                       <div className="relative h-8 bg-white/70 rounded-full overflow-hidden">
                         <div
                           className="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500"
-                          style={{ width: `${(month.earnings / maxEarnings) * 100}%` }}
+                          style={{
+                            width: `${(month.earnings / maxEarnings) * 100}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -575,26 +673,36 @@ export default function FinanceiroPage() {
             {topInstruments.length > 0 && (
               <Card className="card-glass">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-6">Instrumentos mais rentáveis</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-6">
+                    Instrumentos mais rentáveis
+                  </h3>
                   <div className="space-y-4">
                     {topInstruments.slice(0, 5).map((item, idx) => (
                       <div key={idx} className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2">
-                            <span className="text-2xl">{getInstrumentEmoji(item.instrument)}</span>
-                            <span className="text-foreground font-medium">{item.instrument}</span>
+                            <span className="text-2xl">
+                              {getInstrumentEmoji(item.instrument)}
+                            </span>
+                            <span className="text-foreground font-medium">
+                              {item.instrument}
+                            </span>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-foreground/60 text-xs">
                               {item.count} {item.count === 1 ? "show" : "shows"}
                             </span>
-                            <span className="text-foreground font-bold">{formatCurrency(item.earnings)}</span>
+                            <span className="text-foreground font-bold">
+                              {formatCurrency(item.earnings)}
+                            </span>
                           </div>
                         </div>
                         <div className="relative h-6 bg-white/70 rounded-full overflow-hidden">
                           <div
                             className="absolute left-0 top-0 h-full bg-gradient-to-r from-[#ff6b4a] to-[#ffb347] rounded-full transition-all duration-500"
-                            style={{ width: `${(item.earnings / maxInstrumentEarnings) * 100}%` }}
+                            style={{
+                              width: `${(item.earnings / maxInstrumentEarnings) * 100}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -608,7 +716,9 @@ export default function FinanceiroPage() {
             {futureGigs.length > 0 && (
               <Card className="card-glass">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-4">Próximos ganhos detalhados</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Próximos ganhos detalhados
+                  </h3>
                   <div className="space-y-3">
                     {futureGigs.map((gig) => (
                       <div
@@ -616,22 +726,26 @@ export default function FinanceiroPage() {
                         className="flex items-center justify-between py-3 px-4 bg-white/70 rounded-lg border border-white/70"
                       >
                         <div className="flex items-center gap-4 flex-1">
-                          <div className="text-2xl">{getInstrumentEmoji(gig.instrument || "Outro")}</div>
+                          <div className="text-2xl">
+                            {getInstrumentEmoji(gig.instrument || "Outro")}
+                          </div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-foreground">{gig.title}</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {gig.title}
+                            </p>
                             <div className="flex items-center gap-4 mt-1 text-xs text-foreground/60">
                               <span>{formatDate(gig.start_time)}</span>
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
                                 {gig.location_name || gig.city || "Local"}
                               </span>
-                              {gig.instrument && (
-                                <span>{gig.instrument}</span>
-                              )}
+                              {gig.instrument && <span>{gig.instrument}</span>}
                             </div>
                           </div>
                         </div>
-                        <p className="text-lg font-bold text-foreground ml-4">{formatCurrency(gig.cache || 0)}</p>
+                        <p className="text-lg font-bold text-foreground ml-4">
+                          {formatCurrency(gig.cache || 0)}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -644,5 +758,3 @@ export default function FinanceiroPage() {
     </DashboardLayout>
   );
 }
-
-

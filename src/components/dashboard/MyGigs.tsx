@@ -101,7 +101,7 @@ export default function MyGigs() {
         inFlightRef.current = false;
       }
     },
-    [fetchMyGigs]
+    [fetchMyGigs],
   );
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function MyGigs() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "gigs" },
-        () => reload()
+        () => reload(),
       )
       .subscribe();
 

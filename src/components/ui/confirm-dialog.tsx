@@ -54,20 +54,20 @@ export function ConfirmDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-              variant === "destructive" 
-                ? "bg-destructive/10" 
-                : "bg-primary/10"
-            }`}>
+            <div
+              className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                variant === "destructive"
+                  ? "bg-destructive/10"
+                  : "bg-primary/10"
+              }`}
+            >
               {variant === "destructive" ? (
                 <AlertTriangle className="h-5 w-5 text-destructive" />
               ) : (
                 <AlertTriangle className="h-5 w-5 text-primary" />
               )}
             </div>
-            <DialogTitle className="text-lg font-semibold">
-              {title}
-            </DialogTitle>
+            <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
           </div>
           <DialogDescription className="text-sm text-muted-foreground pt-2">
             {description}
@@ -104,4 +104,3 @@ export function ConfirmDialog({
     </Dialog>
   );
 }
-

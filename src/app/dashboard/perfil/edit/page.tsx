@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -36,7 +36,7 @@ export default function EditPerfilPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [setup, setSetup] = useState<string[]>([]);
   const [portfolioLinks, setPortfolioLinks] = useState<string[]>([]);
-  
+
   // Novos campos expandidos
   const [socialMedia, setSocialMedia] = useState({
     instagram: "",
@@ -48,12 +48,13 @@ export default function EditPerfilPage() {
     spotify: "",
     soundcloud: "",
   });
-  const [sheetMusicReading, setSheetMusicReading] = useState<"none" | "basic" | "intermediate" | "advanced">("none");
+  const [sheetMusicReading, setSheetMusicReading] = useState<
+    "none" | "basic" | "intermediate" | "advanced"
+  >("none");
   const [repertoire, setRepertoire] = useState("");
   const [yearsExperience, setYearsExperience] = useState<number | "">("");
   const [musicalEducation, setMusicalEducation] = useState("");
   const [basePrice, setBasePrice] = useState<number | "">("");
-
 
   // Estados para inputs de arrays
   const [newInstrument, setNewInstrument] = useState("");
@@ -107,11 +108,7 @@ export default function EditPerfilPage() {
     "Regência",
   ];
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -162,9 +159,9 @@ export default function EditPerfilPage() {
           setSkills(mp.skills || []);
           setSetup(mp.setup || []);
           setPortfolioLinks(mp.portfolio_links || []);
-          
+
           // Carregar dados extras do JSONB (se existir)
-          const metadata = mp.strengths_counts as any || {};
+          const metadata = (mp.strengths_counts as any) || {};
           if (metadata.socialMedia) {
             setSocialMedia(metadata.socialMedia);
           }
@@ -194,13 +191,17 @@ export default function EditPerfilPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const addToArray = (
     array: string[],
     setter: (arr: string[]) => void,
     value: string,
-    clearInput: () => void
+    clearInput: () => void,
   ) => {
     if (value.trim() && !array.includes(value.trim())) {
       setter([...array, value.trim()]);
@@ -211,7 +212,7 @@ export default function EditPerfilPage() {
   const removeFromArray = (
     array: string[],
     setter: (arr: string[]) => void,
-    index: number
+    index: number,
   ) => {
     setter(array.filter((_, i) => i !== index));
   };
@@ -275,12 +276,13 @@ export default function EditPerfilPage() {
       if (error) {
         // Se o bucket não existir, tenta usar 'public'
         if (error.message.includes("Bucket not found")) {
-          const { data: publicData, error: publicError } = await supabase.storage
-            .from("public")
-            .upload(`${userId}/${fileName}`, photoFile, {
-              cacheControl: "3600",
-              upsert: false,
-            });
+          const { data: publicData, error: publicError } =
+            await supabase.storage
+              .from("public")
+              .upload(`${userId}/${fileName}`, photoFile, {
+                cacheControl: "3600",
+                upsert: false,
+              });
 
           if (publicError) {
             console.error("Error uploading to public bucket:", publicError);
@@ -344,19 +346,17 @@ export default function EditPerfilPage() {
       }
 
       // Atualizar ou criar perfil básico
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert({
-          user_id: user.id,
-          display_name: displayName.trim() || null,
-          phone_e164: phone.trim() || null,
-          cpf: cpf ? cpf.replace(/\D/g, "") : null,
-          city: city.trim() || null,
-          state: state.trim() || null,
-          photo_url: finalPhotoUrl.trim() || null,
-          user_type: "musician", // Todos os usuários são músicos
-          updated_at: new Date().toISOString(),
-        });
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        user_id: user.id,
+        display_name: displayName.trim() || null,
+        phone_e164: phone.trim() || null,
+        cpf: cpf ? cpf.replace(/\D/g, "") : null,
+        city: city.trim() || null,
+        state: state.trim() || null,
+        photo_url: finalPhotoUrl.trim() || null,
+        user_type: "musician", // Todos os usuários são músicos
+        updated_at: new Date().toISOString(),
+      });
 
       if (profileError) {
         console.error("Error saving profile:", profileError);
@@ -372,9 +372,13 @@ export default function EditPerfilPage() {
           socialMedia,
           sheetMusicReading,
           repertoire: repertoire.trim() || null,
-          yearsExperience: yearsExperience && typeof yearsExperience === "number" ? yearsExperience : null,
+          yearsExperience:
+            yearsExperience && typeof yearsExperience === "number"
+              ? yearsExperience
+              : null,
           musicalEducation: musicalEducation.trim() || null,
-          basePrice: basePrice && typeof basePrice === "number" ? basePrice : null,
+          basePrice:
+            basePrice && typeof basePrice === "number" ? basePrice : null,
           searchRadius: searchRadius,
         };
 
@@ -432,7 +436,9 @@ export default function EditPerfilPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Editar Perfil</h1>
+            <h1 className="text-2xl font-semibold text-foreground">
+              Editar Perfil
+            </h1>
             <p className="text-sm text-muted-foreground">
               Atualize suas informações pessoais e profissionais
             </p>
@@ -462,11 +468,16 @@ export default function EditPerfilPage() {
           {/* Informações Básicas */}
           <Card className="bg-white border-white/70">
             <CardHeader>
-              <CardTitle className="text-foreground">Informações Básicas</CardTitle>
+              <CardTitle className="text-foreground">
+                Informações Básicas
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-foreground" htmlFor="displayName">
+                <label
+                  className="text-sm font-medium text-foreground"
+                  htmlFor="displayName"
+                >
                   Nome de Exibição
                 </label>
                 <input
@@ -481,7 +492,10 @@ export default function EditPerfilPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="phone">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="phone"
+                  >
                     Telefone
                   </label>
                   <input
@@ -495,7 +509,10 @@ export default function EditPerfilPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="cpf">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="cpf"
+                  >
                     CPF
                   </label>
                   <input
@@ -511,7 +528,10 @@ export default function EditPerfilPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="photo">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="photo"
+                  >
                     Foto do Perfil
                   </label>
                   <div className="mt-1 space-y-2">
@@ -523,7 +543,7 @@ export default function EditPerfilPage() {
                       className="hidden"
                       onChange={handlePhotoSelect}
                     />
-                    
+
                     {!photoPreview ? (
                       <Button
                         type="button"
@@ -588,7 +608,10 @@ export default function EditPerfilPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="city">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="city"
+                  >
                     Cidade
                   </label>
                   <input
@@ -602,7 +625,10 @@ export default function EditPerfilPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="state">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="state"
+                  >
                     Estado
                   </label>
                   <input
@@ -624,13 +650,17 @@ export default function EditPerfilPage() {
                 </label>
                 <div className="space-y-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-foreground/70">0 km</span>
+                    <span className="text-xs font-medium text-foreground/70">
+                      0 km
+                    </span>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold text-orange-600">
                         {searchRadius} km
                       </span>
                     </div>
-                    <span className="text-xs font-medium text-foreground/70">200 km</span>
+                    <span className="text-xs font-medium text-foreground/70">
+                      200 km
+                    </span>
                   </div>
                   <input
                     type="range"
@@ -641,11 +671,15 @@ export default function EditPerfilPage() {
                     onChange={(e) => setSearchRadius(parseInt(e.target.value))}
                     className="w-full h-3 bg-white/70 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-orange-500 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:border-none"
                     style={{
-                      background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(searchRadius / 200) * 100}%, rgb(229 231 235) ${(searchRadius / 200) * 100}%, rgb(229 231 235) 100%)`
+                      background: `linear-gradient(to right, rgb(249 115 22) 0%, rgb(249 115 22) ${(searchRadius / 200) * 100}%, rgb(229 231 235) ${(searchRadius / 200) * 100}%, rgb(229 231 235) 100%)`,
                     }}
                   />
                   <p className="text-xs text-foreground/70 mt-2">
-                    Você receberá convites para trabalhos dentro de <strong className="text-orange-600">{searchRadius} km</strong> da sua localização
+                    Você receberá convites para trabalhos dentro de{" "}
+                    <strong className="text-orange-600">
+                      {searchRadius} km
+                    </strong>{" "}
+                    da sua localização
                   </p>
                 </div>
               </div>
@@ -656,11 +690,16 @@ export default function EditPerfilPage() {
           {
             <Card className="bg-white border-white/70">
               <CardHeader>
-                <CardTitle className="text-foreground">Informações Profissionais (Músico)</CardTitle>
+                <CardTitle className="text-foreground">
+                  Informações Profissionais (Músico)
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="bio">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="bio"
+                  >
                     Biografia
                   </label>
                   <textarea
@@ -675,7 +714,9 @@ export default function EditPerfilPage() {
 
                 {/* Instrumentos */}
                 <div>
-                  <label className="text-sm font-medium text-foreground">Instrumentos</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Instrumentos
+                  </label>
                   <div className="mt-1 flex gap-2">
                     <select
                       className="flex-1 rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -693,8 +734,11 @@ export default function EditPerfilPage() {
                       type="button"
                       variant="outline"
                       onClick={() =>
-                        addToArray(instruments, setInstruments, newInstrument, () =>
-                          setNewInstrument("")
+                        addToArray(
+                          instruments,
+                          setInstruments,
+                          newInstrument,
+                          () => setNewInstrument(""),
                         )
                       }
                     >
@@ -710,7 +754,9 @@ export default function EditPerfilPage() {
                         {inst}
                         <button
                           type="button"
-                          onClick={() => removeFromArray(instruments, setInstruments, idx)}
+                          onClick={() =>
+                            removeFromArray(instruments, setInstruments, idx)
+                          }
                           className="text-orange-600 hover:text-orange-800"
                         >
                           ×
@@ -722,7 +768,9 @@ export default function EditPerfilPage() {
 
                 {/* Gêneros */}
                 <div>
-                  <label className="text-sm font-medium text-foreground">Gêneros Musicais</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Gêneros Musicais
+                  </label>
                   <div className="mt-1 flex gap-2">
                     <select
                       className="flex-1 rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -740,7 +788,9 @@ export default function EditPerfilPage() {
                       type="button"
                       variant="outline"
                       onClick={() =>
-                        addToArray(genres, setGenres, newGenre, () => setNewGenre(""))
+                        addToArray(genres, setGenres, newGenre, () =>
+                          setNewGenre(""),
+                        )
                       }
                     >
                       Adicionar
@@ -755,7 +805,9 @@ export default function EditPerfilPage() {
                         {genre}
                         <button
                           type="button"
-                          onClick={() => removeFromArray(genres, setGenres, idx)}
+                          onClick={() =>
+                            removeFromArray(genres, setGenres, idx)
+                          }
                           className="text-blue-600 hover:text-blue-800"
                         >
                           ×
@@ -767,7 +819,9 @@ export default function EditPerfilPage() {
 
                 {/* Equipamentos */}
                 <div>
-                  <label className="text-sm font-medium text-foreground">Equipamentos</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Equipamentos
+                  </label>
                   <div className="mt-1 flex gap-2">
                     <input
                       type="text"
@@ -778,14 +832,20 @@ export default function EditPerfilPage() {
                       onKeyPress={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
-                          addToArray(setup, setSetup, newSetup, () => setNewSetup(""));
+                          addToArray(setup, setSetup, newSetup, () =>
+                            setNewSetup(""),
+                          );
                         }
                       }}
                     />
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => addToArray(setup, setSetup, newSetup, () => setNewSetup(""))}
+                      onClick={() =>
+                        addToArray(setup, setSetup, newSetup, () =>
+                          setNewSetup(""),
+                        )
+                      }
                     >
                       Adicionar
                     </Button>
@@ -811,7 +871,9 @@ export default function EditPerfilPage() {
 
                 {/* Links do Portfólio */}
                 <div>
-                  <label className="text-sm font-medium text-foreground">Links do Portfólio</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Links do Portfólio
+                  </label>
                   <div className="mt-1 flex gap-2">
                     <input
                       type="url"
@@ -826,7 +888,7 @@ export default function EditPerfilPage() {
                             portfolioLinks,
                             setPortfolioLinks,
                             newPortfolioLink,
-                            () => setNewPortfolioLink("")
+                            () => setNewPortfolioLink(""),
                           );
                         }
                       }}
@@ -839,7 +901,7 @@ export default function EditPerfilPage() {
                           portfolioLinks,
                           setPortfolioLinks,
                           newPortfolioLink,
-                          () => setNewPortfolioLink("")
+                          () => setNewPortfolioLink(""),
                         )
                       }
                     >
@@ -862,7 +924,13 @@ export default function EditPerfilPage() {
                         </a>
                         <button
                           type="button"
-                          onClick={() => removeFromArray(portfolioLinks, setPortfolioLinks, idx)}
+                          onClick={() =>
+                            removeFromArray(
+                              portfolioLinks,
+                              setPortfolioLinks,
+                              idx,
+                            )
+                          }
                           className="text-red-600 hover:text-red-800"
                         >
                           ×
@@ -874,85 +942,143 @@ export default function EditPerfilPage() {
 
                 {/* Redes Sociais */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">Redes Sociais</label>
+                  <label className="text-sm font-medium text-foreground mb-3 block">
+                    Redes Sociais
+                  </label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">Instagram</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        Instagram
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.instagram}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, instagram: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            instagram: e.target.value,
+                          })
+                        }
                         placeholder="@seu_usuario"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">Facebook</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        Facebook
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.facebook}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, facebook: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            facebook: e.target.value,
+                          })
+                        }
                         placeholder="URL ou nome do perfil"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">YouTube</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        YouTube
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.youtube}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, youtube: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            youtube: e.target.value,
+                          })
+                        }
                         placeholder="URL do canal"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">TikTok</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        TikTok
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.tiktok}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, tiktok: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            tiktok: e.target.value,
+                          })
+                        }
                         placeholder="@seu_usuario"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">Twitter/X</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        Twitter/X
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.twitter}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, twitter: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            twitter: e.target.value,
+                          })
+                        }
                         placeholder="@seu_usuario"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">LinkedIn</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        LinkedIn
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.linkedin}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, linkedin: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            linkedin: e.target.value,
+                          })
+                        }
                         placeholder="URL do perfil"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">Spotify</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        Spotify
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.spotify}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, spotify: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            spotify: e.target.value,
+                          })
+                        }
                         placeholder="URL do artista"
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-foreground/60 mb-1 block">SoundCloud</label>
+                      <label className="text-xs text-foreground/60 mb-1 block">
+                        SoundCloud
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         value={socialMedia.soundcloud}
-                        onChange={(e) => setSocialMedia({ ...socialMedia, soundcloud: e.target.value })}
+                        onChange={(e) =>
+                          setSocialMedia({
+                            ...socialMedia,
+                            soundcloud: e.target.value,
+                          })
+                        }
                         placeholder="URL do perfil"
                       />
                     </div>
@@ -961,14 +1087,19 @@ export default function EditPerfilPage() {
 
                 {/* Leitura de Partitura */}
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="sheetMusicReading">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="sheetMusicReading"
+                  >
                     Leitura de Partitura
                   </label>
                   <select
                     id="sheetMusicReading"
                     className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={sheetMusicReading}
-                    onChange={(e) => setSheetMusicReading(e.target.value as any)}
+                    onChange={(e) =>
+                      setSheetMusicReading(e.target.value as any)
+                    }
                   >
                     <option value="none">Não leio partitura</option>
                     <option value="basic">Básico</option>
@@ -982,7 +1113,10 @@ export default function EditPerfilPage() {
 
                 {/* Repertório */}
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="repertoire">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="repertoire"
+                  >
                     Repertório
                   </label>
                   <textarea
@@ -994,13 +1128,16 @@ export default function EditPerfilPage() {
                     placeholder="Liste suas músicas principais, artistas que você toca, ou gêneros específicos do seu repertório..."
                   />
                   <p className="mt-1 text-xs text-foreground/60">
-                    Descreva seu repertório, músicas principais, ou artistas que você costuma tocar
+                    Descreva seu repertório, músicas principais, ou artistas que
+                    você costuma tocar
                   </p>
                 </div>
 
                 {/* Habilidades */}
                 <div>
-                  <label className="text-sm font-medium text-foreground">Habilidades</label>
+                  <label className="text-sm font-medium text-foreground">
+                    Habilidades
+                  </label>
                   <div className="mt-1 flex gap-2">
                     <select
                       className="flex-1 rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -1019,7 +1156,11 @@ export default function EditPerfilPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => addToArray(skills, setSkills, newSkill, () => setNewSkill(""))}
+                      onClick={() =>
+                        addToArray(skills, setSkills, newSkill, () =>
+                          setNewSkill(""),
+                        )
+                      }
                       disabled={!newSkill}
                     >
                       Adicionar
@@ -1037,7 +1178,9 @@ export default function EditPerfilPage() {
                         {skill}
                         <button
                           type="button"
-                          onClick={() => removeFromArray(skills, setSkills, idx)}
+                          onClick={() =>
+                            removeFromArray(skills, setSkills, idx)
+                          }
                           className="text-green-600 hover:text-green-800"
                         >
                           ×
@@ -1050,7 +1193,10 @@ export default function EditPerfilPage() {
                 {/* Experiência e Formação */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-foreground" htmlFor="yearsExperience">
+                    <label
+                      className="text-sm font-medium text-foreground"
+                      htmlFor="yearsExperience"
+                    >
                       Anos de Experiência
                     </label>
                     <input
@@ -1059,12 +1205,19 @@ export default function EditPerfilPage() {
                       min="0"
                       className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       value={yearsExperience}
-                      onChange={(e) => setYearsExperience(e.target.value ? Number(e.target.value) : "")}
+                      onChange={(e) =>
+                        setYearsExperience(
+                          e.target.value ? Number(e.target.value) : "",
+                        )
+                      }
                       placeholder="0"
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-foreground" htmlFor="basePrice">
+                    <label
+                      className="text-sm font-medium text-foreground"
+                      htmlFor="basePrice"
+                    >
                       Preço Base (R$)
                     </label>
                     <input
@@ -1074,7 +1227,11 @@ export default function EditPerfilPage() {
                       step="0.01"
                       className="mt-1 w-full rounded-md border border-white/70 bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       value={basePrice}
-                      onChange={(e) => setBasePrice(e.target.value ? Number(e.target.value) : "")}
+                      onChange={(e) =>
+                        setBasePrice(
+                          e.target.value ? Number(e.target.value) : "",
+                        )
+                      }
                       placeholder="0.00"
                     />
                     <p className="mt-1 text-xs text-foreground/60">
@@ -1085,7 +1242,10 @@ export default function EditPerfilPage() {
 
                 {/* Formação Musical */}
                 <div>
-                  <label className="text-sm font-medium text-foreground" htmlFor="musicalEducation">
+                  <label
+                    className="text-sm font-medium text-foreground"
+                    htmlFor="musicalEducation"
+                  >
                     Formação Musical
                   </label>
                   <textarea
@@ -1097,7 +1257,8 @@ export default function EditPerfilPage() {
                     placeholder="Ex: Conservatório de Música, Curso de Violão, Aulas particulares, Autodidata..."
                   />
                   <p className="mt-1 text-xs text-foreground/60">
-                    Descreva sua formação musical, cursos, conservatórios, ou experiência de aprendizado
+                    Descreva sua formação musical, cursos, conservatórios, ou
+                    experiência de aprendizado
                   </p>
                 </div>
               </CardContent>
@@ -1106,18 +1267,26 @@ export default function EditPerfilPage() {
 
           {/* Ações */}
           <div className="flex items-center justify-end gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => router.back()} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
               disabled={saving}
               className="bg-white/80 border-white/70 text-foreground hover:bg-amber-50 hover:border-amber-200"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={saving || uploadingPhoto} className="btn-gradient">
+            <Button
+              type="submit"
+              disabled={saving || uploadingPhoto}
+              className="btn-gradient"
+            >
               <Save className="mr-2 h-4 w-4" />
-              {saving || uploadingPhoto ? (uploadingPhoto ? "Enviando foto..." : "Salvando...") : "Salvar Perfil"}
+              {saving || uploadingPhoto
+                ? uploadingPhoto
+                  ? "Enviando foto..."
+                  : "Salvando..."
+                : "Salvar Perfil"}
             </Button>
           </div>
         </form>
@@ -1125,5 +1294,3 @@ export default function EditPerfilPage() {
     </DashboardLayout>
   );
 }
-
-

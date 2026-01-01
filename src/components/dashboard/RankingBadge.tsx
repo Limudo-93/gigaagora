@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Medal, Trophy, Gem } from "lucide-react";
 
-type RankingTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+type RankingTier = "bronze" | "silver" | "gold" | "platinum";
 
 interface RankingBadgeProps {
   tier: RankingTier;
@@ -11,40 +11,43 @@ interface RankingBadgeProps {
   showText?: boolean;
 }
 
-const TIER_CONFIG: Record<RankingTier, { 
-  label: string; 
-  color: string; 
-  bgColor: string;
-  borderColor: string;
-  icon: React.ReactNode;
-}> = {
+const TIER_CONFIG: Record<
+  RankingTier,
+  {
+    label: string;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+    icon: React.ReactNode;
+  }
+> = {
   bronze: {
-    label: 'Bronze',
-    color: 'text-amber-700',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-300',
-    icon: <Medal className="h-4 w-4" />
+    label: "Bronze",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+    borderColor: "border-amber-300",
+    icon: <Medal className="h-4 w-4" />,
   },
   silver: {
-    label: 'Prata',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-300',
-    icon: <Medal className="h-4 w-4" />
+    label: "Prata",
+    color: "text-gray-600",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-300",
+    icon: <Medal className="h-4 w-4" />,
   },
   gold: {
-    label: 'Ouro',
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-300',
-    icon: <Trophy className="h-4 w-4" />
+    label: "Ouro",
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-300",
+    icon: <Trophy className="h-4 w-4" />,
   },
   platinum: {
-    label: 'Platina',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-300',
-    icon: <Gem className="h-4 w-4" />
+    label: "Platina",
+    color: "text-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-300",
+    icon: <Gem className="h-4 w-4" />,
   },
 };
 
@@ -63,19 +66,20 @@ const SIZE_CONFIG = {
   },
 };
 
-export default function RankingBadge({ tier, size = "sm", showText = true }: RankingBadgeProps) {
+export default function RankingBadge({
+  tier,
+  size = "sm",
+  showText = true,
+}: RankingBadgeProps) {
   const config = TIER_CONFIG[tier];
   const sizeConfig = SIZE_CONFIG[size];
 
   return (
-    <Badge 
+    <Badge
       className={`${config.bgColor} ${config.color} ${config.borderColor} border-2 ${sizeConfig.text} font-bold flex items-center gap-1 shadow-sm`}
     >
-      <div className={sizeConfig.icon}>
-        {config.icon}
-      </div>
+      <div className={sizeConfig.icon}>{config.icon}</div>
       {showText && <span>{config.label}</span>}
     </Badge>
   );
 }
-

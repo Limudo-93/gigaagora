@@ -19,13 +19,13 @@ const displayFont = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Chama o Músico",
-  description: "A plataforma que conecta músicos talentosos com oportunidades de trabalho",
+  description:
+    "A plataforma que conecta músicos talentosos com oportunidades de trabalho",
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
   },
   manifest: "/manifest.json",
-  themeColor: "#f97316",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -39,6 +39,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#f97316",
 };
 
 export default async function RootLayout({
@@ -75,11 +76,11 @@ export default async function RootLayout({
 
   return (
     <html lang="pt-BR" className={themeClass} style={themeStyle}>
-      <body className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}>
+      <body
+        className={`${bodyFont.variable} ${displayFont.variable} font-sans antialiased`}
+      >
         <ThemeProvider>
-          <NotificationProvider>
-            {children}
-          </NotificationProvider>
+          <NotificationProvider>{children}</NotificationProvider>
         </ThemeProvider>
       </body>
     </html>

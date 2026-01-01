@@ -6,7 +6,16 @@ import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, Trash2, Upload, X, Image as ImageIcon, MapPin, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+  Image as ImageIcon,
+  MapPin,
+  Loader2,
+} from "lucide-react";
 import { createGigWithRegion } from "@/app/actions/gigs";
 import { computeRegionLabel } from "@/lib/geo";
 import { reverseGeocode, geocodeAddress } from "@/app/actions/geocoding";
@@ -50,6 +59,7 @@ export default function NewGigPage() {
   const [flyerPreview, setFlyerPreview] = useState<string | null>(null);
   const [uploadingFlyer, setUploadingFlyer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasRequestedLocationRef = useRef(false);
 
   // Preview da região calculada
   const [previewRegion, setPreviewRegion] = useState<string | null>(null);
@@ -132,52 +142,69 @@ export default function NewGigPage() {
 
   // Pegar localização automaticamente ao carregar a página
   useEffect(() => {
-    if (!latitude || !longitude) {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            setLatitude(lat);
-            setLongitude(lng);
-            
-            // Fazer reverse geocoding para obter cidade, estado e região
-            try {
-              const geocodeResult = await reverseGeocode(lat, lng);
-              
-              if (!geocodeResult.error || geocodeResult.error === "API key não configurada") {
-                if (geocodeResult.city && !city) {
-                  setCity(geocodeResult.city);
-                }
-                if (geocodeResult.state && !state) {
-                  setState(geocodeResult.state);
-                }
-                if (geocodeResult.region_label) {
-                  setPreviewRegion(geocodeResult.region_label);
-                }
-              }
-            } catch (err) {
-              console.error("Error getting location details:", err);
-            }
-          },
-          (err) => {
-            console.error("Error getting location:", err);
-            // Silenciosamente falha, usuário pode preencher manualmente
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          }
-        );
-      }
+    if (hasRequestedLocationRef.current) return;
+    if (latitude && longitude) {
+      hasRequestedLocationRef.current = true;
+      return;
     }
-  }, []); // Executa apenas uma vez ao montar
+
+    if (navigator.geolocation) {
+      hasRequestedLocationRef.current = true;
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setLatitude(lat);
+          setLongitude(lng);
+
+          // Fazer reverse geocoding para obter cidade, estado e região
+          try {
+            const geocodeResult = await reverseGeocode(lat, lng);
+
+            if (
+              !geocodeResult.error ||
+              geocodeResult.error === "API key não configurada"
+            ) {
+              if (geocodeResult.city) {
+                setCity((current) =>
+                  current ? current : (geocodeResult.city ?? ""),
+                );
+              }
+              if (geocodeResult.state) {
+                setState((current) =>
+                  current ? current : (geocodeResult.state ?? ""),
+                );
+              }
+              if (geocodeResult.region_label) {
+                setPreviewRegion(geocodeResult.region_label);
+              }
+            }
+          } catch (err) {
+            console.error("Error getting location details:", err);
+          }
+        },
+        (err) => {
+          console.error("Error getting location:", err);
+          // Silenciosamente falha, usuário pode preencher manualmente
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        },
+      );
+    }
+  }, [latitude, longitude]); // Executa apenas uma vez por inicializacao
 
   // Atualizar preview da região quando location mudar
   useEffect(() => {
     if (city || state || (latitude && longitude)) {
-      const region = computeRegionLabel(state, city, latitude ?? undefined, longitude ?? undefined);
+      const region = computeRegionLabel(
+        state,
+        city,
+        latitude ?? undefined,
+        longitude ?? undefined,
+      );
       setPreviewRegion(region);
     } else {
       setPreviewRegion(null);
@@ -195,7 +222,7 @@ export default function NewGigPage() {
 
     try {
       const result = await geocodeAddress(addressText.trim());
-      
+
       if (result.error) {
         // Não mostrar erro, apenas log
         console.warn("Erro ao buscar coordenadas:", result.error);
@@ -206,7 +233,7 @@ export default function NewGigPage() {
       if (result.latitude && result.longitude) {
         setLatitude(result.latitude);
         setLongitude(result.longitude);
-        
+
         // Preencher cidade e estado se não estiverem preenchidos
         if (result.city && !city) {
           setCity(result.city);
@@ -224,49 +251,95 @@ export default function NewGigPage() {
   };
 
   // Função para calcular valor mínimo de cachê baseado no instrumento
-  const getMinCacheForInstrument = (instrument: string, quantity: number, hasVocal: boolean): number => {
+  const getMinCacheForInstrument = (
+    instrument: string,
+    quantity: number,
+    hasVocal: boolean,
+  ): number => {
     const inst = instrument.toLowerCase();
-    
+
     if (hasVocal) {
-      if (inst.includes("percussão") || inst.includes("pandeiro") || inst.includes("surdo") || 
-          inst.includes("tamborim") || inst.includes("agogô") || inst.includes("cuíca") || 
-          inst.includes("reco-reco") || inst.includes("repique") || inst.includes("tantã")) {
+      if (
+        inst.includes("percussão") ||
+        inst.includes("pandeiro") ||
+        inst.includes("surdo") ||
+        inst.includes("tamborim") ||
+        inst.includes("agogô") ||
+        inst.includes("cuíca") ||
+        inst.includes("reco-reco") ||
+        inst.includes("repique") ||
+        inst.includes("tantã")
+      ) {
         return 220;
       }
-      if (inst.includes("violão") || inst.includes("cavaquinho") || inst.includes("viola") || 
-          inst.includes("bandolim") || inst.includes("banjo") || inst.includes("guitarra")) {
+      if (
+        inst.includes("violão") ||
+        inst.includes("cavaquinho") ||
+        inst.includes("viola") ||
+        inst.includes("bandolim") ||
+        inst.includes("banjo") ||
+        inst.includes("guitarra")
+      ) {
         return 270;
       }
     }
-    
-    if (inst.includes("percussão") || inst.includes("pandeiro") || inst.includes("surdo") || 
-        inst.includes("tamborim") || inst.includes("agogô") || inst.includes("cuíca") || 
-        inst.includes("reco-reco") || inst.includes("repique") || inst.includes("tantã")) {
+
+    if (
+      inst.includes("percussão") ||
+      inst.includes("pandeiro") ||
+      inst.includes("surdo") ||
+      inst.includes("tamborim") ||
+      inst.includes("agogô") ||
+      inst.includes("cuíca") ||
+      inst.includes("reco-reco") ||
+      inst.includes("repique") ||
+      inst.includes("tantã")
+    ) {
       return quantity >= 2 ? 200 : 170;
     }
-    
-    if (inst.includes("violão") || inst.includes("cavaquinho") || inst.includes("viola") || 
-        inst.includes("bandolim") || inst.includes("banjo") || inst.includes("guitarra")) {
+
+    if (
+      inst.includes("violão") ||
+      inst.includes("cavaquinho") ||
+      inst.includes("viola") ||
+      inst.includes("bandolim") ||
+      inst.includes("banjo") ||
+      inst.includes("guitarra")
+    ) {
       return 220;
     }
-    
-    if (inst.includes("bateria") || inst.includes("baixo") || inst.includes("contrabaixo") || 
-        inst.includes("teclado") || inst.includes("piano")) {
+
+    if (
+      inst.includes("bateria") ||
+      inst.includes("baixo") ||
+      inst.includes("contrabaixo") ||
+      inst.includes("teclado") ||
+      inst.includes("piano")
+    ) {
       return 230;
     }
-    
-    if (inst.includes("saxofone") || inst.includes("trompete") || inst.includes("trombone") || 
-        inst.includes("flauta") || inst.includes("acordeon") || inst.includes("sanfona")) {
+
+    if (
+      inst.includes("saxofone") ||
+      inst.includes("trompete") ||
+      inst.includes("trombone") ||
+      inst.includes("flauta") ||
+      inst.includes("acordeon") ||
+      inst.includes("sanfona")
+    ) {
       return 270;
     }
-    
+
     return 0;
   };
 
   const hasVocalInRole = (role: GigRole): boolean => {
     const inst = role.instrument.toLowerCase();
-    return inst === "vocal" || inst.includes("voz") || 
-           role.desired_skills.includes("Backing vocal");
+    return (
+      inst === "vocal" ||
+      inst.includes("voz") ||
+      role.desired_skills.includes("Backing vocal")
+    );
   };
 
   const addRole = () => {
@@ -297,9 +370,7 @@ export default function NewGigPage() {
   };
 
   const updateRole = (id: string, field: keyof GigRole, value: any) => {
-    setRoles(
-      roles.map((r) => (r.id === id ? { ...r, [field]: value } : r))
-    );
+    setRoles(roles.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
   };
 
   const setCacheForRole = (id: string, value: number | "") => {
@@ -316,10 +387,15 @@ export default function NewGigPage() {
 
     if (nextInstrument) {
       const hasVocal = nextInstrument.toLowerCase().includes("vocal");
-      const minCache = getMinCacheForInstrument(nextInstrument, role.quantity, hasVocal);
+      const minCache = getMinCacheForInstrument(
+        nextInstrument,
+        role.quantity,
+        hasVocal,
+      );
       if (
         minCache > 0 &&
-        (!role.cache || (typeof role.cache === "number" && role.cache < minCache))
+        (!role.cache ||
+          (typeof role.cache === "number" && role.cache < minCache))
       ) {
         setCacheForRole(role.id, minCache);
       }
@@ -359,7 +435,10 @@ export default function NewGigPage() {
     }
   };
 
-  const uploadFlyer = async (gigId: string, userId: string): Promise<string | null> => {
+  const uploadFlyer = async (
+    gigId: string,
+    userId: string,
+  ): Promise<string | null> => {
     if (!flyerFile) return null;
 
     setUploadingFlyer(true);
@@ -377,12 +456,13 @@ export default function NewGigPage() {
 
       if (error) {
         if (error.message.includes("Bucket not found")) {
-          const { data: publicData, error: publicError } = await supabase.storage
-            .from("public")
-            .upload(`${userId}/${fileName}`, flyerFile, {
-              cacheControl: "3600",
-              upsert: false,
-            });
+          const { data: publicData, error: publicError } =
+            await supabase.storage
+              .from("public")
+              .upload(`${userId}/${fileName}`, flyerFile, {
+                cacheControl: "3600",
+                upsert: false,
+              });
 
           if (publicError) {
             console.error("Error uploading to public bucket:", publicError);
@@ -430,7 +510,8 @@ export default function NewGigPage() {
     const startDateTime = new Date(`${startDate}T${startTime}`);
     const duracaoMinutos = horasMinutosParaMinutos(duracaoEntrada);
     const totalShowMinutes = Number(numEntradas) * duracaoMinutos;
-    const totalIntervaloMinutos = (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
+    const totalIntervaloMinutos =
+      (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
     const totalMinutos = totalShowMinutes + totalIntervaloMinutos;
 
     return new Date(startDateTime.getTime() + totalMinutos * 60000);
@@ -443,7 +524,8 @@ export default function NewGigPage() {
 
     const duracaoMinutos = horasMinutosParaMinutos(duracaoEntrada);
     const showMinutes = Number(numEntradas) * duracaoMinutos;
-    const breakMinutes = (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
+    const breakMinutes =
+      (Number(numEntradas) - 1) * Number(intervaloMinutos || 0);
 
     return { showMinutes, breakMinutes };
   };
@@ -473,7 +555,9 @@ export default function NewGigPage() {
 
       const duracaoRegex = /^\d{1,2}:\d{2}$/;
       if (!duracaoEntrada || !duracaoRegex.test(duracaoEntrada)) {
-        setError("A duração de cada entrada deve estar no formato HH:MM (ex: 1:15 para 1h15min).");
+        setError(
+          "A duração de cada entrada deve estar no formato HH:MM (ex: 1:15 para 1h15min).",
+        );
         setSaving(false);
         return;
       }
@@ -523,8 +607,10 @@ export default function NewGigPage() {
         return;
       }
 
-      const { showMinutes: calculatedShowMinutes, breakMinutes: calculatedBreakMinutes } =
-        calcularMinutosParaBanco();
+      const {
+        showMinutes: calculatedShowMinutes,
+        breakMinutes: calculatedBreakMinutes,
+      } = calcularMinutosParaBanco();
 
       // Usar createGigWithRegion ao invés de inserir diretamente
       const { data: gigData, error: gigError } = await createGigWithRegion({
@@ -575,8 +661,10 @@ export default function NewGigPage() {
         gig_id: gigData.id,
         instrument: role.instrument.trim(),
         quantity: role.quantity,
-        desired_genres: role.desired_genres.length > 0 ? role.desired_genres : [],
-        desired_skills: role.desired_skills.length > 0 ? role.desired_skills : [],
+        desired_genres:
+          role.desired_genres.length > 0 ? role.desired_genres : [],
+        desired_skills:
+          role.desired_skills.length > 0 ? role.desired_skills : [],
         desired_setup: role.desired_setup.length > 0 ? role.desired_setup : [],
         notes: role.notes.trim() || null,
         cache: role.cache && typeof role.cache === "number" ? role.cache : null,
@@ -595,7 +683,7 @@ export default function NewGigPage() {
       }
 
       console.log("Gig created successfully:", gigData.id);
-      
+
       if (saveStatus === "draft") {
         router.push("/dashboard?tab=draft");
       } else {
@@ -627,7 +715,9 @@ export default function NewGigPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Criar Nova Gig</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Criar Nova Gig
+            </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Preencha os dados da gig e adicione as vagas necessárias
             </p>
@@ -648,7 +738,10 @@ export default function NewGigPage() {
             </CardHeader>
             <CardContent className="p-6 space-y-5">
               <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="title">
+                <label
+                  className="text-sm font-semibold text-foreground mb-2 block"
+                  htmlFor="title"
+                >
                   Título <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -663,7 +756,10 @@ export default function NewGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="description">
+                <label
+                  className="text-sm font-semibold text-foreground mb-2 block"
+                  htmlFor="description"
+                >
                   Descrição
                 </label>
                 <textarea
@@ -678,7 +774,10 @@ export default function NewGigPage() {
 
               {/* Campo de Flyer */}
               <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="flyer">
+                <label
+                  className="text-sm font-semibold text-foreground mb-2 block"
+                  htmlFor="flyer"
+                >
                   Flyer do Evento
                 </label>
                 <div className="space-y-3">
@@ -690,7 +789,7 @@ export default function NewGigPage() {
                     className="hidden"
                     onChange={handleFlyerSelect}
                   />
-                  
+
                   {!flyerPreview ? (
                     <Button
                       type="button"
@@ -760,7 +859,10 @@ export default function NewGigPage() {
             </CardHeader>
             <CardContent className="p-6 space-y-5">
               <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="locationName">
+                <label
+                  className="text-sm font-semibold text-foreground mb-2 block"
+                  htmlFor="locationName"
+                >
                   Nome do Local
                 </label>
                 <input
@@ -774,7 +876,10 @@ export default function NewGigPage() {
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="addressText">
+                <label
+                  className="text-sm font-semibold text-foreground mb-2 block"
+                  htmlFor="addressText"
+                >
                   Endereço Completo
                 </label>
                 <input
@@ -797,13 +902,17 @@ export default function NewGigPage() {
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Digite o endereço completo do evento para obter a localização automaticamente
+                  Digite o endereço completo do evento para obter a localização
+                  automaticamente
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="city">
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="city"
+                  >
                     Cidade
                   </label>
                   <input
@@ -817,7 +926,10 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="state">
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="state"
+                  >
                     Estado (UF)
                   </label>
                   <input
@@ -835,8 +947,12 @@ export default function NewGigPage() {
               {/* Preview da Região */}
               {previewRegion && (
                 <div className="rounded-lg border-2 border-primary/50 bg-primary/5 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Região calculada:</p>
-                  <p className="text-sm font-semibold text-foreground">{previewRegion}</p>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Região calculada:
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {previewRegion}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -850,7 +966,10 @@ export default function NewGigPage() {
             <CardContent className="p-6 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="startDate">
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="startDate"
+                  >
                     Data de Início <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -864,7 +983,10 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="startTime">
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="startTime"
+                  >
                     Horário de Início <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -880,7 +1002,10 @@ export default function NewGigPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="numEntradas">
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="numEntradas"
+                  >
                     Número de Entradas <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -890,7 +1015,9 @@ export default function NewGigPage() {
                     className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={numEntradas}
                     onChange={(e) =>
-                      setNumEntradas(e.target.value ? Number(e.target.value) : "")
+                      setNumEntradas(
+                        e.target.value ? Number(e.target.value) : "",
+                      )
                     }
                     placeholder="1"
                     required
@@ -901,8 +1028,12 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="duracaoEntrada">
-                    Duração de Cada Entrada <span className="text-red-500">*</span>
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="duracaoEntrada"
+                  >
+                    Duração de Cada Entrada{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="duracaoEntrada"
@@ -925,7 +1056,10 @@ export default function NewGigPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-foreground mb-2 block" htmlFor="intervaloMinutos">
+                  <label
+                    className="text-sm font-semibold text-foreground mb-2 block"
+                    htmlFor="intervaloMinutos"
+                  >
                     Intervalo entre Entradas (minutos)
                   </label>
                   <input
@@ -935,7 +1069,9 @@ export default function NewGigPage() {
                     className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                     value={intervaloMinutos}
                     onChange={(e) =>
-                      setIntervaloMinutos(e.target.value ? Number(e.target.value) : "")
+                      setIntervaloMinutos(
+                        e.target.value ? Number(e.target.value) : "",
+                      )
                     }
                     placeholder="0"
                   />
@@ -948,7 +1084,9 @@ export default function NewGigPage() {
               {/* Mostra o horário de término calculado */}
               {startDate && startTime && numEntradas && duracaoEntrada && (
                 <div className="rounded-lg border-2 border-border bg-muted/30 p-4">
-                  <p className="text-sm font-semibold text-foreground mb-2">Horário de Término Calculado:</p>
+                  <p className="text-sm font-semibold text-foreground mb-2">
+                    Horário de Término Calculado:
+                  </p>
                   <p className="text-base font-medium text-foreground mb-2">
                     {calcularHorarioTermino()?.toLocaleString("pt-BR", {
                       day: "2-digit",
@@ -959,7 +1097,8 @@ export default function NewGigPage() {
                     }) || "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Duração total: {calcularMinutosParaBanco().showMinutes} minutos
+                    Duração total: {calcularMinutosParaBanco().showMinutes}{" "}
+                    minutos
                     {calcularMinutosParaBanco().breakMinutes > 0 &&
                       ` + ${calcularMinutosParaBanco().breakMinutes} minutos de intervalo`}
                   </p>
@@ -987,7 +1126,8 @@ export default function NewGigPage() {
               {roles.length === 0 ? (
                 <div className="text-center py-8 rounded-lg border-2 border-dashed border-border">
                   <p className="text-sm text-muted-foreground">
-                    Nenhuma vaga adicionada. Clique em "Adicionar Vaga" para começar.
+                    Nenhuma vaga adicionada. Clique em &quot;Adicionar
+                    Vaga&quot; para começar.
                   </p>
                 </div>
               ) : (
@@ -997,7 +1137,9 @@ export default function NewGigPage() {
                     className="rounded-lg border-2 border-border bg-muted/30 p-5 space-y-4"
                   >
                     <div className="flex items-start justify-between">
-                      <h4 className="font-semibold text-lg text-foreground">Vaga {roles.indexOf(role) + 1}</h4>
+                      <h4 className="font-semibold text-lg text-foreground">
+                        Vaga {roles.indexOf(role) + 1}
+                      </h4>
                       <Button
                         type="button"
                         variant="ghost"
@@ -1051,17 +1193,32 @@ export default function NewGigPage() {
                           onChange={(e) => {
                             const newQuantity = Number(e.target.value) || 1;
                             updateRole(role.id, "quantity", newQuantity);
-                            
+
                             if (role.instrument) {
                               const inst = role.instrument.toLowerCase();
-                              if (inst.includes("percussão") || inst.includes("pandeiro") || 
-                                  inst.includes("surdo") || inst.includes("tamborim") || 
-                                  inst.includes("agogô") || inst.includes("cuíca") || 
-                                  inst.includes("reco-reco") || inst.includes("repique") || 
-                                  inst.includes("tantã")) {
+                              if (
+                                inst.includes("percussão") ||
+                                inst.includes("pandeiro") ||
+                                inst.includes("surdo") ||
+                                inst.includes("tamborim") ||
+                                inst.includes("agogô") ||
+                                inst.includes("cuíca") ||
+                                inst.includes("reco-reco") ||
+                                inst.includes("repique") ||
+                                inst.includes("tantã")
+                              ) {
                                 const hasVocal = hasVocalInRole(role);
-                                const minCache = getMinCacheForInstrument(role.instrument, newQuantity, hasVocal);
-                                if (minCache > 0 && (!role.cache || (typeof role.cache === "number" && role.cache < minCache))) {
+                                const minCache = getMinCacheForInstrument(
+                                  role.instrument,
+                                  newQuantity,
+                                  hasVocal,
+                                );
+                                if (
+                                  minCache > 0 &&
+                                  (!role.cache ||
+                                    (typeof role.cache === "number" &&
+                                      role.cache < minCache))
+                                ) {
                                   setCacheForRole(role.id, minCache);
                                 }
                               }
@@ -1080,10 +1237,20 @@ export default function NewGigPage() {
                         type="text"
                         inputMode="decimal"
                         className={`w-full rounded-lg border-2 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
-                          role.instrument && (() => {
+                          role.instrument &&
+                          (() => {
                             const hasVocal = hasVocalInRole(role);
-                            const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
-                            if (minCache > 0 && role.cache && typeof role.cache === "number" && role.cache < minCache) {
+                            const minCache = getMinCacheForInstrument(
+                              role.instrument,
+                              role.quantity,
+                              hasVocal,
+                            );
+                            if (
+                              minCache > 0 &&
+                              role.cache &&
+                              typeof role.cache === "number" &&
+                              role.cache < minCache
+                            ) {
                               return "border-red-500 bg-red-50";
                             }
                             return "border-input bg-background";
@@ -1098,10 +1265,19 @@ export default function NewGigPage() {
                               : "")
                         }
                         onChange={(e) => {
-                          const rawValue = normalizeCurrencyInput(e.target.value);
-                          setCacheInputs((prev) => ({ ...prev, [role.id]: rawValue }));
+                          const rawValue = normalizeCurrencyInput(
+                            e.target.value,
+                          );
+                          setCacheInputs((prev) => ({
+                            ...prev,
+                            [role.id]: rawValue,
+                          }));
                           const parsed = parseCurrencyInput(rawValue);
-                          updateRole(role.id, "cache", parsed === "" ? "" : parsed);
+                          updateRole(
+                            role.id,
+                            "cache",
+                            parsed === "" ? "" : parsed,
+                          );
                         }}
                         onBlur={(e) => {
                           const rawValue = cacheInputs[role.id] ?? "";
@@ -1114,7 +1290,11 @@ export default function NewGigPage() {
                           let finalValue = parsed;
                           if (role.instrument) {
                             const hasVocal = hasVocalInRole(role);
-                            const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
+                            const minCache = getMinCacheForInstrument(
+                              role.instrument,
+                              role.quantity,
+                              hasVocal,
+                            );
                             if (minCache > 0 && finalValue < minCache) {
                               finalValue = minCache;
                             }
@@ -1124,23 +1304,38 @@ export default function NewGigPage() {
                         }}
                         placeholder="0,00"
                       />
-                      {role.instrument && (() => {
-                        const hasVocal = hasVocalInRole(role);
-                        const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
-                        if (minCache > 0) {
+                      {role.instrument &&
+                        (() => {
+                          const hasVocal = hasVocalInRole(role);
+                          const minCache = getMinCacheForInstrument(
+                            role.instrument,
+                            role.quantity,
+                            hasVocal,
+                          );
+                          if (minCache > 0) {
+                            return (
+                              <p
+                                className={`mt-1 text-xs ${role.cache && typeof role.cache === "number" && role.cache < minCache ? "text-red-600 font-medium" : "text-muted-foreground"}`}
+                              >
+                                Valor mínimo: R${" "}
+                                {new Intl.NumberFormat("pt-BR", {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }).format(minCache)}
+                                {role.cache &&
+                                  typeof role.cache === "number" &&
+                                  role.cache < minCache &&
+                                  " (valor ajustado automaticamente)"}
+                              </p>
+                            );
+                          }
                           return (
-                            <p className={`mt-1 text-xs ${role.cache && typeof role.cache === "number" && role.cache < minCache ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
-                              Valor mínimo: R$ {new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(minCache)}
-                              {role.cache && typeof role.cache === "number" && role.cache < minCache && " (valor ajustado automaticamente)"}
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Valor do cachê para este instrumento (ex:
+                              1.500,00)
                             </p>
                           );
-                        }
-                        return (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Valor do cachê para este instrumento (ex: 1.500,00)
-                          </p>
-                        );
-                      })()}
+                        })()}
                       {!role.instrument && (
                         <p className="mt-1 text-xs text-muted-foreground">
                           Valor do cachê para este instrumento (ex: 1.500,00)
@@ -1155,7 +1350,8 @@ export default function NewGigPage() {
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {generos.map((genero) => {
-                          const isSelected = role.desired_genres.includes(genero);
+                          const isSelected =
+                            role.desired_genres.includes(genero);
                           return (
                             <button
                               key={genero}
@@ -1164,22 +1360,40 @@ export default function NewGigPage() {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 const newGenres = isSelected
-                                  ? role.desired_genres.filter((g) => g !== genero)
+                                  ? role.desired_genres.filter(
+                                      (g) => g !== genero,
+                                    )
                                   : [...role.desired_genres, genero];
-                                updateRole(role.id, "desired_genres", newGenres);
-                                
+                                updateRole(
+                                  role.id,
+                                  "desired_genres",
+                                  newGenres,
+                                );
+
                                 if (genero === "Pagode" && !isSelected) {
-                                  if (roles.indexOf(role) === 0 || numEntradas === 1) {
+                                  if (
+                                    roles.indexOf(role) === 0 ||
+                                    numEntradas === 1
+                                  ) {
                                     setNumEntradas(2);
                                     setDuracaoEntrada("1:15");
                                     setIntervaloMinutos(30);
                                   }
-                                  
-                                  const defaultSetup = ["Instrumento próprio", "Afinador", "Cabo próprio"];
+
+                                  const defaultSetup = [
+                                    "Instrumento próprio",
+                                    "Afinador",
+                                    "Cabo próprio",
+                                  ];
                                   const currentSetup = role.desired_setup || [];
-                                  const missingSetup = defaultSetup.filter(item => !currentSetup.includes(item));
+                                  const missingSetup = defaultSetup.filter(
+                                    (item) => !currentSetup.includes(item),
+                                  );
                                   if (missingSetup.length > 0) {
-                                    updateRole(role.id, "desired_setup", [...currentSetup, ...missingSetup]);
+                                    updateRole(role.id, "desired_setup", [
+                                      ...currentSetup,
+                                      ...missingSetup,
+                                    ]);
                                   }
                                 }
                               }}
@@ -1203,7 +1417,8 @@ export default function NewGigPage() {
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {habilidades.map((habilidade) => {
-                          const isSelected = role.desired_skills.includes(habilidade);
+                          const isSelected =
+                            role.desired_skills.includes(habilidade);
                           return (
                             <button
                               key={habilidade}
@@ -1212,14 +1427,32 @@ export default function NewGigPage() {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 const newSkills = isSelected
-                                  ? role.desired_skills.filter((s) => s !== habilidade)
+                                  ? role.desired_skills.filter(
+                                      (s) => s !== habilidade,
+                                    )
                                   : [...role.desired_skills, habilidade];
-                                updateRole(role.id, "desired_skills", newSkills);
-                                
-                                if (habilidade === "Backing vocal" && role.instrument) {
+                                updateRole(
+                                  role.id,
+                                  "desired_skills",
+                                  newSkills,
+                                );
+
+                                if (
+                                  habilidade === "Backing vocal" &&
+                                  role.instrument
+                                ) {
                                   const hasVocal = !isSelected;
-                                  const minCache = getMinCacheForInstrument(role.instrument, role.quantity, hasVocal);
-                                  if (minCache > 0 && (!role.cache || (typeof role.cache === "number" && role.cache < minCache))) {
+                                  const minCache = getMinCacheForInstrument(
+                                    role.instrument,
+                                    role.quantity,
+                                    hasVocal,
+                                  );
+                                  if (
+                                    minCache > 0 &&
+                                    (!role.cache ||
+                                      (typeof role.cache === "number" &&
+                                        role.cache < minCache))
+                                  ) {
                                     setCacheForRole(role.id, minCache);
                                   }
                                 }
@@ -1253,7 +1486,9 @@ export default function NewGigPage() {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 const newSetup = isSelected
-                                  ? role.desired_setup.filter((s) => s !== setup)
+                                  ? role.desired_setup.filter(
+                                      (s) => s !== setup,
+                                    )
                                   : [...role.desired_setup, setup];
                                 updateRole(role.id, "desired_setup", newSetup);
                               }}
@@ -1271,12 +1506,16 @@ export default function NewGigPage() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-semibold text-foreground mb-2 block">Observações</label>
+                      <label className="text-sm font-semibold text-foreground mb-2 block">
+                        Observações
+                      </label>
                       <textarea
                         className="w-full rounded-lg border-2 border-input bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
                         rows={2}
                         value={role.notes}
-                        onChange={(e) => updateRole(role.id, "notes", e.target.value)}
+                        onChange={(e) =>
+                          updateRole(role.id, "notes", e.target.value)
+                        }
                         placeholder="Observações sobre esta vaga..."
                       />
                     </div>
