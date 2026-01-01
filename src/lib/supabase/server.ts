@@ -10,7 +10,7 @@ function normalizeEnvValue(value?: string) {
   ) {
     return trimmed.slice(1, -1).trim();
   }
-  return trimmed;
+  return trimmed.replace(/\\r|\\n/g, "").trim();
 }
 
 function sanitizeSupabaseKey(value?: string) {

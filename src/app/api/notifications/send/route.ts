@@ -22,13 +22,16 @@ function normalizeEnvValue(value?: string) {
     (trimmed.startsWith("'") && trimmed.endsWith("'"))
       ? trimmed.slice(1, -1)
       : trimmed;
-  return unquoted.replace(/[\u0000-\u001F\u007F\uFEFF]/g, "").trim();
+  return unquoted
+    .replace(/\\r|\\n/g, "")
+    .replace(/[\u0000-\u001F\u007F\uFEFF]/g, "")
+    .trim();
 }
 
 function sanitizeVapidKey(value?: string) {
   const normalized = normalizeEnvValue(value);
   if (!normalized) return null;
-  return normalized.replace(/[^A-Za-z0-9_-]/g, "");
+  return normalized.replace(/\\r|\\n/g, "").replace(/[^A-Za-z0-9_-]/g, "");
 }
 
 function sanitizeVapidSubject(value?: string) {
