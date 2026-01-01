@@ -104,7 +104,22 @@ async function sendWithWebPush(
 
     const errorMessage =
       pushError?.message || "Erro desconhecido ao enviar notificação";
-    throw new Error(errorMessage);
+    const body =
+      typeof pushError?.body === "string"
+        ? pushError.body
+        : pushError?.body
+          ? JSON.stringify(pushError.body)
+          : "";
+    const statusLabel = Number.isFinite(statusCode)
+      ? `status ${statusCode}`
+      : "status desconhecido";
+    const extraHint =
+      statusCode === 401 || statusCode === 403 ? " (verifique VAPID keys)" : "";
+    throw new Error(
+      `Web Push falhou (${statusLabel})${extraHint}: ${errorMessage}${
+        body ? ` - ${body}` : ""
+      }`,
+    );
   }
 }
 
