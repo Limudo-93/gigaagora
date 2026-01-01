@@ -181,6 +181,18 @@ export async function POST(request: NextRequest) {
       createdCount += toInsert.length;
     }
 
+    if (createdCount > 0) {
+      try {
+        const processUrl = new URL("/api/notifications/process", request.url);
+        await fetch(processUrl, { method: "POST" });
+      } catch (error) {
+        console.error(
+          "[auto-create invites] failed to trigger notifications process:",
+          error,
+        );
+      }
+    }
+
     return NextResponse.json({ success: true, created: createdCount });
   } catch (error: any) {
     console.error("[auto-create invites] error:", error);
