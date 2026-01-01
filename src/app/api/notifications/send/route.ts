@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
+import {
+  createClient as createSupabaseAdmin,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
+import webPush from "web-push";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
+
+type VapidConfig = {
+  publicKey: string | null;
+  privateKey: string | null;
+  subject: string;
+};
+
+function getVapidConfig(): VapidConfig {
+  const publicKey =
+    process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY || null;
+  const subject = process.env.VAPID_SUBJECT || "mailto:admin@chamaomusico.com";
+
+  return {
+    publicKey: publicKey || null,
+    privateKey,
+    subject,
+  };
+}
 
 function getSupabaseAdmin() {
   const supabaseUrl =
@@ -17,10 +42,49 @@ function getSupabaseAdmin() {
   });
 }
 
+async function sendWithWebPush(
+  subscription: {
+    endpoint: string;
+    keys: { p256dh: string; auth: string };
+  },
+  payload: Record<string, unknown>,
+  supabaseAdmin: SupabaseClient,
+) {
+  try {
+    await webPush.sendNotification(subscription, JSON.stringify(payload));
+    return { success: true, via: "web-push" };
+  } catch (pushError: any) {
+    const statusCode = Number(pushError?.statusCode);
+    if (statusCode === 404 || statusCode === 410) {
+      await supabaseAdmin
+        .from("push_subscriptions")
+        .delete()
+        .eq("endpoint", subscription.endpoint);
+      return { deleted: true, via: "web-push" };
+    }
+
+    const errorMessage =
+      pushError?.message || "Erro desconhecido ao enviar notificação";
+    throw new Error(errorMessage);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const supabaseAdmin = getSupabaseAdmin();
+    const vapidConfig = getVapidConfig();
+    const canUseWebPush = Boolean(
+      vapidConfig.publicKey && vapidConfig.privateKey,
+    );
+
+    if (canUseWebPush) {
+      webPush.setVapidDetails(
+        vapidConfig.subject,
+        vapidConfig.publicKey as string,
+        vapidConfig.privateKey as string,
+      );
+    }
 
     // Verificar autenticação
     const {
@@ -107,7 +171,6 @@ export async function POST(request: NextRequest) {
                 subscription: subscriptionData,
                 payload: payload,
               },
-              // Não precisamos passar headers manualmente, o cliente já faz isso
             },
           );
 
@@ -146,10 +209,23 @@ export async function POST(request: NextRequest) {
             }
 
             // Extrair mensagem de erro limpa
+            if (canUseWebPush) {
+              console.warn(
+                "[Send Notification] Edge Function falhou, tentando fallback com web-push",
+              );
+              return await sendWithWebPush(
+                subscriptionData,
+                payload,
+                supabaseAdmin,
+              );
+            }
+
             const errorMsg =
               error.message ||
               (typeof error === "string" ? error : JSON.stringify(error));
-            throw new Error(errorMsg);
+            throw new Error(
+              `${errorMsg}. Edge Function falhou e não há VAPID keys no servidor para fallback.`,
+            );
           }
 
           if (
@@ -178,7 +254,19 @@ export async function POST(request: NextRequest) {
               `[Send Notification] Edge Function returned error in data:`,
               errorMessage,
             );
-            throw new Error(errorMessage);
+            if (canUseWebPush) {
+              console.warn(
+                "[Send Notification] Edge Function retornou erro, tentando fallback com web-push",
+              );
+              return await sendWithWebPush(
+                subscriptionData,
+                payload,
+                supabaseAdmin,
+              );
+            }
+            throw new Error(
+              `${errorMessage}. Edge Function falhou e não há VAPID keys no servidor para fallback.`,
+            );
           }
 
           return data;
