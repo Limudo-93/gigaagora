@@ -14,16 +14,52 @@ type VapidConfig = {
   subject: string;
 };
 
+function normalizeEnvValue(value?: string) {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const unquoted =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ? trimmed.slice(1, -1)
+      : trimmed;
+  return unquoted.replace(/[\u0000-\u001F\u007F\uFEFF]/g, "").trim();
+}
+
+function sanitizeVapidKey(value?: string) {
+  const normalized = normalizeEnvValue(value);
+  if (!normalized) return null;
+  return normalized.replace(/[^A-Za-z0-9_-]/g, "");
+}
+
+function sanitizeVapidSubject(value?: string) {
+  const normalized = normalizeEnvValue(value);
+  if (!normalized) return null;
+  return normalized;
+}
+
+function isValidVapidSubject(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "mailto:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function getVapidConfig(): VapidConfig {
-  const publicKey =
-    process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const privateKey = process.env.VAPID_PRIVATE_KEY || null;
-  const subject = process.env.VAPID_SUBJECT || "mailto:admin@chamaomusico.com";
+  const publicKey = sanitizeVapidKey(
+    process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+  );
+  const privateKey = sanitizeVapidKey(process.env.VAPID_PRIVATE_KEY || "");
+  const subject = sanitizeVapidSubject(process.env.VAPID_SUBJECT);
+  const fallbackSubject = "mailto:admin@chamaomusico.com";
+  const safeSubject =
+    subject && isValidVapidSubject(subject) ? subject : fallbackSubject;
 
   return {
-    publicKey: publicKey || null,
+    publicKey,
     privateKey,
-    subject,
+    subject: safeSubject,
   };
 }
 
