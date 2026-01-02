@@ -15,6 +15,10 @@ import {
   Image as ImageIcon,
   MapPin,
   Loader2,
+  Music,
+  Sparkles,
+  Ticket,
+  Flame,
 } from "lucide-react";
 import { createGigWithRegion } from "@/app/actions/gigs";
 import { computeRegionLabel } from "@/lib/geo";
@@ -37,6 +41,7 @@ export default function NewGigPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   // Dados da gig
   const [title, setTitle] = useState("");
@@ -66,10 +71,14 @@ export default function NewGigPage() {
 
   // Lista de instrumentos
   const instrumentos = INSTRUMENT_OPTIONS;
+  const [expandedInstrumentRoles, setExpandedInstrumentRoles] = useState<
+    Record<string, boolean>
+  >({});
 
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);
   const [cacheInputs, setCacheInputs] = useState<Record<string, string>>({});
+  const [gigGenres, setGigGenres] = useState<string[]>(["Pagode"]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -139,6 +148,110 @@ export default function NewGigPage() {
     "Tablet/Tablet para partitura",
     "Backline fornecido",
   ];
+
+  const popularByGenre: Record<string, string[]> = {
+    Pagode: [
+      "Vocal",
+      "Violão",
+      "Cavaquinho",
+      "Pandeiro",
+      "Surdo",
+      "Tamborim",
+      "Tantã",
+      "Tantanzinho/Rebolo",
+      "Percussão",
+      "Banjo",
+      "Repique de mão",
+      "Cuíca",
+    ],
+    Sertanejo: [
+      "Vocal",
+      "Violão",
+      "Viola",
+      "Viola Caipira",
+      "Acordeon",
+      "Teclado",
+      "Baixo",
+      "Bateria",
+    ],
+    MPB: ["Vocal", "Violão", "Guitarra", "Baixo", "Bateria", "Teclado"],
+    Rock: ["Vocal", "Guitarra", "Baixo", "Bateria", "Teclado"],
+    Pop: ["Vocal", "Guitarra", "Baixo", "Bateria", "Teclado"],
+    Funk: ["Vocal", "Percussão", "DJ", "Teclado", "Baixo"],
+    Forró: ["Vocal", "Sanfona", "Percussão", "Pandeiro"],
+    Samba: [
+      "Vocal",
+      "Violão",
+      "Cavaquinho",
+      "Surdo",
+      "Tamborim",
+      "Pandeiro",
+      "Cuíca",
+      "Tantã",
+      "Tantanzinho/Rebolo",
+    ],
+    Jazz: ["Saxofone", "Trompete", "Trombone", "Piano", "Contrabaixo"],
+  };
+
+  const getPopularInstruments = (genresSelected: string[]) => {
+    const fromGenres = genresSelected.flatMap(
+      (genre) => popularByGenre[genre] || [],
+    );
+    const unique = Array.from(new Set(fromGenres));
+    const filtered = unique.filter((inst) => instrumentos.includes(inst));
+    if (filtered.length > 0) return filtered;
+    return instrumentos.slice(0, 12);
+  };
+
+  const steps = [
+    {
+      id: 1,
+      title: "Ato 1 — Abertura",
+      subtitle: "Dê um nome que vende e o clima do show",
+    },
+    {
+      id: 2,
+      title: "Ato 2 — Luz e Palco",
+      subtitle: "Data, horário e onde o público chega",
+    },
+    {
+      id: 3,
+      title: "Ato 3 — Line-up",
+      subtitle: "Estilo musical e vagas da banda",
+    },
+  ];
+  const totalSteps = steps.length;
+  const isLastStep = currentStep === totalSteps;
+
+  const progressPercent =
+    totalSteps > 1
+      ? Math.round(((currentStep - 1) / (totalSteps - 1)) * 100)
+      : 100;
+
+  const goStep = (nextStep: number) => {
+    setCurrentStep(nextStep);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleNextStep = () => {
+    setError(null);
+    if (currentStep === 1 && !title.trim()) {
+      setError("Dê um nome para a gig antes de continuar.");
+      return;
+    }
+    if (currentStep === 2 && (!startDate || !startTime)) {
+      setError("Informe a data e o horário de início.");
+      return;
+    }
+    goStep(Math.min(totalSteps, currentStep + 1));
+  };
+
+  const handlePrevStep = () => {
+    setError(null);
+    goStep(Math.max(1, currentStep - 1));
+  };
 
   // Pegar localização automaticamente ao carregar a página
   useEffect(() => {
@@ -268,7 +381,9 @@ export default function NewGigPage() {
         inst.includes("cuíca") ||
         inst.includes("reco-reco") ||
         inst.includes("repique") ||
-        inst.includes("tantã")
+        inst.includes("tantã") ||
+        inst.includes("tantanzinho") ||
+        inst.includes("rebolo")
       ) {
         return 220;
       }
@@ -293,7 +408,9 @@ export default function NewGigPage() {
       inst.includes("cuíca") ||
       inst.includes("reco-reco") ||
       inst.includes("repique") ||
-      inst.includes("tantã")
+      inst.includes("tantã") ||
+      inst.includes("tantanzinho") ||
+      inst.includes("rebolo")
     ) {
       return quantity >= 2 ? 200 : 170;
     }
@@ -334,7 +451,7 @@ export default function NewGigPage() {
   };
 
   const hasVocalInRole = (role: GigRole): boolean => {
-    const inst = role.instrument.toLowerCase();
+    const inst = (role.instrument || "").toLowerCase();
     return (
       inst === "vocal" ||
       inst.includes("voz") ||
@@ -350,7 +467,7 @@ export default function NewGigPage() {
         id: newRoleId,
         instrument: "",
         quantity: 1,
-        desired_genres: ["Pagode"],
+        desired_genres: gigGenres,
         desired_skills: [],
         desired_setup: ["Instrumento próprio", "Afinador", "Cabo próprio"],
         notes: "",
@@ -367,10 +484,17 @@ export default function NewGigPage() {
       delete next[id];
       return next;
     });
+    setExpandedInstrumentRoles((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const updateRole = (id: string, field: keyof GigRole, value: any) => {
-    setRoles(roles.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    setRoles((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+    );
   };
 
   const setCacheForRole = (id: string, value: number | "") => {
@@ -384,21 +508,19 @@ export default function NewGigPage() {
   const handleInstrumentSelect = (role: GigRole, instrument: string) => {
     const nextInstrument = role.instrument === instrument ? "" : instrument;
     updateRole(role.id, "instrument", nextInstrument);
-
-    if (nextInstrument) {
-      const hasVocal = nextInstrument.toLowerCase().includes("vocal");
-      const minCache = getMinCacheForInstrument(
-        nextInstrument,
-        role.quantity,
-        hasVocal,
-      );
-      if (
-        minCache > 0 &&
-        (!role.cache ||
-          (typeof role.cache === "number" && role.cache < minCache))
-      ) {
-        setCacheForRole(role.id, minCache);
-      }
+    if (!nextInstrument) return;
+    const hasVocal = instrument.toLowerCase().includes("vocal");
+    const minCache = getMinCacheForInstrument(
+      instrument,
+      role.quantity,
+      hasVocal,
+    );
+    if (
+      minCache > 0 &&
+      (!role.cache ||
+        (typeof role.cache === "number" && role.cache < minCache))
+    ) {
+      setCacheForRole(role.id, minCache);
     }
   };
 
@@ -661,8 +783,7 @@ export default function NewGigPage() {
         gig_id: gigData.id,
         instrument: role.instrument.trim(),
         quantity: role.quantity,
-        desired_genres:
-          role.desired_genres.length > 0 ? role.desired_genres : [],
+        desired_genres: gigGenres.length > 0 ? gigGenres : [],
         desired_skills:
           role.desired_skills.length > 0 ? role.desired_skills : [],
         desired_setup: role.desired_setup.length > 0 ? role.desired_setup : [],
@@ -736,9 +857,15 @@ export default function NewGigPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Criar Nova Gig
-            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-3xl font-bold text-foreground">
+                Criar Nova Gig
+              </h1>
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                <Sparkles className="h-3 w-3" />
+                Festival Mode
+              </span>
+            </div>
             <p className="text-sm text-muted-foreground mt-1">
               Preencha os dados da gig e adicione as vagas necessárias
             </p>
@@ -752,12 +879,99 @@ export default function NewGigPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Informações Básicas */}
-          <Card className="border-2 border-border shadow-lg">
-            <CardHeader className="bg-muted/30 border-b border-border">
-              <CardTitle className="text-xl">Informações Básicas</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-5">
+          <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+            <div className="relative overflow-hidden rounded-3xl border-2 border-orange-200/60 bg-gradient-to-br from-amber-50 via-white to-orange-100 p-6 shadow-2xl">
+              <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-amber-200/40 blur-2xl" />
+              <div className="absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-orange-200/40 blur-2xl" />
+              <div className="relative z-10 flex flex-col gap-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg">
+                      <Music className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">
+                        Palco Aberto
+                      </p>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {steps[currentStep - 1]?.title}
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {steps[currentStep - 1]?.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-full border border-orange-200/80 bg-white/80 px-3 py-1 text-xs font-semibold text-orange-700 shadow-sm">
+                    <Ticket className="mr-1 inline h-3 w-3" />
+                    {currentStep}/{totalSteps}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-orange-200/70 bg-white/80 p-4">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Crowd Meter</span>
+                    <span className="font-semibold text-orange-600">
+                      +{currentStep * 120} XP
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-orange-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 flex items-center gap-1 text-orange-600">
+                    <Flame className="h-4 w-4" />
+                    <span className="text-xs font-semibold">
+                      {progressPercent}% da energia no palco
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border-2 border-orange-200/60 bg-white/90 p-5 shadow-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">
+                  Setlist da Gig
+                </p>
+                <Sparkles className="h-4 w-4 text-orange-500" />
+              </div>
+              <div className="mt-4 space-y-2">
+                {steps.map((step) => {
+                  const isActive = step.id === currentStep;
+                  const isDone = step.id < currentStep;
+                  return (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => goStep(step.id)}
+                      className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all ${
+                        isActive
+                          ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md"
+                          : isDone
+                            ? "bg-orange-50 text-orange-700"
+                            : "bg-white text-foreground border-2 border-border hover:border-orange-300"
+                      }`}
+                    >
+                      <span>{step.title}</span>
+                      <span className="text-xs opacity-80">
+                        {isDone ? "OK" : isActive ? "Agora" : "Em breve"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          {currentStep === 1 && (
+            <>
+              {/* Informações Básicas */}
+              <Card className="border-0 shadow-2xl bg-gradient-to-br from-white via-amber-50 to-orange-100/70">
+                <CardHeader className="border-0 bg-transparent">
+                  <CardTitle className="text-xl">Informações Básicas</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-5">
               <div>
                 <label
                   className="text-sm font-semibold text-foreground mb-2 block"
@@ -867,18 +1081,22 @@ export default function NewGigPage() {
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
-          {/* Localização */}
-          <Card className="border-2 border-border shadow-lg">
-            <CardHeader className="bg-muted/30 border-b border-border">
-              <CardTitle className="text-xl flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                Localização
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-5">
+          {currentStep === 2 && (
+            <>
+              {/* Localização */}
+              <Card className="border-0 shadow-2xl bg-gradient-to-br from-white via-amber-50 to-orange-100/70">
+                <CardHeader className="border-0 bg-transparent">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    Localização
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-5">
               <div>
                 <label
                   className="text-sm font-semibold text-foreground mb-2 block"
@@ -976,15 +1194,15 @@ export default function NewGigPage() {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Data e Horário */}
-          <Card className="border-2 border-border shadow-lg">
-            <CardHeader className="bg-muted/30 border-b border-border">
-              <CardTitle className="text-xl">Data e Horário</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-5">
+              {/* Data e Horário */}
+              <Card className="border-0 shadow-2xl bg-gradient-to-br from-white via-amber-50 to-orange-100/70">
+                <CardHeader className="border-0 bg-transparent">
+                  <CardTitle className="text-xl">Data e Horário</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
@@ -1125,12 +1343,90 @@ export default function NewGigPage() {
                   </p>
                 </div>
               )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {currentStep === 3 && (
+            <>
+              {/* Estilo Musical */}
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-white via-amber-50 to-orange-100/70">
+            <CardHeader className="border-0 bg-transparent">
+              <CardTitle className="text-xl">Estilo Musical</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-3">
+              <label className="text-sm font-semibold text-foreground mb-2 block">
+                Gênero Musical
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {generos.map((genero) => {
+                  const isSelected = gigGenres.includes(genero);
+                  return (
+                    <button
+                      key={genero}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const nextGenres = isSelected
+                          ? gigGenres.filter((g) => g !== genero)
+                          : [...gigGenres, genero];
+                        setGigGenres(nextGenres);
+                        setRoles((prev) =>
+                          prev.map((r) => ({
+                            ...r,
+                            desired_genres: nextGenres,
+                          })),
+                        );
+                        const hadPagode = gigGenres.includes("Pagode");
+                        const hasPagode = nextGenres.includes("Pagode");
+                        if (!hadPagode && hasPagode) {
+                          if (!numEntradas || numEntradas === 1) {
+                            setNumEntradas(2);
+                            setDuracaoEntrada("1:15");
+                            setIntervaloMinutos(30);
+                          }
+                          const defaultSetup = [
+                            "Instrumento próprio",
+                            "Afinador",
+                            "Cabo próprio",
+                          ];
+                          setRoles((prev) =>
+                            prev.map((r) => {
+                              const currentSetup = r.desired_setup || [];
+                              const missing = defaultSetup.filter(
+                                (item) => !currentSetup.includes(item),
+                              );
+                              if (missing.length === 0) return r;
+                              return {
+                                ...r,
+                                desired_setup: [...currentSetup, ...missing],
+                              };
+                            }),
+                          );
+                        }
+                      }}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground shadow-md"
+                          : "bg-background text-foreground border-2 border-input hover:border-primary hover:bg-muted/50"
+                      }`}
+                    >
+                      {genero}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Esse estilo será aplicado em todas as vagas da gig.
+              </p>
             </CardContent>
           </Card>
 
-          {/* Vagas (Roles) */}
-          <Card className="border-2 border-border shadow-lg">
-            <CardHeader className="bg-muted/30 border-b border-border flex flex-row items-center justify-between">
+              {/* Vagas (Roles) */}
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-white via-amber-50 to-orange-100/70">
+            <CardHeader className="border-0 bg-transparent flex flex-row items-center justify-between">
               <CardTitle className="text-xl">Vagas Necessárias</CardTitle>
               <Button
                 type="button"
@@ -1145,18 +1441,18 @@ export default function NewGigPage() {
             </CardHeader>
             <CardContent className="p-6 space-y-5">
               {roles.length === 0 ? (
-                <div className="text-center py-8 rounded-lg border-2 border-dashed border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Nenhuma vaga adicionada. Clique em &quot;Adicionar
-                    Vaga&quot; para começar.
-                  </p>
-                </div>
-              ) : (
-                roles.map((role) => (
-                  <div
-                    key={role.id}
-                    className="rounded-lg border-2 border-border bg-muted/30 p-5 space-y-4"
-                  >
+                    <div className="text-center py-8 rounded-2xl border-2 border-dashed border-orange-200/70 bg-white/70">
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma vaga adicionada. Clique em &quot;Adicionar
+                        Vaga&quot; para começar.
+                      </p>
+                    </div>
+                  ) : (
+                    roles.map((role) => (
+                      <div
+                        key={role.id}
+                        className="rounded-2xl border border-orange-200/70 bg-white/80 p-5 shadow-md space-y-4"
+                      >
                     <div className="flex items-start justify-between">
                       <h4 className="font-semibold text-lg text-foreground">
                         Vaga {roles.indexOf(role) + 1}
@@ -1178,7 +1474,10 @@ export default function NewGigPage() {
                           Instrumento <span className="text-red-500">*</span>
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {instrumentos.map((inst) => {
+                          {(expandedInstrumentRoles[role.id]
+                            ? instrumentos
+                            : getPopularInstruments(gigGenres)
+                          ).map((inst) => {
                             const isSelected = role.instrument === inst;
                             return (
                               <button
@@ -1199,6 +1498,22 @@ export default function NewGigPage() {
                               </button>
                             );
                           })}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setExpandedInstrumentRoles((prev) => ({
+                                ...prev,
+                                [role.id]: !prev[role.id],
+                              }));
+                            }}
+                            className="px-4 py-2 rounded-lg text-sm font-semibold border-2 border-dashed border-input text-foreground hover:border-primary hover:text-primary transition-all"
+                          >
+                            {expandedInstrumentRoles[role.id]
+                              ? "Ver Menos"
+                              : "Ver Mais"}
+                          </button>
                         </div>
                       </div>
 
@@ -1226,7 +1541,9 @@ export default function NewGigPage() {
                                 inst.includes("cuíca") ||
                                 inst.includes("reco-reco") ||
                                 inst.includes("repique") ||
-                                inst.includes("tantã")
+                                inst.includes("tantã") ||
+                                inst.includes("tantanzinho") ||
+                                inst.includes("rebolo")
                               ) {
                                 const hasVocal = hasVocalInRole(role);
                                 const minCache = getMinCacheForInstrument(
@@ -1254,77 +1571,80 @@ export default function NewGigPage() {
                       <label className="text-sm font-semibold text-foreground mb-2 block">
                         Cachê (R$)
                       </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        className={`w-full rounded-lg border-2 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
-                          role.instrument &&
-                          (() => {
-                            const hasVocal = hasVocalInRole(role);
-                            const minCache = getMinCacheForInstrument(
-                              role.instrument,
-                              role.quantity,
-                              hasVocal,
-                            );
-                            if (
-                              minCache > 0 &&
-                              role.cache &&
-                              typeof role.cache === "number" &&
-                              role.cache < minCache
-                            ) {
-                              return "border-red-500 bg-red-50";
-                            }
-                            return "border-input bg-background";
-                          })()
-                        }`}
-                        value={
-                          cacheInputs[role.id] ??
-                          (role.cache === ""
-                            ? ""
-                            : typeof role.cache === "number"
-                              ? formatCurrency(role.cache)
-                              : "")
-                        }
-                        onChange={(e) => {
-                          const rawValue = normalizeCurrencyInput(
-                            e.target.value,
-                          );
-                          setCacheInputs((prev) => ({
-                            ...prev,
-                            [role.id]: rawValue,
-                          }));
-                          const parsed = parseCurrencyInput(rawValue);
-                          updateRole(
-                            role.id,
-                            "cache",
-                            parsed === "" ? "" : parsed,
-                          );
-                        }}
-                        onBlur={(e) => {
-                          const rawValue = cacheInputs[role.id] ?? "";
-                          const parsed = parseCurrencyInput(rawValue);
-                          if (parsed === "") {
-                            setCacheForRole(role.id, "");
-                            return;
+                      {role.instrument ? (
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          className={`w-full rounded-lg border-2 px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                            (() => {
+                              const hasVocal = hasVocalInRole(role);
+                              const minCache = getMinCacheForInstrument(
+                                role.instrument,
+                                role.quantity,
+                                hasVocal,
+                              );
+                              if (
+                                minCache > 0 &&
+                                role.cache &&
+                                typeof role.cache === "number" &&
+                                role.cache < minCache
+                              ) {
+                                return "border-red-500 bg-red-50";
+                              }
+                              return "border-input bg-background";
+                            })()
+                          }`}
+                          value={
+                            cacheInputs[role.id] ??
+                            (role.cache === ""
+                              ? ""
+                              : typeof role.cache === "number"
+                                ? formatCurrency(role.cache)
+                                : "")
                           }
+                          onChange={(e) => {
+                            const rawValue = normalizeCurrencyInput(
+                              e.target.value,
+                            );
+                            setCacheInputs((prev) => ({
+                              ...prev,
+                              [role.id]: rawValue,
+                            }));
+                            const parsed = parseCurrencyInput(rawValue);
+                            updateRole(
+                              role.id,
+                              "cache",
+                              parsed === "" ? "" : parsed,
+                            );
+                          }}
+                          onBlur={(e) => {
+                            const rawValue = cacheInputs[role.id] ?? "";
+                            const parsed = parseCurrencyInput(rawValue);
+                            if (parsed === "") {
+                              setCacheForRole(role.id, "");
+                              return;
+                            }
 
                           let finalValue = parsed;
-                          if (role.instrument) {
-                            const hasVocal = hasVocalInRole(role);
-                            const minCache = getMinCacheForInstrument(
-                              role.instrument,
-                              role.quantity,
-                              hasVocal,
-                            );
-                            if (minCache > 0 && finalValue < minCache) {
-                              finalValue = minCache;
-                            }
+                          const hasVocal = hasVocalInRole(role);
+                          const minCache = getMinCacheForInstrument(
+                            role.instrument,
+                            role.quantity,
+                            hasVocal,
+                          );
+                          if (minCache > 0 && finalValue < minCache) {
+                            finalValue = minCache;
                           }
 
-                          setCacheForRole(role.id, finalValue);
-                        }}
-                        placeholder="0,00"
-                      />
+                            setCacheForRole(role.id, finalValue);
+                          }}
+                          placeholder="0,00"
+                        />
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Selecione um instrumento para definir o cachê.
+                        </p>
+                      )}
                       {role.instrument &&
                         (() => {
                           const hasVocal = hasVocalInRole(role);
@@ -1357,78 +1677,6 @@ export default function NewGigPage() {
                             </p>
                           );
                         })()}
-                      {!role.instrument && (
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Valor do cachê para este instrumento (ex: 1.500,00)
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Gênero */}
-                    <div>
-                      <label className="text-sm font-semibold text-foreground mb-3 block">
-                        Gênero Musical
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {generos.map((genero) => {
-                          const isSelected =
-                            role.desired_genres.includes(genero);
-                          return (
-                            <button
-                              key={genero}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const newGenres = isSelected
-                                  ? role.desired_genres.filter(
-                                      (g) => g !== genero,
-                                    )
-                                  : [...role.desired_genres, genero];
-                                updateRole(
-                                  role.id,
-                                  "desired_genres",
-                                  newGenres,
-                                );
-
-                                if (genero === "Pagode" && !isSelected) {
-                                  if (
-                                    roles.indexOf(role) === 0 ||
-                                    numEntradas === 1
-                                  ) {
-                                    setNumEntradas(2);
-                                    setDuracaoEntrada("1:15");
-                                    setIntervaloMinutos(30);
-                                  }
-
-                                  const defaultSetup = [
-                                    "Instrumento próprio",
-                                    "Afinador",
-                                    "Cabo próprio",
-                                  ];
-                                  const currentSetup = role.desired_setup || [];
-                                  const missingSetup = defaultSetup.filter(
-                                    (item) => !currentSetup.includes(item),
-                                  );
-                                  if (missingSetup.length > 0) {
-                                    updateRole(role.id, "desired_setup", [
-                                      ...currentSetup,
-                                      ...missingSetup,
-                                    ]);
-                                  }
-                                }
-                              }}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                isSelected
-                                  ? "bg-primary text-primary-foreground shadow-md"
-                                  : "bg-background text-foreground border-2 border-input hover:border-primary hover:bg-muted/50"
-                              }`}
-                            >
-                              {genero}
-                            </button>
-                          );
-                        })}
-                      </div>
                     </div>
 
                     {/* Habilidades Requeridas */}
@@ -1545,9 +1793,11 @@ export default function NewGigPage() {
               )}
             </CardContent>
           </Card>
+            </>
+          )}
 
           {/* Ações */}
-          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t-2 border-border">
+          <div className="flex flex-col gap-3 pt-4 border-t-2 border-border sm:flex-row sm:items-center sm:justify-between">
             <Button
               type="button"
               variant="outline"
@@ -1555,38 +1805,63 @@ export default function NewGigPage() {
               disabled={saving}
               className="w-full sm:w-auto border-2"
             >
-              Cancelar
+              Sair do palco
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => saveGig("draft")}
-              disabled={saving || uploadingFlyer}
-              className="w-full sm:w-auto"
-            >
-              {saving || uploadingFlyer ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {uploadingFlyer ? "Enviando flyer..." : "Salvando..."}
-                </>
-              ) : (
-                "Salvar como Rascunho"
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevStep}
+                  disabled={saving}
+                  className="w-full sm:w-auto border-2"
+                >
+                  Voltar ao ato
+                </Button>
               )}
-            </Button>
-            <Button
-              type="submit"
-              disabled={saving || uploadingFlyer}
-              className="w-full sm:w-auto font-semibold"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Publicando...
-                </>
-              ) : (
-                "Publicar Gig"
+              {currentStep < totalSteps && (
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={saving || uploadingFlyer}
+                  className="w-full sm:w-auto font-semibold"
+                >
+                  Proximo ato
+                </Button>
               )}
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => saveGig("draft")}
+                disabled={saving || uploadingFlyer}
+                className="w-full sm:w-auto"
+              >
+                {saving || uploadingFlyer ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {uploadingFlyer ? "Enviando flyer..." : "Salvando..."}
+                  </>
+                ) : (
+                  "Salvar pra depois"
+                )}
+              </Button>
+              {isLastStep && (
+                <Button
+                  type="submit"
+                  disabled={saving || uploadingFlyer}
+                  className="w-full sm:w-auto font-semibold"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Publicando...
+                    </>
+                  ) : (
+                    "Lancar Gig"
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </div>

@@ -226,7 +226,7 @@ export default function MusiciansSearch({
                       asChild
                       className="flex-1 bg-white/80 border-white/70"
                     >
-                      <Link href={"/signup" as any}>Convidar</Link>
+                      <Link href={"/dashboard/gigs/new" as any}>Convidar</Link>
                     </Button>
                   </div>
                 </CardContent>

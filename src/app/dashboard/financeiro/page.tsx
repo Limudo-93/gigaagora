@@ -5,14 +5,18 @@ import { supabase } from "@/lib/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   DollarSign,
   Calendar,
   Clock,
+  Flame,
+  Target,
+  Trophy,
   TrendingUp,
-  Music,
   MapPin,
   Sparkles,
+  Zap,
 } from "lucide-react";
 
 type FinancialGig = {
@@ -199,6 +203,27 @@ export default function FinanceiroPage() {
   // Quanto ganha por hora
   const earningsPerHour = totalHours > 0 ? totalEarnings / totalHours : 0;
 
+  const totalConfirmed = gigs.length;
+  const levelSize = 2000;
+  const currentLevel = Math.max(1, Math.floor(totalEarnings / levelSize) + 1);
+  const currentLevelEarnings =
+    totalEarnings - (currentLevel - 1) * levelSize;
+  const nextLevelTarget = currentLevel * levelSize;
+  const nextLevelRemaining = Math.max(0, nextLevelTarget - totalEarnings);
+  const levelProgress = Math.min(
+    100,
+    Math.round((currentLevelEarnings / levelSize) * 100),
+  );
+
+  const nextGoalBase =
+    totalEarnings > 0 ? Math.ceil(totalEarnings / 1000) * 1000 : 1000;
+  const nextGoal =
+    nextGoalBase === totalEarnings ? nextGoalBase + 1000 : nextGoalBase;
+  const goalProgress = Math.min(
+    100,
+    Math.round((totalEarnings / nextGoal) * 100),
+  );
+
   // Insights (modo avançado)
   const calculateInsights = (): Insight[] => {
     const insights: Insight[] = [];
@@ -297,6 +322,22 @@ export default function FinanceiroPage() {
 
   const maxEarnings = Math.max(...last6Months.map((m) => m.earnings), 1);
 
+  const monthlyStreak = (() => {
+    let streak = 0;
+    for (let i = last6Months.length - 1; i >= 0; i -= 1) {
+      if (last6Months[i].gigs > 0) streak += 1;
+      else break;
+    }
+    return streak;
+  })();
+
+  const badges = [
+    totalEarnings >= 1000 ? "Primeiro cachê" : null,
+    pastGigs.length >= 5 ? "Veterano de palco" : null,
+    totalHours >= 20 ? "Maratonista" : null,
+    earningsPerHour >= 200 ? "Premium por hora" : null,
+  ].filter(Boolean) as string[];
+
   // Instrumentos mais rentáveis (ranking)
   const instrumentDistribution: Record<
     string,
@@ -366,20 +407,20 @@ export default function FinanceiroPage() {
     <DashboardLayout fullWidth>
       <div className="space-y-8">
         {/* Header */}
-        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
+        <div className="rounded-[32px] border border-white/70 bg-white/70 p-6 md:p-8 shadow-sm relative overflow-hidden">
           <div className="absolute -top-24 -right-20 h-52 w-52 rounded-full bg-amber-200/40 blur-3xl" />
           <div className="absolute -bottom-28 -left-20 h-60 w-60 rounded-full bg-teal-200/40 blur-3xl" />
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-foreground/50">
                 Painel financeiro
               </p>
               <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground flex items-center gap-2">
-                💰 Seus ganhos com música
+                💰 Evolua sua carreira musical
               </h1>
-              <p className="text-base text-foreground/60 mt-2">
-                Acompanhe quanto você já ganhou, quanto vai receber e como
-                evoluir
+              <p className="text-base text-foreground/60 mt-2 max-w-2xl">
+                Cada gig confirmada aumenta seu nível, desbloqueia recompensas e
+                acelera seus ganhos.
               </p>
             </div>
 
@@ -393,7 +434,7 @@ export default function FinanceiroPage() {
                     : "text-foreground/60 hover:text-foreground"
                 }`}
               >
-                Básico
+                Game
               </button>
               <button
                 onClick={() => setViewMode("advanced")}
@@ -403,7 +444,7 @@ export default function FinanceiroPage() {
                     : "text-foreground/60 hover:text-foreground"
                 }`}
               >
-                Avançado
+                Pro
               </button>
             </div>
           </div>
@@ -412,75 +453,207 @@ export default function FinanceiroPage() {
         {/* MODO BÁSICO */}
         {viewMode === "basic" && (
           <div className="space-y-6">
-            {/* BLOCO 1 — HERO FINANCEIRO */}
-            <Card className="border-0 shadow-xl gradient-music">
-              <CardContent className="p-8 md:p-12 text-white">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="text-5xl">💰</div>
-                </div>
-                <h2 className="text-xl md:text-2xl font-semibold mb-2 text-white">
-                  Total já ganho
-                </h2>
-                <p className="text-4xl md:text-5xl font-bold mb-4 text-white">
-                  {formatCurrency(totalEarnings)}
-                </p>
-                <div className="flex items-center gap-2 text-white">
-                  <span className="text-lg font-medium text-white">
-                    {pastGigs.length}{" "}
-                    {pastGigs.length === 1
-                      ? "show confirmado"
-                      : "shows confirmados"}
-                  </span>
-                </div>
-                {totalEarnings > 0 && (
-                  <p className="mt-4 text-lg font-medium text-white">
-                    Você já ganhou dinheiro tocando 🎶
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* BLOCO 2 — AGORA & FUTURO */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border border-amber-200/70 shadow-md bg-white/80">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="text-3xl">📅</div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Este mês
-                    </h3>
+            {/* BLOCO 1 — GAMEBOARD */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <Card className="border border-amber-200/70 bg-white/80 shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Trophy className="h-5 w-5 text-amber-600" />
+                    <p className="text-sm font-semibold text-foreground/70">
+                      Nível atual
+                    </p>
                   </div>
-                  <p className="text-3xl font-bold text-foreground mb-2">
-                    {formatCurrency(thisMonthEarnings)}
+                  <p className="text-2xl font-bold text-foreground">
+                    Nível {currentLevel}
                   </p>
-                  <p className="text-sm text-foreground/60">
-                    {thisMonthGigs.length}{" "}
-                    {thisMonthGigs.length === 1
-                      ? "show confirmado"
-                      : "shows confirmados"}
+                  <p className="text-xs text-foreground/50 mt-1">
+                    Falta {formatCurrency(nextLevelRemaining)} para o próximo
+                    nível
+                  </p>
+                  <div className="mt-3 h-2 rounded-full bg-amber-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400"
+                      style={{ width: `${levelProgress}%` }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-rose-200/70 bg-white/80 shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Flame className="h-5 w-5 text-rose-500" />
+                    <p className="text-sm font-semibold text-foreground/70">
+                      Streak mensal
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {monthlyStreak}{" "}
+                    {monthlyStreak === 1 ? "mês" : "meses"}
+                  </p>
+                  <p className="text-xs text-foreground/50 mt-1">
+                    Mantenha shows todos os meses e suba mais rápido
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="border border-teal-200/70 shadow-md bg-white/80">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="text-3xl">🔮</div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Você vai receber
-                    </h3>
+              <Card className="border border-emerald-200/70 bg-white/80 shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Target className="h-5 w-5 text-emerald-600" />
+                    <p className="text-sm font-semibold text-foreground/70">
+                      Próxima meta
+                    </p>
                   </div>
-                  <p className="text-3xl font-bold text-foreground mb-2">
-                    {formatCurrency(futureEarnings)}
+                  <p className="text-2xl font-bold text-foreground">
+                    {formatCurrency(nextGoal)}
                   </p>
-                  <p className="text-sm text-foreground/60">Próximas semanas</p>
+                  <p className="text-xs text-foreground/50 mt-1">
+                    Você já está em {goalProgress}% da meta
+                  </p>
+                  <div className="mt-3 h-2 rounded-full bg-emerald-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400"
+                      style={{ width: `${goalProgress}%` }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-sky-200/70 bg-white/80 shadow-md">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Zap className="h-5 w-5 text-sky-500" />
+                    <p className="text-sm font-semibold text-foreground/70">
+                      XP de shows
+                    </p>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">
+                    {totalConfirmed * 120} XP
+                  </p>
+                  <p className="text-xs text-foreground/50 mt-1">
+                    {totalConfirmed}{" "}
+                    {totalConfirmed === 1 ? "gig confirmada" : "gigs confirmadas"}
+                  </p>
                 </CardContent>
               </Card>
             </div>
 
-            <p className="text-sm text-foreground/50 text-center -mt-4">
-              Previsão baseada em shows já confirmados
-            </p>
+            {/* BLOCO 2 — PLACAR PRINCIPAL */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="border-0 shadow-xl gradient-music md:col-span-2">
+                <CardContent className="p-8 md:p-10 text-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-3xl">💰</span>
+                    <p className="text-sm uppercase tracking-[0.2em] text-white/70">
+                      Cofre do músico
+                    </p>
+                  </div>
+                  <p className="text-4xl md:text-5xl font-bold mb-2 text-white">
+                    {formatCurrency(totalEarnings)}
+                  </p>
+                  <p className="text-sm text-white/80">
+                    {pastGigs.length}{" "}
+                    {pastGigs.length === 1
+                      ? "show confirmado"
+                      : "shows confirmados"}
+                  </p>
+                  {totalEarnings > 0 && (
+                    <p className="mt-4 text-base text-white/90">
+                      Você já está monetizando seu talento 🎶
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <div className="grid gap-4">
+                <Card className="border border-amber-200/70 shadow-md bg-white/80">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-2xl">📅</div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        Este mês
+                      </h3>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">
+                      {formatCurrency(thisMonthEarnings)}
+                    </p>
+                    <p className="text-xs text-foreground/60">
+                      {thisMonthGigs.length}{" "}
+                      {thisMonthGigs.length === 1 ? "show" : "shows"}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border border-teal-200/70 shadow-md bg-white/80">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-2xl">🔮</div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        Vai receber
+                      </h3>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">
+                      {formatCurrency(futureEarnings)}
+                    </p>
+                    <p className="text-xs text-foreground/60">
+                      Próximas semanas
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="card-glass">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Recompensas desbloqueadas
+                  </h3>
+                  {badges.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {badges.map((badge) => (
+                        <span
+                          key={badge}
+                          className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700"
+                        >
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-foreground/60">
+                      Feche sua primeira gig para liberar conquistas.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="card-glass">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Missões rápidas da semana
+                  </h3>
+                  <div className="space-y-3 text-sm text-foreground/70">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">✅</span>
+                      <span>
+                        Aceite {thisMonthGigs.length >= 2 ? "mais" : "2"} gigs
+                        até o fim do mês
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">✅</span>
+                      <span>Responda convites em até 1 hora</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">✅</span>
+                      <span>Atualize seu perfil para ganhar destaque</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* BLOCO 3 — PRÓXIMOS SHOWS */}
             {futureGigs.length > 0 && (
@@ -516,18 +689,29 @@ export default function FinanceiroPage() {
               </Card>
             )}
 
-            {/* BLOCO 4 — CTA EDUCATIVO */}
+            {/* BLOCO 4 — CTA */}
             <Card className="card-glass">
               <CardContent className="p-6 text-center">
                 <p className="text-base text-foreground/70 mb-3">
-                  Quer entender quais shows rendem mais pra você?
+                  Quer mergulhar nos detalhes e estratégias financeiras?
                 </p>
-                <Button
-                  onClick={() => setViewMode("advanced")}
-                  className="btn-gradient"
-                >
-                  👉 Ative o modo avançado
-                </Button>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <Button
+                    onClick={() => setViewMode("advanced")}
+                    className="btn-gradient"
+                  >
+                    👉 Ative o modo Pro
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="bg-white/80 border-white/70"
+                    asChild
+                  >
+                    <Link href={"/dashboard/gigs" as any}>
+                      Buscar novas gigs
+                    </Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

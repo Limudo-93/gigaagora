@@ -15,6 +15,10 @@ type PublicMusician = {
   avg_rating?: number | null;
   rating_count?: number | null;
   is_trusted?: boolean | null;
+  max_radius_km?: number | null;
+  strengths_counts?: Record<string, any> | null;
+  attendance_rate?: number | null;
+  response_time_seconds_avg?: number | null;
   latitude?: number | null;
   longitude?: number | null;
   distance_km?: number | null;
@@ -51,7 +55,7 @@ export async function GET(request: NextRequest) {
     ? await supabase
         .from("musician_profiles")
         .select(
-          "user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted, latitude, longitude",
+          "user_id, bio, instruments, genres, skills, avg_rating, rating_count, is_trusted, max_radius_km, strengths_counts, attendance_rate, response_time_seconds_avg, latitude, longitude",
         )
         .in("user_id", ids)
     : { data: [] };
@@ -75,6 +79,11 @@ export async function GET(request: NextRequest) {
       avg_rating: musician?.avg_rating ?? null,
       rating_count: musician?.rating_count ?? null,
       is_trusted: musician?.is_trusted ?? null,
+      max_radius_km: (musician as any)?.max_radius_km ?? null,
+      strengths_counts: (musician as any)?.strengths_counts ?? null,
+      attendance_rate: (musician as any)?.attendance_rate ?? null,
+      response_time_seconds_avg:
+        (musician as any)?.response_time_seconds_avg ?? null,
       latitude: (musician as any)?.latitude ?? null,
       longitude: (musician as any)?.longitude ?? null,
       distance_km: null,

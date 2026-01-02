@@ -33,6 +33,7 @@ import {
   Heart,
   HeartOff,
   Flag,
+  Sparkles,
 } from "lucide-react";
 import {
   Dialog,
@@ -84,6 +85,31 @@ type AcceptedMusician = {
   basePrice?: number | null;
 };
 
+type MatchCandidate = {
+  user_id: string;
+  display_name: string | null;
+  photo_url: string | null;
+  city: string | null;
+  state: string | null;
+  instruments?: string[] | null;
+  genres?: string[] | null;
+  skills?: string[] | null;
+  avg_rating?: number | null;
+  rating_count?: number | null;
+  is_trusted?: boolean | null;
+  max_radius_km?: number | null;
+  strengths_counts?: Record<string, any> | null;
+  attendance_rate?: number | null;
+  response_time_seconds_avg?: number | null;
+  distance_km?: number | null;
+};
+
+type SuggestedMatch = MatchCandidate & {
+  score: number;
+  reasons: string[];
+  matched_instruments: string[];
+};
+
 // Função para obter iniciais (corrigido para TypeScript)
 function getInitials(name: string | null | undefined): string {
   if (!name) return "?";
@@ -129,6 +155,171 @@ export default function GigMatchesPage() {
   const [badges, setBadges] = useState<Record<string, any[]>>({});
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportingUserId, setReportingUserId] = useState<string | null>(null);
+  const [suggestedMusicians, setSuggestedMusicians] = useState<SuggestedMatch[]>(
+    [],
+  );
+  const [loadingSuggested, setLoadingSuggested] = useState(false);
+  const [invitingMusicianId, setInvitingMusicianId] = useState<string | null>(
+    null,
+  );
+  const [gigRoleMap, setGigRoleMap] = useState<Record<string, string>>({});
+  const [invitedStatusMap, setInvitedStatusMap] = useState<
+    Record<string, string>
+  >({});
+  const [selectedInstrumentMap, setSelectedInstrumentMap] = useState<
+    Record<string, string>
+  >({});
+
+  const getMusicianRadiusKm = (candidate: MatchCandidate): number => {
+    const metadata = candidate.strengths_counts || {};
+    if (metadata.searchRadius != null) {
+      const radius = Number(metadata.searchRadius);
+      if (!Number.isNaN(radius) && radius > 0) {
+        return radius;
+      }
+    }
+    if (candidate.max_radius_km != null) {
+      const radius = Number(candidate.max_radius_km);
+      if (!Number.isNaN(radius) && radius > 0) {
+        return radius;
+      }
+    }
+    return 50;
+  };
+
+  const scoreMatch = (
+    candidate: MatchCandidate,
+    gigInstruments: string[],
+    gigGenres: string[],
+    gigSkills: string[],
+  ): SuggestedMatch | null => {
+    const instruments = candidate.instruments || [];
+    const genres = candidate.genres || [];
+    const skills = candidate.skills || [];
+    const matchedInstruments = gigInstruments.filter((inst) =>
+      instruments.includes(inst),
+    );
+
+    if (matchedInstruments.length === 0) return null;
+    if (candidate.distance_km == null) return null;
+
+    const radiusKm = getMusicianRadiusKm(candidate);
+    if (candidate.distance_km > radiusKm) return null;
+
+    const instrumentScore =
+      gigInstruments.length > 0
+        ? (matchedInstruments.length / gigInstruments.length) * 40
+        : 0;
+    const genreMatches = gigGenres.filter((g) => genres.includes(g));
+    const genreScore =
+      gigGenres.length > 0 ? (genreMatches.length / gigGenres.length) * 20 : 0;
+    const skillMatches = gigSkills.filter((s) => skills.includes(s));
+    const skillScore =
+      gigSkills.length > 0 ? (skillMatches.length / gigSkills.length) * 10 : 0;
+    const distanceScore =
+      candidate.distance_km <= 5
+        ? 15
+        : candidate.distance_km <= 10
+          ? 12
+          : candidate.distance_km <= 20
+            ? 9
+            : candidate.distance_km <= 30
+              ? 6
+              : candidate.distance_km <= 50
+                ? 3
+                : 0;
+    const ratingScore = candidate.avg_rating
+      ? (Math.min(5, candidate.avg_rating) / 5) * 10
+      : 0;
+    const trustScore = candidate.is_trusted ? 5 : 0;
+
+    const score = Math.round(
+      instrumentScore +
+        genreScore +
+        skillScore +
+        distanceScore +
+        ratingScore +
+        trustScore,
+    );
+
+    const reasons: string[] = [];
+    if (matchedInstruments.length > 0) {
+      reasons.push(`Instrumentos: ${matchedInstruments.join(", ")}`);
+    }
+    if (genreMatches.length > 0) {
+      reasons.push(`Gêneros em comum: ${genreMatches.join(", ")}`);
+    }
+    if (candidate.distance_km != null) {
+      reasons.push(
+        `Distância: ${candidate.distance_km.toFixed(1)} km (raio ${radiusKm} km)`,
+      );
+    }
+    if (candidate.avg_rating) {
+      reasons.push(`Avaliação: ${candidate.avg_rating.toFixed(1)}`);
+    }
+    if (candidate.is_trusted) {
+      reasons.push("Perfil verificado");
+    }
+
+    return {
+      ...candidate,
+      score,
+      reasons,
+      matched_instruments: matchedInstruments,
+    };
+  };
+
+  const formatInviteStatus = (status?: string) => {
+    if (!status) return "Convite enviado";
+    switch (status) {
+      case "pending":
+        return "Convite enviado";
+      case "accepted":
+        return "Convite aceito";
+      case "declined":
+        return "Convite recusado";
+      case "canceled":
+        return "Convite cancelado";
+      default:
+        return `Convite: ${status}`;
+    }
+  };
+
+  const handleInviteSuggested = async (
+    musicianId: string,
+    instrument: string,
+  ) => {
+    if (!gigRoleMap[instrument]) {
+      setError("Não foi possível encontrar a vaga para este instrumento.");
+      return;
+    }
+    setInvitingMusicianId(musicianId);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/invites/manual-create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gigId,
+          musicianId,
+          gigRoleId: gigRoleMap[instrument],
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || "Erro ao convidar músico");
+      }
+      setInvitedStatusMap((prev) => ({
+        ...prev,
+        [musicianId]: result?.status || "pending",
+      }));
+    } catch (err: any) {
+      setError(err?.message || "Erro ao convidar músico");
+    } finally {
+      setInvitingMusicianId(null);
+    }
+  };
 
   const loadData = useCallback(async () => {
     if (!gigId) {
@@ -158,15 +349,95 @@ export default function GigMatchesPage() {
       let acceptedMusicians: AcceptedMusician[] = [];
       let confirmedMusiciansList: AcceptedMusician[] = [];
 
-      // Busca título da gig
+      // Busca dados da gig
       const { data: gigData, error: gigError } = await supabase
         .from("gigs")
-        .select("title")
+        .select("title, latitude, longitude, city, state, contractor_id")
         .eq("id", gigId)
         .single();
 
       if (gigError) throw gigError;
       if (gigData) setGigTitle(gigData.title);
+
+      const { data: gigRoles } = await supabase
+        .from("gig_roles")
+        .select("id, instrument, desired_genres, desired_skills")
+        .eq("gig_id", gigId);
+
+      const roleMap: Record<string, string> = {};
+      (gigRoles || []).forEach((role: any) => {
+        if (role.instrument && role.id) {
+          roleMap[role.instrument] = role.id;
+        }
+      });
+      setGigRoleMap(roleMap);
+
+      const gigInstruments = Array.from(
+        new Set((gigRoles || []).map((r: any) => r.instrument).filter(Boolean)),
+      );
+      const gigGenres = Array.from(
+        new Set(
+          (gigRoles || []).flatMap(
+            (r: any) => (r.desired_genres as string[]) || [],
+          ),
+        ),
+      );
+      const gigSkills = Array.from(
+        new Set(
+          (gigRoles || []).flatMap(
+            (r: any) => (r.desired_skills as string[]) || [],
+          ),
+        ),
+      );
+
+      const { data: existingInvites } = await supabase
+        .from("invites")
+        .select("musician_id, status")
+        .eq("gig_id", gigId);
+
+      const nextInvitedStatus: Record<string, string> = {};
+      (existingInvites || []).forEach((inv: any) => {
+        if (inv?.musician_id) {
+          nextInvitedStatus[inv.musician_id] = inv.status || "pending";
+        }
+      });
+      setInvitedStatusMap(nextInvitedStatus);
+
+      if (gigData?.latitude && gigData?.longitude) {
+        setLoadingSuggested(true);
+        try {
+          const response = await fetch(
+            `/api/musicos/nearby?lat=${gigData.latitude}&lng=${gigData.longitude}&limit=120`,
+          );
+          const payload = await response.json();
+          const items = (payload?.items || []) as MatchCandidate[];
+          const suggestions = items
+            .map((candidate) =>
+              scoreMatch(candidate, gigInstruments, gigGenres, gigSkills),
+            )
+            .filter(Boolean) as SuggestedMatch[];
+
+          suggestions.sort((a, b) => b.score - a.score);
+          const trimmed = suggestions.slice(0, 12);
+          setSuggestedMusicians(trimmed);
+          const nextSelectedInstrument: Record<string, string> = {};
+          trimmed.forEach((candidate) => {
+            if (candidate.matched_instruments[0]) {
+              nextSelectedInstrument[candidate.user_id] =
+                candidate.matched_instruments[0];
+            }
+          });
+          setSelectedInstrumentMap(nextSelectedInstrument);
+        } catch (err) {
+          console.error("Error loading match suggestions:", err);
+          setSuggestedMusicians([]);
+        } finally {
+          setLoadingSuggested(false);
+        }
+      } else {
+        setSuggestedMusicians([]);
+        setLoadingSuggested(false);
+      }
 
       // Busca músicos que aceitaram (mas não confirmados) usando RPC
       const { data: rpcData, error: rpcError } = await supabase.rpc(
@@ -886,6 +1157,169 @@ Se tiver alguma dúvida, use o campo de mensagens para entrar em contato. Estamo
             <p className="mt-1">{error}</p>
           </div>
         )}
+
+        {/* Sugestoes de Match */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-500" />
+            <h2 className="text-xl font-bold text-foreground">
+              Matchmaking recomendado
+            </h2>
+            <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+              Top matches
+            </Badge>
+          </div>
+          <Card className="border-amber-200 bg-amber-50/60 backdrop-blur-xl">
+            <CardContent className="p-6">
+              {loadingSuggested ? (
+                <div className="flex items-center gap-3 text-foreground/70">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Buscando os melhores músicos para esta gig...
+                </div>
+              ) : suggestedMusicians.length === 0 ? (
+                <div className="text-sm text-foreground/70">
+                  Nenhum match forte encontrado ainda. Tente ajustar o gênero,
+                  instrumentos ou o local da gig.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {suggestedMusicians.map((musician) => {
+                    const selectedInstrument =
+                      selectedInstrumentMap[musician.user_id] ||
+                      musician.matched_instruments[0] ||
+                      "";
+                    const inviteStatus = invitedStatusMap[musician.user_id];
+                    return (
+                      <Card
+                        key={musician.user_id}
+                        className="border-amber-200 bg-white/80 shadow-lg"
+                      >
+                        <CardContent className="p-5 space-y-4">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="h-14 w-14 ring-2 ring-amber-300">
+                              <AvatarImage src={musician.photo_url || ""} />
+                              <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white font-semibold">
+                                {getInitials(musician.display_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-base font-semibold text-foreground truncate">
+                                  {musician.display_name || "Músico"}
+                                </h3>
+                                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                                  {musician.score}%
+                                </Badge>
+                              </div>
+                              <div className="mt-1 flex items-center gap-2 text-xs text-foreground/60">
+                                <MapPin className="h-3 w-3" />
+                                {musician.distance_km != null
+                                  ? `${musician.distance_km.toFixed(1)} km`
+                                  : "Distância não informada"}
+                              </div>
+                              {musician.avg_rating && (
+                                <div className="mt-1 flex items-center gap-1 text-xs text-foreground/70">
+                                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                  {musician.avg_rating.toFixed(1)}
+                                  {musician.rating_count ? (
+                                    <span className="text-foreground/50">
+                                      ({musician.rating_count})
+                                    </span>
+                                  ) : null}
+                                </div>
+                              )}
+                              {inviteStatus && (
+                                <Badge className="mt-2 bg-amber-100 text-amber-700 border-amber-200">
+                                  {formatInviteStatus(inviteStatus)}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          {musician.matched_instruments.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {musician.matched_instruments.map((inst) => (
+                                <Badge
+                                  key={inst}
+                                  variant="secondary"
+                                  className="text-[10px] bg-amber-100 text-amber-700 border-amber-200"
+                                >
+                                  {inst}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+
+                          <ul className="space-y-1 text-xs text-foreground/70">
+                            {musician.reasons.slice(0, 3).map((reason) => (
+                              <li key={reason}>• {reason}</li>
+                            ))}
+                          </ul>
+
+                          {musician.matched_instruments.length > 1 && (
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-foreground/70">
+                                Instrumento
+                              </label>
+                              <select
+                                className="w-full rounded-md border border-amber-200 bg-white/80 px-3 py-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+                                value={selectedInstrument}
+                                onChange={(event) =>
+                                  setSelectedInstrumentMap((prev) => ({
+                                    ...prev,
+                                    [musician.user_id]: event.target.value,
+                                  }))
+                                }
+                              >
+                                {musician.matched_instruments.map((inst) => (
+                                  <option key={inst} value={inst}>
+                                    {inst}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            className="w-full bg-white/80 border-amber-200 hover:bg-amber-50"
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/musicos/${musician.user_id}` as any,
+                              )
+                            }
+                          >
+                            Ver perfil
+                          </Button>
+                          <Button
+                            className="w-full btn-gradient"
+                            disabled={
+                              invitingMusicianId === musician.user_id ||
+                              !selectedInstrument ||
+                              Boolean(inviteStatus)
+                            }
+                            onClick={() =>
+                              handleInviteSuggested(
+                                musician.user_id,
+                                selectedInstrument,
+                              )
+                            }
+                          >
+                            {invitingMusicianId === musician.user_id
+                              ? "Convidando..."
+                              : inviteStatus
+                                ? formatInviteStatus(inviteStatus)
+                                : "Convidar agora"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Seção de Músicos Confirmados */}
         {confirmedMusicians.length > 0 && (

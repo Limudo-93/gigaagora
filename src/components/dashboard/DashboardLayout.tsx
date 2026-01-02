@@ -13,11 +13,13 @@ export default function DashboardLayout({
   sidebar,
   fullWidth = false,
   hideFooterOnMobile = false,
+  snapScroll = false,
 }: {
   children: React.ReactNode;
   sidebar?: React.ReactNode;
   fullWidth?: boolean;
   hideFooterOnMobile?: boolean;
+  snapScroll?: boolean;
 }) {
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -30,6 +32,17 @@ export default function DashboardLayout({
     };
     getUser();
   }, []);
+
+  useEffect(() => {
+    if (!snapScroll) return;
+    const classes = ["snap-y", "snap-mandatory", "scroll-smooth"];
+    document.body.classList.add(...classes);
+    document.documentElement.classList.add(...classes);
+    return () => {
+      document.body.classList.remove(...classes);
+      document.documentElement.classList.remove(...classes);
+    };
+  }, [snapScroll]);
 
   return (
     <div className="min-h-screen flex flex-col relative">

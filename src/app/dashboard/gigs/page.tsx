@@ -1069,6 +1069,41 @@ export default function GigsPage() {
           )}
         </div>
 
+        <Card className="border border-amber-200/60 bg-amber-50/60 shadow-sm">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-600" />
+              <h2 className="text-lg font-semibold text-foreground">
+                Como o Match funciona
+              </h2>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  Para músicos
+                </p>
+                <ul className="space-y-2 text-sm text-foreground/70">
+                  <li>• Instrumentos compatíveis com as vagas da gig.</li>
+                  <li>• Raio de busca respeita sua distância configurada.</li>
+                  <li>• Gêneros e habilidades em comum aumentam a prioridade.</li>
+                  <li>• Avaliações e respostas rápidas impulsionam o ranking.</li>
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  Para contratantes
+                </p>
+                <ul className="space-y-2 text-sm text-foreground/70">
+                  <li>• Priorizamos quem casa com a vaga e o estilo.</li>
+                  <li>• Distância e raio do músico são considerados.</li>
+                  <li>• Avaliações, confiabilidade e perfil completo pesam.</li>
+                  <li>• Você vê um ranking claro dos melhores matches.</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Filtros e Busca */}
         <Card className="card-glass">
           <CardContent className="p-4 md:p-6">

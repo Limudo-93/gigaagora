@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   ArrowRight,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +28,7 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
   const router = useRouter();
   const [action, setAction] = useState<PriorityAction>(null);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const determinePriorityAction = async () => {
@@ -196,23 +199,39 @@ export default function PriorityActionBlock({ userId }: { userId: string }) {
                 <h3 className="text-lg md:text-xl font-bold text-foreground mb-2">
                   {config.title}
                 </h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCollapsed((prev) => !prev)}
+                aria-label={collapsed ? "Expandir card" : "Ocultar card"}
+              >
+                {collapsed ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+
+            {!collapsed && (
+              <>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                   {config.description}
                 </p>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <Button
-              asChild
-              className={`bg-gradient-to-r ${config.color} hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all`}
-              size="lg"
-            >
-              <Link href={config.href as any}>
-                {config.cta}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+                <Button
+                  asChild
+                  className={`bg-gradient-to-r ${config.color} hover:opacity-90 text-white font-semibold shadow-md hover:shadow-lg transition-all`}
+                  size="lg"
+                >
+                  <Link href={config.href as any}>
+                    {config.cta}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </CardContent>

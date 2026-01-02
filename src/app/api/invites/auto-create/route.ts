@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { haversineKm } from "@/lib/geo";
 
 export const runtime = "nodejs";
 
@@ -24,9 +25,34 @@ type GigRoleRow = {
   instrument: string | null;
 };
 
+type CandidateRow = {
+  user_id: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  max_radius_km: number | null;
+  strengths_counts: Record<string, any> | null;
+};
+
 function isMissingTableError(error: { message?: string } | null) {
   const message = error?.message || "";
   return message.includes("does not exist");
+}
+
+function getMusicianRadiusKm(candidate: CandidateRow): number {
+  const metadata = candidate.strengths_counts || {};
+  if (metadata.searchRadius != null) {
+    const radius = Number(metadata.searchRadius);
+    if (!Number.isNaN(radius) && radius > 0) {
+      return radius;
+    }
+  }
+  if (candidate.max_radius_km != null) {
+    const radius = Number(candidate.max_radius_km);
+    if (!Number.isNaN(radius) && radius > 0) {
+      return radius;
+    }
+  }
+  return 50;
 }
 
 export async function POST(request: NextRequest) {
@@ -56,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     const { data: gig, error: gigError } = await supabaseAdmin
       .from("gigs")
-      .select("id, contractor_id, status, start_time")
+      .select("id, contractor_id, status, start_time, latitude, longitude")
       .eq("id", gigId)
       .single();
 
@@ -102,7 +128,9 @@ export async function POST(request: NextRequest) {
 
       const { data: candidates, error: candidateError } = await supabaseAdmin
         .from("musician_profiles")
-        .select("user_id, profiles!inner(user_type)")
+        .select(
+          "user_id, latitude, longitude, max_radius_km, strengths_counts, profiles!inner(user_type)",
+        )
         .contains("instruments", [role.instrument])
         .eq("profiles.user_type", "musician")
         .neq("user_id", gig.contractor_id);
@@ -112,9 +140,33 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      let candidateIds = (candidates || [])
-        .map((row: any) => row.user_id)
-        .filter(Boolean);
+      const gigLat = gig.latitude as number | null | undefined;
+      const gigLng = gig.longitude as number | null | undefined;
+      const candidateRows = (candidates || []) as CandidateRow[];
+
+      let candidateIds = candidateRows
+        .filter((row) => {
+          if (!row.user_id) return false;
+          if (gigLat == null || gigLng == null) {
+            console.warn(
+              "[auto-create invites] gig sem coordenadas, pulando filtro de raio",
+            );
+            return true;
+          }
+          if (row.latitude == null || row.longitude == null) {
+            return false;
+          }
+          const radiusKm = getMusicianRadiusKm(row);
+          const distanceKm = haversineKm(
+            gigLat,
+            gigLng,
+            row.latitude,
+            row.longitude,
+          );
+          return distanceKm <= radiusKm;
+        })
+        .map((row) => row.user_id)
+        .filter(Boolean) as string[];
 
       if (candidateIds.length === 0) continue;
 

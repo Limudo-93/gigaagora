@@ -59,6 +59,10 @@ export default function EditGigPage() {
 
   // Lista de instrumentos
   const instrumentos = INSTRUMENT_OPTIONS;
+  const [expandedInstrumentRoles, setExpandedInstrumentRoles] = useState<
+    Record<string, boolean>
+  >({});
+  const [gigGenres, setGigGenres] = useState<string[]>(["Pagode"]);
 
   // Roles (vagas)
   const [roles, setRoles] = useState<GigRole[]>([]);
@@ -83,6 +87,80 @@ export default function EditGigPage() {
     if (!value) return "";
     const parsed = Number.parseFloat(value.replace(",", "."));
     return Number.isNaN(parsed) ? "" : parsed;
+  };
+
+  // Gêneros musicais
+  const generos = [
+    "Pagode",
+    "Sertanejo",
+    "MPB",
+    "Rock",
+    "Pop",
+    "Funk",
+    "Forró",
+    "Axé",
+    "Samba",
+    "Bossa Nova",
+    "Jazz",
+    "Blues",
+    "Eletrônica",
+    "Reggae",
+    "Hip Hop",
+    "Outro",
+  ];
+
+  const popularByGenre: Record<string, string[]> = {
+    Pagode: [
+      "Vocal",
+      "Violão",
+      "Cavaquinho",
+      "Pandeiro",
+      "Surdo",
+      "Tamborim",
+      "Tantã",
+      "Tantanzinho/Rebolo",
+      "Percussão",
+      "Banjo",
+      "Repique de mão",
+      "Cuíca",
+    ],
+    Sertanejo: [
+      "Vocal",
+      "Violão",
+      "Viola",
+      "Viola Caipira",
+      "Acordeon",
+      "Teclado",
+      "Baixo",
+      "Bateria",
+    ],
+    MPB: ["Vocal", "Violão", "Guitarra", "Baixo", "Bateria", "Teclado"],
+    Rock: ["Vocal", "Guitarra", "Baixo", "Bateria", "Teclado"],
+    Pop: ["Vocal", "Guitarra", "Baixo", "Bateria", "Teclado"],
+    Funk: ["Vocal", "Percussão", "DJ", "Teclado", "Baixo"],
+    Forró: ["Vocal", "Sanfona", "Percussão", "Pandeiro"],
+    Samba: [
+      "Vocal",
+      "Violão",
+      "Cavaquinho",
+      "Surdo",
+      "Tamborim",
+      "Pandeiro",
+      "Cuíca",
+      "Tantã",
+      "Tantanzinho/Rebolo",
+    ],
+    Jazz: ["Saxofone", "Trompete", "Trombone", "Piano", "Contrabaixo"],
+  };
+
+  const getPopularInstruments = (genresSelected: string[]) => {
+    const fromGenres = genresSelected.flatMap(
+      (genre) => popularByGenre[genre] || [],
+    );
+    const unique = Array.from(new Set(fromGenres));
+    const filtered = unique.filter((inst) => instrumentos.includes(inst));
+    if (filtered.length > 0) return filtered;
+    return instrumentos.slice(0, 12);
   };
 
   // Função para converter minutos em HH:MM
@@ -183,7 +261,20 @@ export default function EditGigPage() {
           cache: r.cache && typeof r.cache === "number" ? r.cache : "",
         }));
 
-        setRoles(rolesMapped);
+        const genresFromRoles = Array.from(
+          new Set(
+            rolesMapped.flatMap((role) => role.desired_genres || []),
+          ),
+        );
+        const initialGenres =
+          genresFromRoles.length > 0 ? genresFromRoles : ["Pagode"];
+        setGigGenres(initialGenres);
+        setRoles(
+          rolesMapped.map((role) => ({
+            ...role,
+            desired_genres: initialGenres,
+          })),
+        );
         setCacheInputs(
           rolesMapped.reduce<Record<string, string>>((acc, role) => {
             acc[role.id] =
@@ -314,7 +405,7 @@ export default function EditGigPage() {
         id: newRoleId,
         instrument: "",
         quantity: 1,
-        desired_genres: [],
+        desired_genres: gigGenres,
         desired_skills: [],
         desired_setup: [],
         notes: "",
@@ -331,10 +422,17 @@ export default function EditGigPage() {
       delete next[id];
       return next;
     });
+    setExpandedInstrumentRoles((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const updateRole = (id: string, field: keyof GigRole, value: any) => {
-    setRoles(roles.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    setRoles((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+    );
   };
 
   const setCacheForRole = (id: string, value: number | "") => {
@@ -541,8 +639,7 @@ export default function EditGigPage() {
           gig_id: gigId,
           instrument: role.instrument.trim(),
           quantity: role.quantity,
-          desired_genres:
-            role.desired_genres.length > 0 ? role.desired_genres : [],
+          desired_genres: gigGenres.length > 0 ? gigGenres : [],
           desired_skills:
             role.desired_skills.length > 0 ? role.desired_skills : [],
           desired_setup:
@@ -987,6 +1084,80 @@ export default function EditGigPage() {
             </CardContent>
           </Card>
 
+          {/* Estilo Musical */}
+          <Card className="bg-white border-white/70">
+            <CardHeader>
+              <CardTitle className="text-foreground">Estilo Musical</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <label className="text-sm font-medium text-foreground">
+                Gênero Musical
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {generos.map((genero) => {
+                  const isSelected = gigGenres.includes(genero);
+                  return (
+                    <button
+                      key={genero}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const nextGenres = isSelected
+                          ? gigGenres.filter((g) => g !== genero)
+                          : [...gigGenres, genero];
+                        setGigGenres(nextGenres);
+                        setRoles((prev) =>
+                          prev.map((r) => ({
+                            ...r,
+                            desired_genres: nextGenres,
+                          })),
+                        );
+                        const hadPagode = gigGenres.includes("Pagode");
+                        const hasPagode = nextGenres.includes("Pagode");
+                        if (!hadPagode && hasPagode) {
+                          if (!numEntradas || numEntradas === 1) {
+                            setNumEntradas(2);
+                            setDuracaoEntrada("1:15");
+                            setIntervaloMinutos(30);
+                          }
+                          const defaultSetup = [
+                            "Instrumento próprio",
+                            "Afinador",
+                            "Cabo próprio",
+                          ];
+                          setRoles((prev) =>
+                            prev.map((r) => {
+                              const currentSetup = r.desired_setup || [];
+                              const missing = defaultSetup.filter(
+                                (item) => !currentSetup.includes(item),
+                              );
+                              if (missing.length === 0) return r;
+                              return {
+                                ...r,
+                                desired_setup: [...currentSetup, ...missing],
+                              };
+                            }),
+                          );
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        isSelected
+                          ? "bg-[#ff6b4a] text-white shadow-sm"
+                          : "bg-white text-foreground border border-white/70 hover:border-[#ff6b4a] hover:bg-amber-50"
+                      }`}
+                    >
+                      {genero}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-foreground/70">
+                Esse estilo será aplicado em todas as vagas da gig.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Vagas (Roles) */}
           <Card className="bg-white border-white/70">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1037,7 +1208,10 @@ export default function EditGigPage() {
                           Instrumento <span className="text-red-500">*</span>
                         </label>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {instrumentos.map((inst) => {
+                          {(expandedInstrumentRoles[role.id]
+                            ? instrumentos
+                            : getPopularInstruments(gigGenres)
+                          ).map((inst) => {
                             const isSelected = role.instrument === inst;
                             return (
                               <button
@@ -1063,6 +1237,22 @@ export default function EditGigPage() {
                               </button>
                             );
                           })}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setExpandedInstrumentRoles((prev) => ({
+                                ...prev,
+                                [role.id]: !prev[role.id],
+                              }));
+                            }}
+                            className="px-3 py-2 rounded-lg text-xs font-semibold border border-dashed border-white/70 text-foreground/70 hover:border-[#ff6b4a] hover:text-[#ff6b4a] transition-all"
+                          >
+                            {expandedInstrumentRoles[role.id]
+                              ? "Ver Menos"
+                              : "Ver Mais"}
+                          </button>
                         </div>
                       </div>
 

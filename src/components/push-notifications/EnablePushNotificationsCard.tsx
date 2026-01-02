@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import {
+  Bell,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +34,7 @@ export default function EnablePushNotificationsCard({
   const [isSupported, setIsSupported] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isStandalone, setIsStandalone] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const supported = "serviceWorker" in navigator && "PushManager" in window;
@@ -122,54 +130,71 @@ export default function EnablePushNotificationsCard({
   return (
     <Card className="border-amber-200 bg-amber-50/60">
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Bell className="h-5 w-5 text-[#ff6b4a]" />
-          Ative as notificações
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-gray-700">
-          Receba alertas de convites, mensagens e atualizações importantes em
-          tempo real.
-        </p>
-
-        {showPwaHint && (
-          <div className="text-xs text-amber-900 bg-white/80 border border-amber-200 rounded-lg p-3">
-            No iOS, instale o app na Tela de Início para receber notificações.
-          </div>
-        )}
-
-        {status === "idle" && (
+        <div className="flex items-center justify-between gap-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Bell className="h-5 w-5 text-[#ff6b4a]" />
+            Ative as notificações
+          </CardTitle>
           <Button
-            onClick={handleEnable}
-            className="w-full btn-gradient text-white"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setCollapsed((prev) => !prev)}
+            aria-label={collapsed ? "Expandir card" : "Ocultar card"}
           >
-            <Bell className="mr-2 h-4 w-4" />
-            Ativar notificações
+            {collapsed ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronUp className="h-4 w-4" />
+            )}
           </Button>
-        )}
+        </div>
+      </CardHeader>
+      {!collapsed && (
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-700">
+            Receba alertas de convites, mensagens e atualizações importantes em
+            tempo real.
+          </p>
 
-        {status === "registering" && (
-          <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-amber-200">
-            <Loader2 className="h-5 w-5 animate-spin text-[#ff6b4a]" />
-            <p className="text-sm text-gray-700">{message}</p>
-          </div>
-        )}
+          {showPwaHint && (
+            <div className="text-xs text-amber-900 bg-white/80 border border-amber-200 rounded-lg p-3">
+              No iOS, instale o app na Tela de Início para receber notificações.
+            </div>
+          )}
 
-        {status === "success" && (
-          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <p className="text-sm text-green-900">{message}</p>
-          </div>
-        )}
+          {status === "idle" && (
+            <Button
+              onClick={handleEnable}
+              className="w-full btn-gradient text-white"
+            >
+              <Bell className="mr-2 h-4 w-4" />
+              Ativar notificações
+            </Button>
+          )}
 
-        {status === "error" && (
-          <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
-            <AlertCircle className="h-5 w-5 text-red-600" />
-            <p className="text-sm text-red-900">{message}</p>
-          </div>
-        )}
-      </CardContent>
+          {status === "registering" && (
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-amber-200">
+              <Loader2 className="h-5 w-5 animate-spin text-[#ff6b4a]" />
+              <p className="text-sm text-gray-700">{message}</p>
+            </div>
+          )}
+
+          {status === "success" && (
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <p className="text-sm text-green-900">{message}</p>
+            </div>
+          )}
+
+          {status === "error" && (
+            <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg border border-red-200">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <p className="text-sm text-red-900">{message}</p>
+            </div>
+          )}
+        </CardContent>
+      )}
     </Card>
   );
 }

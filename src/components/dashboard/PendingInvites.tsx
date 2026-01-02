@@ -590,8 +590,9 @@ export default function PendingInvites({ userId }: { userId: string }) {
             </p>
           </CardContent>
         ) : (
-          <div className="space-y-2 md:space-y-3">
-            {items.slice(0, 3).map((r) => {
+          <div className="space-y-3">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-3 -mx-2 px-2">
+              {items.map((r) => {
               const when = formatDateTimeBR(r.start_time);
               const location = buildLocationText(r);
 
@@ -623,11 +624,11 @@ export default function PendingInvites({ userId }: { userId: string }) {
               return (
                 <Card
                   key={r.invite_id}
-                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[85%] md:min-w-[420px] lg:min-w-[460px] snap-start"
                 >
                   <CardContent className="p-0">
                     {/* Flyer do evento ou logo padrão */}
-                    <div className="w-full h-48 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
+                    <div className="w-full h-36 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
                       {r.flyer_url ? (
                         <img
                           src={r.flyer_url}
@@ -648,7 +649,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
                       )}
                     </div>
 
-                    <div className="p-5 space-y-4">
+                    <div className="p-4 space-y-3">
                       {/* Cachê em Destaque - Primeiro elemento visual */}
                       {r.cache && (
                         <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-4 text-white shadow-md">
@@ -1032,8 +1033,9 @@ export default function PendingInvites({ userId }: { userId: string }) {
                 </Card>
               );
             })}
-            {items.length > 3 && (
-              <CardContent className="text-center pt-4">
+            </div>
+            {items.length > 5 && (
+              <CardContent className="text-center pt-2">
                 <Button
                   variant="outline"
                   onClick={() => router.push("/dashboard/gigs")}

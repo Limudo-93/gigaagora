@@ -26,6 +26,7 @@ export const INSTRUMENT_OPTIONS = [
   "Surdo",
   "Tamborim",
   "Tantã",
+  "Tantanzinho/Rebolo",
   "Teclado",
   "Técnico de som",
   "Trombone",

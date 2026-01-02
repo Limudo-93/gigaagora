@@ -55,7 +55,7 @@ export default function ThemedBackground() {
 
   // Mapear cores do tema para classes Tailwind
   const bgGradients: Record<ThemeName, string> = {
-    default: "from-[#fff1e7] via-white to-[#e9f7f5]",
+    default: "from-[#fff6ee] via-[#f8fbff] to-[#eef9f7]",
     ocean: "from-blue-50 via-cyan-50 to-teal-50",
     sunset: "from-orange-50 via-pink-50 to-rose-50",
     forest: "from-green-50 via-emerald-50 to-amber-50",
@@ -120,32 +120,56 @@ export default function ThemedBackground() {
         }}
       />
 
-      {/* Padrão de notas musicais flutuantes */}
+      {/* Pauta de partitura */}
       <div
-        className="fixed inset-0 opacity-[0.06] -z-10 music-notes-pattern"
+        className="fixed inset-0 -z-10 opacity-[0.18]"
         style={{
           backgroundImage: `
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Ctext x='10' y='50' font-size='50' fill='%23ff6b4a'%3E♪%3C/text%3E%3C/svg%3E"),
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ctext x='20' y='60' font-size='40' fill='%232aa6a1'%3E♫%3C/text%3E%3C/svg%3E"),
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Ctext x='15' y='80' font-size='55' fill='%23ffb347'%3E♬%3C/text%3E%3C/svg%3E")
-        `,
-          backgroundSize: "180px 180px, 150px 150px, 200px 200px",
-          backgroundPosition: "0 0, 80px 80px, 160px 160px",
+            repeating-linear-gradient(
+              to bottom,
+              rgba(0,0,0,0.05) 0px,
+              rgba(0,0,0,0.05) 1px,
+              transparent 1px,
+              transparent 26px
+            )
+          `,
+          backgroundSize: "100% 26px",
         }}
       />
 
-      {/* Padrão de ondas sonoras */}
-      <div
-        className="fixed inset-0 opacity-[0.04] -z-10"
-        style={{
-          backgroundImage: `
-          url("data:image/svg+xml,%3Csvg width='200' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q25 30, 50 50 T100 50 T150 50 T200 50' stroke='%23ff6b4a' fill='none' stroke-width='2'/%3E%3Cpath d='M0 50 Q25 70, 50 50 T100 50 T150 50 T200 50' stroke='%232aa6a1' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"),
-          url("data:image/svg+xml,%3Csvg width='150' height='80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 Q20 20, 40 40 T80 40 T120 40 T150 40' stroke='%23ffb347' fill='none' stroke-width='1.5'/%3E%3C/svg%3E")
-        `,
-          backgroundSize: "300px 150px, 250px 120px",
-          backgroundPosition: "50px 100px, 200px 300px",
-        }}
-      />
+      {/* Notas flutuantes */}
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        <div
+          className="absolute left-[8%] top-[12%] text-[#ff6b4a]/25 text-3xl music-notes-pattern"
+          style={{ animationDuration: "18s" }}
+        >
+          ♪
+        </div>
+        <div
+          className="absolute left-[70%] top-[18%] text-[#2aa6a1]/25 text-4xl music-notes-pattern"
+          style={{ animationDuration: "22s", animationDelay: "2s" }}
+        >
+          ♫
+        </div>
+        <div
+          className="absolute left-[22%] top-[48%] text-[#ffb347]/25 text-4xl music-notes-pattern"
+          style={{ animationDuration: "20s", animationDelay: "1s" }}
+        >
+          ♬
+        </div>
+        <div
+          className="absolute left-[78%] top-[58%] text-[#ff6b4a]/20 text-3xl music-notes-pattern"
+          style={{ animationDuration: "24s", animationDelay: "3s" }}
+        >
+          ♪
+        </div>
+        <div
+          className="absolute left-[42%] top-[75%] text-[#2aa6a1]/20 text-4xl music-notes-pattern"
+          style={{ animationDuration: "26s", animationDelay: "4s" }}
+        >
+          ♫
+        </div>
+      </div>
 
       {/* Elementos musicais decorativos adicionais */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
