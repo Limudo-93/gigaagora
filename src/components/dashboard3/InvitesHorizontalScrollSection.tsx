@@ -390,7 +390,16 @@ export default function InvitesHorizontalScrollSection({
         <InviteDetailsDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          inviteId={selectedInvite.invite_id}
+          invite={selectedInvite as any}
+          onAccept={() => {
+            acceptInvite(selectedInvite.invite_id);
+            setDialogOpen(false);
+          }}
+          onDecline={() => {
+            setDialogOpen(false);
+            setPendingDeclineInviteId(selectedInvite.invite_id);
+            setShowDeclineReasonDialog(true);
+          }}
         />
       )}
 
