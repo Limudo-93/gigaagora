@@ -406,9 +406,9 @@ export default function InvitesHorizontalScrollSection({
       <DeclineReasonDialog
         open={showDeclineReasonDialog}
         onOpenChange={setShowDeclineReasonDialog}
-        onDecline={(reason) => {
+        onConfirm={async (reason) => {
           if (pendingDeclineInviteId) {
-            declineInvite(pendingDeclineInviteId, reason);
+            await declineInvite(pendingDeclineInviteId, reason);
           }
         }}
       />
