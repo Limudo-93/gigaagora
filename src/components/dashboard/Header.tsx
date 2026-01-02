@@ -12,6 +12,7 @@ export default function Header() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [hidden, setHidden] = useState(false);
 
   // Links de navegação (corrigidos para typedRoutes)
   const navLinks = [
@@ -103,9 +104,27 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    let lastScrollY = 0;
+    const handleScroll = () => {
+      if (window.innerWidth >= 768 || isMenuOpen) {
+        setHidden(false);
+        return;
+      }
+      const current = window.scrollY;
+      const isDown = current > lastScrollY && current > 80;
+      setHidden(isDown);
+      lastScrollY = current;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isMenuOpen]);
+
   return (
     <>
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border shadow-sm">
+      <header
+        className={`sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border shadow-sm transition-transform duration-300 ${hidden ? "-translate-y-full md:translate-y-0" : "translate-y-0"}`}
+      >
         <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-2.5 md:py-4">
           <div className="flex items-center justify-between">
             <Link

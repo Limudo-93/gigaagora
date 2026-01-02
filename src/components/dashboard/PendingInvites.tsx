@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase/client";
@@ -17,6 +17,8 @@ import {
 import {
   Calendar,
   Clock,
+  ChevronLeft,
+  ChevronRight,
   DollarSign,
   Check,
   X,
@@ -110,6 +112,9 @@ export default function PendingInvites({ userId }: { userId: string }) {
   const [pendingDeclineInviteId, setPendingDeclineInviteId] = useState<
     string | null
   >(null);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const count = useMemo(() => items.length, [items]);
 
@@ -554,6 +559,29 @@ export default function PendingInvites({ userId }: { userId: string }) {
     [],
   );
 
+  const updateScrollButtons = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  const handleScrollLeft = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: -el.clientWidth * 0.9, behavior: "smooth" });
+  };
+
+  const handleScrollRight = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    el.scrollBy({ left: el.clientWidth * 0.9, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+  }, [items, updateScrollButtons]);
+
   return (
     <section className="mt-4 md:mt-6">
       <div className="flex items-center justify-between mb-3 md:mb-4">
@@ -591,8 +619,37 @@ export default function PendingInvites({ userId }: { userId: string }) {
           </CardContent>
         ) : (
           <div className="space-y-3">
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-3 -mx-2 px-2">
-              {items.map((r) => {
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleScrollLeft}
+                disabled={!canScrollLeft}
+                className={`absolute -left-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border border-white/70 bg-white/90 shadow-md transition-opacity ${
+                  canScrollLeft ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                aria-label="Convite anterior"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <button
+                type="button"
+                onClick={handleScrollRight}
+                disabled={!canScrollRight}
+                className={`absolute -right-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full border border-white/70 bg-white/90 shadow-md transition-opacity ${
+                  canScrollRight
+                    ? "opacity-100"
+                    : "opacity-0 pointer-events-none"
+                }`}
+                aria-label="Próximo convite"
+              >
+                <ChevronRight className="h-5 w-5 text-foreground" />
+              </button>
+              <div
+                ref={carouselRef}
+                onScroll={updateScrollButtons}
+                className="flex gap-4 overflow-x-auto overflow-y-visible snap-x snap-mandatory pb-3 -mx-2 px-2 scrollbar-theme"
+              >
+                {items.map((r) => {
               const when = formatDateTimeBR(r.start_time);
               const location = buildLocationText(r);
 
@@ -624,11 +681,11 @@ export default function PendingInvites({ userId }: { userId: string }) {
               return (
                 <Card
                   key={r.invite_id}
-                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[85%] md:min-w-[420px] lg:min-w-[460px] snap-start"
+                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[92%] sm:min-w-[86%] md:min-w-[420px] lg:min-w-[460px] snap-start flex flex-col min-h-[78vh] md:min-h-0"
                 >
-                  <CardContent className="p-0">
+                  <CardContent className="p-0 flex flex-col flex-1">
                     {/* Flyer do evento ou logo padrão */}
-                    <div className="w-full h-36 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
+                    <div className="w-full h-40 overflow-hidden rounded-t-lg bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center relative">
                       {r.flyer_url ? (
                         <img
                           src={r.flyer_url}
@@ -649,7 +706,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
                       )}
                     </div>
 
-                    <div className="p-4 space-y-3">
+                    <div className="p-4 space-y-3 flex flex-col h-full">
                       {/* Cachê em Destaque - Primeiro elemento visual */}
                       {r.cache && (
                         <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg p-4 text-white shadow-md">
@@ -909,7 +966,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
                       </div>
 
                       {/* Botões de ação */}
-                      <div className="flex flex-col gap-2.5 pt-4 border-t-2 border-border/30">
+                      <div className="flex flex-col gap-2.5 pt-4 border-t-2 border-border/30 mt-auto">
                         {/* Botão Ver Detalhes - sempre visível */}
                         <Button
                           variant="outline"
@@ -1032,7 +1089,8 @@ export default function PendingInvites({ userId }: { userId: string }) {
                   </CardContent>
                 </Card>
               );
-            })}
+                })}
+              </div>
             </div>
             {items.length > 5 && (
               <CardContent className="text-center pt-2">
