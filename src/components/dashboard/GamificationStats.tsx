@@ -145,7 +145,7 @@ export default function GamificationStats({ userId }: { userId: string }) {
         {stats.map((stat, index) => (
           <Link
             key={index}
-            href={stat.href}
+            href={stat.href as any}
             className="block group"
           >
             <Card className="border-2 hover:border-primary/50 transition-all hover:shadow-lg h-full bg-card/80 backdrop-blur-sm">
@@ -192,7 +192,7 @@ export default function GamificationStats({ userId }: { userId: string }) {
                 </div>
               </div>
               <Link
-                href="/dashboard/desafios"
+                href={"/dashboard/desafios" as any}
                 className="text-xs font-medium text-primary hover:underline"
               >
                 Ver detalhes
@@ -211,7 +211,7 @@ export default function GamificationStats({ userId }: { userId: string }) {
       {/* Ação rápida - mobile friendly */}
       {pendingInvites > 0 && (
         <div className="md:hidden">
-          <Link href="/dashboard/gigs">
+          <Link href={"/dashboard/gigs" as any}>
             <Card className="border-2 border-orange-200 bg-orange-50/80 backdrop-blur-sm hover:border-orange-300 transition-all">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
