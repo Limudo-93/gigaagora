@@ -5,6 +5,7 @@ import QuickActionsSection from "@/components/dashboard3/QuickActionsSection";
 import ProgressSection from "@/components/dashboard3/ProgressSection";
 import PendingItemsSection from "@/components/dashboard3/PendingItemsSection";
 import UpcomingGigsSection from "@/components/dashboard3/UpcomingGigsSection";
+import InvitesHorizontalScrollSection from "@/components/dashboard3/InvitesHorizontalScrollSection";
 import Dashboard3Layout from "@/components/dashboard3/Dashboard3Layout";
 
 export default async function Dashboard3Page() {
@@ -19,6 +20,7 @@ export default async function Dashboard3Page() {
     <Dashboard3Layout>
       <HeroSection userId={user.id} />
       <QuickActionsSection />
+      <InvitesHorizontalScrollSection userId={user.id} />
       <PendingItemsSection userId={user.id} />
       <UpcomingGigsSection userId={user.id} />
       <ProgressSection userId={user.id} />

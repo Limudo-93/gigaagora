@@ -3,9 +3,11 @@ import Link from "next/link";
 import {
   Bell,
   Calendar,
-  CheckCircle2,
+  Crown,
   Flame,
+  LineChart,
   Plus,
+  Rocket,
   Sparkles,
   Star,
   Trophy,
@@ -79,30 +81,28 @@ export default async function Dashboard2Page() {
   const upcomingConfirmed = upcomingConfirmedResult.count ?? 0;
   const confirmedCount = confirmedResult.count ?? 0;
 
-  const xp = confirmedCount * 120;
-  const levelSize = 1000;
+  const xp = confirmedCount * 150 + pendingInvites * 20;
+  const levelSize = 1200;
   const level = Math.max(1, Math.floor(xp / levelSize) + 1);
-  const levelProgress = Math.min(
-    100,
-    Math.round(((xp % levelSize) / levelSize) * 100),
-  );
+  const progress = Math.min(100, Math.round(((xp % levelSize) / levelSize) * 100));
 
   return (
     <DashboardLayout fullWidth snapScroll>
       <div className="space-y-10 md:space-y-14">
         <section className="snap-start snap-always w-full px-4 md:px-8">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
             <Card className="border border-white/60 bg-white/75">
               <CardContent className="p-6 md:p-8 space-y-5">
-                <p className="text-xs uppercase tracking-[0.3em] text-foreground/50">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-foreground/50">
+                  <Rocket className="h-4 w-4 text-amber-500" />
                   Dashboard 2.0
-                </p>
+                </div>
                 <h1 className="text-2xl md:text-3xl font-display font-semibold text-foreground">
-                  Uma central de controle gamificada para fechar mais gigs
+                  Sua jornada musical em modo avancado
                 </h1>
                 <p className="text-sm text-foreground/60 max-w-2xl">
-                  Acompanhe convites, gigs confirmadas e seu desempenho em um
-                  so lugar.
+                  Tudo o que voce precisa para fechar mais gigs, aumentar sua
+                  visibilidade e ganhar mais cache.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="btn-gradient">
@@ -116,57 +116,43 @@ export default async function Dashboard2Page() {
                     variant="outline"
                     className="bg-white/80 border-white/70"
                   >
-                    <Link href={"/dashboard/gigs" as any}>Ver gigs</Link>
+                    <Link href={"/dashboard/gigs" as any}>Explorar gigs</Link>
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            <div className="grid gap-4">
-              <Card className="border border-white/60 bg-white/80">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-foreground/60">
-                    <Trophy className="h-4 w-4 text-amber-500" />
-                    Nivel atual
+            <Card className="border border-white/60 bg-white/80">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-foreground/60">
+                  <Trophy className="h-4 w-4 text-amber-500" />
+                  Nivel {level}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-semibold text-foreground">
+                      {xp} XP
+                    </p>
+                    <p className="text-xs text-foreground/50">
+                      {confirmedCount} gigs confirmadas
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-2xl font-semibold text-foreground">
-                        Nivel {level}
-                      </p>
-                      <p className="text-xs text-foreground/50">
-                        {xp} XP acumulado
-                      </p>
-                    </div>
-                    <Star className="h-6 w-6 text-amber-400" />
-                  </div>
-                  <div className="h-2 rounded-full bg-amber-100">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1]"
-                      style={{ width: `${levelProgress}%` }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border border-white/60 bg-white/80">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-foreground/60">
-                    <Flame className="h-4 w-4 text-orange-500" />
-                    Momentum
-                  </div>
-                  <p className="text-sm text-foreground/70">
-                    {pendingInvites > 0
-                      ? "Voce tem convites esperando resposta."
-                      : "Sua caixa esta limpa. Continue ativo para subir no ranking."}
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-foreground/70">
-                    <span>{confirmedCount} gigs confirmadas</span>
-                    <span>{upcomingConfirmed} proximas</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <Crown className="h-6 w-6 text-amber-400" />
+                </div>
+                <div className="h-2 rounded-full bg-amber-100">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-[#ff6b4a] via-[#ffb347] to-[#2aa6a1]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className="flex items-center gap-3 text-xs text-foreground/60">
+                  <Flame className="h-4 w-4 text-orange-500" />
+                  {pendingInvites > 0
+                    ? "Responda convites para acelerar seu nivel."
+                    : "Seu ritmo esta em dia. Continue ativo."}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -174,8 +160,8 @@ export default async function Dashboard2Page() {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                Perfil e destaque
+                <Star className="h-4 w-4 text-amber-500" />
+                Seu perfil em destaque
               </div>
               <ProfileHeader />
               <div className="grid gap-4 md:grid-cols-2">
@@ -186,8 +172,8 @@ export default async function Dashboard2Page() {
             <Card className="border border-white/60 bg-white/80">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
-                  <Bell className="h-4 w-4 text-[#ff6b4a]" />
-                  Painel rapido
+                  <LineChart className="h-4 w-4 text-emerald-500" />
+                  Resumo rapido
                 </div>
                 <div className="grid gap-3 text-sm">
                   <div className="flex items-center justify-between rounded-xl border border-white/60 bg-white/90 px-4 py-3">
@@ -208,9 +194,15 @@ export default async function Dashboard2Page() {
                       {pendingRatings}
                     </span>
                   </div>
+                  <div className="flex items-center justify-between rounded-xl border border-white/60 bg-white/90 px-4 py-3">
+                    <span>Proximas confirmacoes</span>
+                    <span className="font-semibold text-foreground">
+                      {upcomingConfirmed}
+                    </span>
+                  </div>
                 </div>
                 <Button asChild className="btn-gradient w-full">
-                  <Link href={"/dashboard/gigs" as any}>Ir para minhas gigs</Link>
+                  <Link href={"/dashboard/gigs" as any}>Abrir painel completo</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -256,10 +248,10 @@ export default async function Dashboard2Page() {
               <CardContent className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <p className="text-sm text-foreground/70">
-                    Acompanhe seus ganhos, metas e recompensas.
+                    Metas, ganhos e previsoes do seu proximo ciclo.
                   </p>
                   <p className="text-xs text-foreground/50 mt-1">
-                    Veja tendencias, caches e suas melhores oportunidades.
+                    Veja tendencias, caches e oportunidades para subir de nivel.
                   </p>
                 </div>
                 <Button asChild className="btn-gradient">
