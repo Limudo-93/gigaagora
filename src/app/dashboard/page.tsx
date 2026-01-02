@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Plus } from "lucide-react";
+import { Bell, Calendar, CheckCircle2, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
@@ -13,11 +13,12 @@ import UpcomingConfirmedGigs from "@/components/dashboard/UpcomingConfirmedGigs"
 import CompletedGigsToRate from "@/components/dashboard/CompletedGigsToRate";
 import ReferralSystem from "@/components/dashboard/ReferralSystem";
 import ThemeSelector from "@/components/dashboard/ThemeSelector";
+import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import { Button } from "@/components/ui/button";
 import EnablePushNotificationsCard from "@/components/push-notifications/EnablePushNotificationsCard";
 import PwaInstallGuideCard from "@/components/dashboard/PwaInstallGuideCard";
 import MissionProgressCard from "@/components/dashboard/MissionProgressCard";
-import GamificationStats from "@/components/dashboard/GamificationStats";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -28,206 +29,161 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   return (
-    <DashboardLayout fullWidth>
-      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
-        {/* Hero Section com Stats Gamificados - Mobile: Stack, Desktop: Side by side */}
-        <section className="px-4 md:px-0">
-          <div className="space-y-4 md:space-y-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Bem-vindo de volta! 🎵
-              </h1>
-              <p className="text-sm md:text-base text-muted-foreground mt-1">
-                Acompanhe seu progresso e continue crescendo na plataforma
-              </p>
-            </div>
-            <GamificationStats userId={user.id} />
+    <DashboardLayout fullWidth snapScroll>
+      <div className="space-y-10 md:space-y-12">
+        <section className="max-w-6xl mx-auto">
+          <Card className="border border-white/60 bg-white/75">
+            <CardContent className="p-6 md:p-8">
+              <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                <div className="space-y-4">
+                  <p className="text-xs uppercase tracking-[0.25em] text-foreground/50">
+                    Dashboard 2.0
+                  </p>
+                  <h1 className="text-2xl md:text-3xl font-display font-semibold text-foreground">
+                    Tudo o que importa, organizado para voce fechar mais gigs
+                  </h1>
+                  <p className="text-sm text-foreground/60">
+                    Acompanhe convites, gigs confirmadas e seu desempenho em um
+                    so lugar.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild className="btn-gradient">
+                      <Link href={"/dashboard/gigs/new" as any}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Criar nova gig
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="bg-white/80 border-white/70"
+                    >
+                      <Link href={"/dashboard/gigs" as any}>Ver gigs</Link>
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-4">
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs uppercase tracking-wide text-foreground/60">
+                      Foco do dia
+                    </p>
+                    <PriorityActionBlock userId={user.id} />
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/80 p-4">
+                    <p className="text-xs uppercase tracking-wide text-foreground/60">
+                      Progresso
+                    </p>
+                    <MissionProgressCard />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            Perfil e destaque
+          </div>
+          <ProfileHeader />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <EnablePushNotificationsCard userId={user.id} />
+            <PwaInstallGuideCard />
           </div>
         </section>
 
-        {/* Ação Prioritária - Full width no mobile, destaque no desktop */}
-        <section className="px-4 md:px-0">
-          <PriorityActionBlock userId={user.id} />
+        <section className="max-w-6xl mx-auto space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+            <Bell className="h-4 w-4 text-[#ff6b4a]" />
+            Convites pendentes
+          </div>
+          <PendingInvites userId={user.id} />
         </section>
 
-        {/* Alertas e Notificações - Grid responsivo */}
-        <section className="px-4 md:px-0">
-          <CancellationAlertCard userId={user.id} />
-        </section>
-
-        {/* Convites Pendentes - Destaque */}
-        <section className="px-4 md:px-0">
+        <section className="max-w-6xl mx-auto grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                Convites pendentes
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Responda rápido para aumentar suas chances de fechar shows
-              </p>
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+              <Calendar className="h-4 w-4 text-emerald-500" />
+              Proximas confirmacoes
             </div>
-            <PendingInvites userId={user.id} />
+            <UpcomingConfirmedGigs userId={user.id} />
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+              <CheckCircle2 className="h-4 w-4 text-blue-500" />
+              Avaliacoes pendentes
+            </div>
+            <CompletedGigsToRate userId={user.id} />
           </div>
         </section>
 
-        {/* Grid Principal - Desktop: 2 colunas, Mobile: Stack */}
-        <div className="px-4 md:px-0 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Próximas Confirmações */}
-          <section className="md:col-span-1 lg:col-span-1">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-foreground">
-                  Próximas confirmações
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Shows confirmados nos próximos dias
-                </p>
-              </div>
-              <UpcomingConfirmedGigs userId={user.id} />
-            </div>
-          </section>
-
-          {/* Avaliações Pendentes */}
-          <section className="md:col-span-1 lg:col-span-1">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-foreground">
-                  Avaliações pendentes
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Avalie gigs concluídas e ajude a comunidade
-                </p>
-              </div>
-              <CompletedGigsToRate userId={user.id} />
-            </div>
-          </section>
-
-          {/* Missões e Progresso - Full width no mobile, 1 coluna no desktop */}
-          <section className="md:col-span-2 lg:col-span-1">
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-foreground">
-                  Sua jornada
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Complete desafios e suba de nível
-                </p>
-              </div>
-              <MissionProgressCard />
-            </div>
-          </section>
-        </div>
-
-        {/* Perfil e Configurações - Grid responsivo */}
-        <div className="px-4 md:px-0 grid gap-6 md:grid-cols-2">
-          {/* Perfil */}
-          <section>
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-foreground">
-                  Seu perfil
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Mantenha seu perfil atualizado para receber mais convites
-                </p>
-              </div>
-              <ProfileHeader />
-            </div>
-          </section>
-
-          {/* Configurações */}
-          <section>
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-foreground">
-                  Configurações
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Personalize sua experiência na plataforma
-                </p>
-              </div>
-              <div className="space-y-4">
-                <EnablePushNotificationsCard userId={user.id} />
-                <PwaInstallGuideCard />
-                <ThemeSelector />
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Gigs - Full width */}
-        <section className="px-4 md:px-0">
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                Suas gigs
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Gerencie todas as suas oportunidades e shows
-              </p>
-            </div>
-            <GigsTabs userId={user.id} />
+        <section className="max-w-6xl mx-auto space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            Suas gigs
           </div>
+          <GigsTabs userId={user.id} />
         </section>
 
-        {/* Recompensas e Referências - Grid responsivo */}
-        <section className="px-4 md:px-0">
+        <section className="max-w-6xl mx-auto grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            <div>
-              <h2 className="text-lg md:text-xl font-bold text-foreground">
-                Benefícios e recompensas
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Convide amigos e ganhe recompensas
-              </p>
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              Beneficios e recompensas
             </div>
             <ReferralSystem />
           </div>
-        </section>
-
-        {/* Footer Info */}
-        <section className="px-4 md:px-0 pb-8">
-          <div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm p-4 flex items-start gap-3">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-primary/20 rounded-full blur-md" />
-              <div className="relative h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow-sm">
-                <svg
-                  className="h-3 w-3 text-primary-foreground"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground/70">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              Personalizacao
             </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                Seus dados estão protegidos
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Informações de contato só são compartilhadas em gigs confirmadas.
-              </p>
-            </div>
+            <ThemeSelector />
+            <WelcomeCard />
           </div>
         </section>
-      </div>
 
-      {/* Botão Flutuante Nova Gig - Mobile: Bottom Center, Desktop: Bottom Right */}
-      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
-        <Button
-          asChild
-          size="lg"
-          className="btn-gradient shadow-lg hover:shadow-xl transition-all rounded-full h-12 w-12 md:h-auto md:w-auto md:rounded-lg"
-        >
+        <section className="max-w-6xl mx-auto space-y-4">
+          <CancellationAlertCard userId={user.id} />
+          <Card className="border border-white/60 bg-white/75">
+            <CardContent className="p-5 flex items-start gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-md" />
+                <div className="relative h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-md">
+                  <svg
+                    className="h-4 w-4 text-primary-foreground"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  Seus dados estao protegidos
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Informacoes de contato so sao compartilhadas em gigs
+                  confirmadas.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+      <div className="fixed bottom-5 right-5 z-50">
+        <Button asChild className="btn-gradient shadow-lg">
           <Link href={"/dashboard/gigs/new" as any}>
-            <Plus className="h-5 w-5 md:mr-2" />
-            <span className="hidden md:inline">Nova gig</span>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova gig
           </Link>
         </Button>
       </div>

@@ -99,14 +99,14 @@ export default async function ProfileHeader() {
       : profile?.city || profile?.state || null;
 
   return (
-    <div className="relative overflow-hidden flex flex-col gap-3 md:gap-4 rounded-2xl border border-border bg-card p-4 md:p-6 md:flex-row md:items-center md:justify-between shadow-lg">
+    <div className="relative overflow-hidden flex flex-col gap-3 md:gap-4 rounded-xl border border-border bg-card p-3 md:p-4 md:flex-row md:items-center md:justify-between shadow-md">
       {/* Decorative gradient overlay */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10" />
 
       <div className="flex items-center gap-3 md:gap-4 relative z-10 flex-1 min-w-0">
         <div className="relative shrink-0">
           <div className="absolute inset-0 bg-primary/30 rounded-full blur-md" />
-          <Avatar className="relative h-12 w-12 md:h-16 md:w-16 ring-2 ring-border shadow-lg">
+          <Avatar className="relative h-11 w-11 md:h-14 md:w-14 ring-2 ring-border shadow-md">
             <AvatarImage src={profile?.photo_url || ""} />
             <AvatarFallback className="text-base md:text-lg bg-primary text-primary-foreground font-semibold">
               {initials}

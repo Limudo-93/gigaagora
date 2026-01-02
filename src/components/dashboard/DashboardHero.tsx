@@ -32,15 +32,16 @@ export default function DashboardHero() {
   return (
     <section className="snap-start snap-always">
       <div className="relative overflow-hidden rounded-[28px] border border-white/60 bg-white/70 px-6 py-8 md:px-8 md:py-9 shadow-sm max-w-6xl mx-auto">
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-200/40 blur-3xl pointer-events-none" />
+        <div className="absolute -left-20 -bottom-24 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl pointer-events-none" />
         <button
+          type="button"
           onClick={handleDismiss}
-          className="absolute right-4 top-4 z-20 h-9 w-9 rounded-full bg-white/90 border border-white/70 text-foreground flex items-center justify-center hover:bg-white shadow-sm pointer-events-auto"
+          className="absolute right-4 top-4 z-30 h-9 w-9 rounded-full bg-white/90 border border-white/70 text-foreground flex items-center justify-center hover:bg-white shadow-sm"
           aria-label="Fechar destaque do dashboard"
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-amber-200/40 blur-3xl" />
-        <div className="absolute -left-20 -bottom-24 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl" />
         <div className="relative z-10 grid gap-6 lg:grid-cols-[1.4fr_1fr] items-center">
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.25em] text-foreground/50">

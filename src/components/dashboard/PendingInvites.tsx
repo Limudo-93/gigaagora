@@ -647,7 +647,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
               <div
                 ref={carouselRef}
                 onScroll={updateScrollButtons}
-                className="flex gap-4 overflow-x-auto overflow-y-visible snap-x snap-mandatory pb-3 -mx-2 px-2 scrollbar-theme"
+                className="flex gap-4 overflow-x-auto overflow-y-visible snap-x snap-mandatory pb-16 md:pb-6 -mx-2 px-2 scrollbar-theme"
               >
                 {items.map((r) => {
               const when = formatDateTimeBR(r.start_time);
@@ -681,7 +681,7 @@ export default function PendingInvites({ userId }: { userId: string }) {
               return (
                 <Card
                   key={r.invite_id}
-                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[92%] sm:min-w-[86%] md:min-w-[420px] lg:min-w-[460px] snap-start flex flex-col min-h-[78vh] md:min-h-0"
+                  className="border-2 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[92%] sm:min-w-[86%] md:min-w-[420px] lg:min-w-[460px] snap-start flex flex-col min-h-[82vh] md:min-h-0"
                 >
                   <CardContent className="p-0 flex flex-col flex-1">
                     {/* Flyer do evento ou logo padrão */}
