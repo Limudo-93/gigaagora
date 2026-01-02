@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   Bell,
   Calendar,
+  CheckCircle2,
   Crown,
   Flame,
   LineChart,
